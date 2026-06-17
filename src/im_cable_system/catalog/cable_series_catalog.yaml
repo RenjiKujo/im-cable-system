@@ -1,0 +1,98 @@
+# Cable series definition catalog (cables only)
+#
+# NOTE:
+# - This file is the reference source for cable series definitions.
+# - Estimation bounds/init live in bounds_and_init/cable_descriptor_bounds_and_init.yaml.
+# - Physical quantities use SI base units (or post to_base_unit() contract units).
+# - See im_series_catalog.yaml for IM definitions (IEC/JIS 3.7 kW GP motor reference).
+# - Ideal: zero series impedance, open shunt (engine / wiring verification).
+# - Real: short LV feeder for small industrial fan/blower plants.
+#
+# Real (per-phase π-model):
+#   FeederReal — plant feeder ~4 mm² Cu: R' 4.61 mΩ/m, L' 0.6 µH/m, C' 100 pF/m, R·L 1e11 Ω·m.
+#   LeadReal — motor lead (lighter, short): R' 3.5 mΩ/m, L' 0.4 µH/m, C' 1 nF/m, R·L 1e10 Ω·m.
+
+version: 1
+
+# Cable-bundle conductor circuit models (one per bundle).
+# Keys use the same PascalCase + number convention as im_series_catalog names.
+# Series-selection TSV: column cable_conductor_model references a key here
+# (exactly one non-empty cell per bundle; continuation rows leave it blank).
+cable_conductor_models:
+  Basic01:
+    name: BASIC
+    params: []
+  FreqDependentSkin01:
+    name: FREQUENCY_DEPENDENT_SKIN_EFFECT_V1
+    params:
+      - { name: alpha_conductor_r, value: 0.02 }
+      - { name: beta_conductor_r, value: 0.1 }
+      - { name: alpha_conductor_x, value: 0.02 }
+      - { name: beta_conductor_x, value: 0.1 }
+  CurrentDependentSkin01:
+    name: CURRENT_DEPENDENT_SKIN_EFFECT_V1
+    params:
+      - { name: alpha_conductor_r, value: 0.02 }
+      - { name: beta_conductor_r, value: 0.1 }
+      - { name: alpha_conductor_x, value: 0.02 }
+      - { name: beta_conductor_x, value: 0.1 }
+
+cable_series:
+  # Ideal plant feeder (ROUND).
+  - name: "FeederIdeal"
+    shape_type: "ROUND"
+    conductor:
+      resistance_per_length: { value: 0.0, unit: "Ω/m" }
+      inductance_per_length: { value: 0.0, unit: "H/m" }
+    ground:
+      resistance_length: { value: 1.0e30, unit: "Ω*m" }
+      capacitance_per_length: { value: 0.0, unit: "F/m" }
+
+  # Ideal motor lead (FLAT).
+  - name: "LeadIdeal"
+    shape_type: "FLAT"
+    conductor:
+      resistance_per_length: { value: 0.0, unit: "Ω/m" }
+      inductance_per_length: { value: 0.0, unit: "H/m" }
+    ground:
+      resistance_length: { value: 1.0e30, unit: "Ω*m" }
+      capacitance_per_length: { value: 0.0, unit: "F/m" }
+
+  # Legacy test fixture names (ROUND main / FLAT MLE), same as FeederIdeal / LeadIdeal.
+  - name: "MAIN_IDEAL"
+    shape_type: "ROUND"
+    conductor:
+      resistance_per_length: { value: 0.0, unit: "Ω/m" }
+      inductance_per_length: { value: 0.0, unit: "H/m" }
+    ground:
+      resistance_length: { value: 1.0e30, unit: "Ω*m" }
+      capacitance_per_length: { value: 0.0, unit: "F/m" }
+
+  - name: "MLE_IDEAL"
+    shape_type: "FLAT"
+    conductor:
+      resistance_per_length: { value: 0.0, unit: "Ω/m" }
+      inductance_per_length: { value: 0.0, unit: "H/m" }
+    ground:
+      resistance_length: { value: 1.0e30, unit: "Ω*m" }
+      capacitance_per_length: { value: 0.0, unit: "F/m" }
+
+  # Plant feeder ~4 mm² Cu (ROUND).
+  - name: "FeederReal"
+    shape_type: "ROUND"
+    conductor:
+      resistance_per_length: { value: 4.61e-3, unit: "Ω/m" }
+      inductance_per_length: { value: 6.0e-7, unit: "H/m" }
+    ground:
+      resistance_length: { value: 1.0e11, unit: "Ω*m" }
+      capacitance_per_length: { value: 1.0e-10, unit: "F/m" }
+
+  # Motor lead, slightly lighter / shorter run (FLAT).
+  - name: "LeadReal"
+    shape_type: "FLAT"
+    conductor:
+      resistance_per_length: { value: 3.5e-3, unit: "Ω/m" }
+      inductance_per_length: { value: 4.0e-7, unit: "H/m" }
+    ground:
+      resistance_length: { value: 1.0e10, unit: "Ω*m" }
+      capacitance_per_length: { value: 1.0e-9, unit: "F/m" }

@@ -1,0 +1,6 @@
+im_cable_system_name	CurrentDependent02_RealFeeder30m_RealLead10m
+
+im_series_name	cable_series_name	cable_length	cable_conductor_model
+[-]	[-]	[m]	[-]
+CurrentDependent02	FeederReal	30	Basic01
+	LeadReal	10

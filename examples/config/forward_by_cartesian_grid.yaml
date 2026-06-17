@@ -1,0 +1,109 @@
+# Demo configuration for README Quick Start (ForwardByCartesianGrid).
+# Relative paths are resolved from this file's directory.
+
+project_info:
+  project_name: im_cable_system
+  version: 1.0.0
+  default_encoding: utf-8
+  timezone: "Asia/Tokyo"
+
+logging:
+  default_log_level: INFO
+  default_log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+series_catalog_for_forward_simulation:
+  im_file_path: "../../src/im_cable_system/catalog/im_series_catalog.yaml"
+  cable_file_path: "../../src/im_cable_system/catalog/cable_series_catalog.yaml"
+
+bounds_and_init_for_estimation_parameters:
+  im_file_path: "../../src/im_cable_system/bounds_and_init/im_descriptor_bounds_and_init.yaml"
+  cable_file_path: "../../src/im_cable_system/bounds_and_init/cable_descriptor_bounds_and_init.yaml"
+
+dump:
+  base_dir: "../outputs/forward_by_cartesian_grid"
+  input:
+    dtos:
+      enabled: false
+      sub_dir: "dtos/input"
+      filename_pattern: "input_{timestamp}.pkl"
+  execute:
+    dtos:
+      enabled: false
+      sub_dir: "dtos/itm"
+      filename_pattern: "itm_{timestamp}.pkl"
+  output:
+    figures:
+      enabled: true
+      sub_dir: "figures"
+      filename_pattern: "fig_{kind}_{im_cable_system_name}_{timestamp}.png"
+    tables:
+      enabled: true
+      sub_dir: "tables"
+      filename_pattern: "tbl_{kind}_{timestamp}.csv"
+    reports:
+      enabled: true
+      sub_dir: "reports"
+      fit_summary_pattern: "report_fit_summary_{im_cable_system_name}_{timestamp}.csv"
+      fitted_catalog_pattern: "report_model_{im_cable_system_name}_{timestamp}.yaml"
+      numerical_stability_pattern: "report_numerical_stability_{im_cable_system_name}_{timestamp}.csv"
+    dtos:
+      enabled: false
+      sub_dir: "dtos/output"
+      filename_pattern: "output_{timestamp}.pkl"
+
+calculation:
+  input:
+    validation:
+      max_reference_axes_grid_points: 25000000
+
+  execute:
+    data_processing:
+      method: "sequential"
+      max_workers: 2
+      timeout_seconds: 300
+
+    numerical_guard:
+      eps: 1.0e-12
+
+    validation:
+      energy_conservation:
+        enabled: true
+        severity: "ERROR"
+        tolerance: 1.0e-6
+      current_voltage_range:
+        enabled: true
+        severity: "INFO"
+        voltage_tolerance: 0.1
+        current_tolerance: 6.0
+
+    current_estimation:
+      convergence_failure_severity: "WARNING"
+      iteration:
+        max_iterations: 20
+        convergence_tolerance: 1.0e-6
+        convergence_criterion: "line_current"
+
+    estimate_params:
+      residual:
+        weights:
+          current: 1.0
+          power: 1.0
+          power_factor: 1.0
+          efficiency: 1.0
+        normalization:
+          method: "by_curve_scale"
+          by_curve_scale:
+            statistic: "std"
+            eps: 1.0e-12
+      optimizer:
+        algorithm: "least_squares"
+        least_squares:
+          max_nfev: 5
+          ftol: 1.0e-8
+          xtol: 1.0e-8
+          gtol: 1.0e-8
+
+  output:
+    figures:
+      show: false
+      show_duration_seconds: 3.0

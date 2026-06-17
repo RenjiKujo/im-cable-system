@@ -1,0 +1,67 @@
+# Ruff設定ファイル
+# https://docs.astral.sh/ruff/configuration/
+
+line-length = 80
+target-version = "py310"
+
+indent-width = 4
+
+[lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "N",
+    "UP",
+    "ANN",
+    "B",
+    "C4",
+    "DTZ",
+    "T20",
+    "RET",
+    "SIM",
+    "ARG",
+    "PTH",
+    "ERA",
+    "PD",
+    "PL",
+    "NPY",
+]
+
+ignore = [
+    "E501",
+    "PLR0913",
+    "PLR2004",  # 構造チェック由来の小整数比較が本番にも多いため全体で無視
+    "COM812",
+    "ISC001",
+]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]
+# テスト本体・補助モジュール(stub/fake/builder)は型ヒント(ANN)を緩める
+"test_*.py" = ["ANN"]
+"**/conftest.py" = ["ANN"]
+"**/_*_helpers.py" = ["ANN"]
+"**/_*_builders.py" = ["ANN"]
+# config.schema の factory は YAML 生値を扱うため create(raw: Any) を許容
+"src/im_cable_system/engine/shared/config/schema/*.py" = ["ANN401"]
+
+[lint.isort]
+known-first-party = ["im_cable_system"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+
+[lint.pydocstyle]
+convention = "google"
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

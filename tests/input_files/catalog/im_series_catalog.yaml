@@ -1,0 +1,469 @@
+# IM series definition catalog (induction motors only)
+#
+# NOTE:
+# - This file is the reference source for series definitions.
+# - Estimation bounds/init live in bounds_and_init/im_descriptor_bounds_and_init.yaml.
+# - Physical quantities use SI base units (or post to_base_unit() contract units).
+# - See cable_series_catalog.yaml for cable definitions.
+# - Double-cage entries use cage_multiplicity: DOUBLE_CAGE with secondary_inner /
+#   secondary_outer.
+
+version: 1
+
+im_series:
+  # Single-cage (CatalogImSeriesNameV1). Small motors for verification.
+
+  # Basic01: STAR, L-type. Primary, excitation, and secondary are all BASIC.
+  - name: "Basic01"
+    poles: 4
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "STAR"
+    circuit_type: "L"
+    primary:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # Basic02: DELTA, L-type. Same equivalent R/L and nameplate as Basic01.
+  - name: "Basic02"
+    poles: 4
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "DELTA"
+    circuit_type: "L"
+    primary:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # Basic03: DELTA, T-type. Same equivalent R/L as Basic01. All branches BASIC.
+  - name: "Basic03"
+    poles: 4
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "DELTA"
+    circuit_type: "T"
+    primary:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # Basic04: DELTA, T-type, 2 poles. Same equivalent R/L as Basic01. All branches BASIC.
+  - name: "Basic04"
+    poles: 2
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "DELTA"
+    circuit_type: "T"
+    primary:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # Single-cage, nonlinear: same equivalent R/L as Basic01. Tiny α/β (impedance vs
+  # BASIC is typically under 0.1% near rated). For wiring/circuit/model combos.
+
+  # SlipDependent01: DELTA, T-type. Primary, excitation, and secondary are slip-dependent.
+  - name: "SlipDependent01"
+    poles: 4
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "DELTA"
+    circuit_type: "T"
+    primary:
+      model:
+        name: "SLIP_DEPENDENT_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_primary_r", value: 0.01 }
+          - { name: "alpha_primary_x", value: 0.01 }
+          - { name: "beta_primary_x", value: 0.1 }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model:
+        name: "SLIP_DEPENDENT_SATURATION_V1"
+        params:
+          - { name: "alpha_excitation_r", value: 0.02 }
+          - { name: "alpha_excitation_x", value: 0.02 }
+          - { name: "beta_excitation_x", value: 0.1 }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model:
+        name: "SLIP_DEPENDENT_SKIN_EFFECT_V1"
+        params:
+          - { name: "alpha_secondary_r", value: 0.02 }
+          - { name: "alpha_secondary_x", value: 0.02 }
+          - { name: "beta_secondary_r", value: 0.1 }
+          - { name: "beta_secondary_x", value: 0.1 }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # CurrentDependent01: DELTA, L-type. All branches current-dependent (secondary: skin effect).
+  - name: "CurrentDependent01"
+    poles: 4
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "DELTA"
+    circuit_type: "L"
+    primary:
+      model:
+        name: "CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_primary_leakage_x", value: 0.02 }
+          - { name: "beta_primary_leakage_x", value: 0.1 }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model:
+        name: "CURRENT_DEPENDENT_SATURATION_V1"
+        params:
+          - { name: "alpha_excitation_r", value: 0.02 }
+          - { name: "alpha_excitation_x", value: 0.02 }
+          - { name: "beta_excitation_x", value: 0.1 }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model:
+        name: "CURRENT_DEPENDENT_SKIN_EFFECT_V1"
+        params:
+          - { name: "alpha_secondary_r", value: 0.02 }
+          - { name: "alpha_secondary_x", value: 0.02 }
+          - { name: "beta_secondary_r", value: 0.1 }
+          - { name: "beta_secondary_x", value: 0.1 }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # CurrentDependent02: STAR, T-type. Primary/excitation current-dependent; secondary leakage saturation.
+  - name: "CurrentDependent02"
+    poles: 4
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "STAR"
+    circuit_type: "T"
+    primary:
+      model:
+        name: "CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_primary_leakage_x", value: 0.02 }
+          - { name: "beta_primary_leakage_x", value: 0.1 }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model:
+        name: "CURRENT_DEPENDENT_SATURATION_V1"
+        params:
+          - { name: "alpha_excitation_r", value: 0.02 }
+          - { name: "alpha_excitation_x", value: 0.02 }
+          - { name: "beta_excitation_x", value: 0.1 }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model:
+        name: "CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_secondary_leakage_x", value: 0.02 }
+          - { name: "beta_secondary_leakage_x", value: 0.1 }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # CurrentDependent03: DELTA, T-type. Primary/excitation current-dependent; secondary skin + leakage.
+  - name: "CurrentDependent03"
+    poles: 4
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "DELTA"
+    circuit_type: "T"
+    primary:
+      model:
+        name: "CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_primary_leakage_x", value: 0.02 }
+          - { name: "beta_primary_leakage_x", value: 0.1 }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model:
+        name: "CURRENT_DEPENDENT_SATURATION_V1"
+        params:
+          - { name: "alpha_excitation_r", value: 0.02 }
+          - { name: "alpha_excitation_x", value: 0.02 }
+          - { name: "beta_excitation_x", value: 0.1 }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model:
+        name: "CURRENT_DEPENDENT_SKIN_EFFECT_AND_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_secondary_r", value: 0.02 }
+          - { name: "alpha_secondary_x", value: 0.02 }
+          - { name: "beta_secondary_r", value: 0.1 }
+          - { name: "beta_secondary_x", value: 0.1 }
+          - { name: "alpha_secondary_leakage_x", value: 0.02 }
+          - { name: "beta_secondary_leakage_x", value: 0.1 }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # SlipAndCurrentDependent01: STAR, L-type. Primary current-dependent; excitation/secondary slip-dependent.
+  - name: "SlipAndCurrentDependent01"
+    poles: 4
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "STAR"
+    circuit_type: "L"
+    primary:
+      model:
+        name: "CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_primary_leakage_x", value: 0.02 }
+          - { name: "beta_primary_leakage_x", value: 0.1 }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model:
+        name: "SLIP_DEPENDENT_SATURATION_V1"
+        params:
+          - { name: "alpha_excitation_r", value: 0.02 }
+          - { name: "alpha_excitation_x", value: 0.02 }
+          - { name: "beta_excitation_x", value: 0.1 }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model:
+        name: "SLIP_DEPENDENT_SKIN_EFFECT_V1"
+        params:
+          - { name: "alpha_secondary_r", value: 0.02 }
+          - { name: "alpha_secondary_x", value: 0.02 }
+          - { name: "beta_secondary_r", value: 0.1 }
+          - { name: "beta_secondary_x", value: 0.1 }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # SlipAndCurrentDependent02: DELTA, L-type. Primary slip-dependent; excitation/secondary current-dependent.
+  - name: "SlipAndCurrentDependent02"
+    poles: 4
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "DELTA"
+    circuit_type: "L"
+    primary:
+      model:
+        name: "SLIP_DEPENDENT_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_primary_r", value: 0.01 }
+          - { name: "alpha_primary_x", value: 0.01 }
+          - { name: "beta_primary_x", value: 0.1 }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model:
+        name: "CURRENT_DEPENDENT_SATURATION_V1"
+        params:
+          - { name: "alpha_excitation_r", value: 0.02 }
+          - { name: "alpha_excitation_x", value: 0.02 }
+          - { name: "beta_excitation_x", value: 0.1 }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary:
+      model:
+        name: "CURRENT_DEPENDENT_SKIN_EFFECT_V1"
+        params:
+          - { name: "alpha_secondary_r", value: 0.02 }
+          - { name: "alpha_secondary_x", value: 0.02 }
+          - { name: "beta_secondary_r", value: 0.1 }
+          - { name: "beta_secondary_x", value: 0.1 }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+
+  # Double-cage (CatalogImSeriesNameV1). Primary/excitation R/L match Basic01.
+  # Inner/outer cage R/L differ. Nonlinear α/β are tiny, as in single-cage nonlinear series.
+
+  # DoubleCageBasic01: STAR, L-type. Inner and outer cages are BASIC.
+  - name: "DoubleCageBasic01"
+    poles: 4
+    cage_multiplicity: "DOUBLE_CAGE"
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "STAR"
+    circuit_type: "L"
+    primary:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary_inner:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    secondary_outer:
+      model: { name: "BASIC", params: [] }
+      resistance: { value: 0.42, unit: "Ω" }
+      inductance: { value: 0.00215, unit: "H" }
+
+  # DoubleCageSlipDependent01: DELTA, T-type. Inner/outer slip-dependent (skin effect).
+  - name: "DoubleCageSlipDependent01"
+    poles: 4
+    cage_multiplicity: "DOUBLE_CAGE"
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "DELTA"
+    circuit_type: "T"
+    primary:
+      model:
+        name: "SLIP_DEPENDENT_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_primary_r", value: 0.01 }
+          - { name: "alpha_primary_x", value: 0.01 }
+          - { name: "beta_primary_x", value: 0.1 }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model:
+        name: "SLIP_DEPENDENT_SATURATION_V1"
+        params:
+          - { name: "alpha_excitation_r", value: 0.02 }
+          - { name: "alpha_excitation_x", value: 0.02 }
+          - { name: "beta_excitation_x", value: 0.1 }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary_inner:
+      model:
+        name: "SLIP_DEPENDENT_SKIN_EFFECT_V1"
+        params:
+          - { name: "alpha_secondary_r", value: 0.02 }
+          - { name: "alpha_secondary_x", value: 0.02 }
+          - { name: "beta_secondary_r", value: 0.1 }
+          - { name: "beta_secondary_x", value: 0.1 }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    secondary_outer:
+      model:
+        name: "SLIP_DEPENDENT_SKIN_EFFECT_V1"
+        params:
+          - { name: "alpha_secondary_r", value: 0.018 }
+          - { name: "alpha_secondary_x", value: 0.018 }
+          - { name: "beta_secondary_r", value: 0.1 }
+          - { name: "beta_secondary_x", value: 0.1 }
+      resistance: { value: 0.42, unit: "Ω" }
+      inductance: { value: 0.00215, unit: "H" }
+
+  # DoubleCageCurrentDependent01: DELTA, L-type. Inner/outer current-dependent (skin effect).
+  - name: "DoubleCageCurrentDependent01"
+    poles: 4
+    cage_multiplicity: "DOUBLE_CAGE"
+    nameplate:
+      voltage: { value: 200.0, unit: "V" }
+      current: { value: 13.86, unit: "A" }
+      power: { value: 3711.0, unit: "W" }
+      frequency: { value: 50.0, unit: "Hz" }
+    connection_type: "DELTA"
+    circuit_type: "L"
+    primary:
+      model:
+        name: "CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1"
+        params:
+          - { name: "alpha_primary_leakage_x", value: 0.02 }
+          - { name: "beta_primary_leakage_x", value: 0.1 }
+      resistance: { value: 0.4, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    excitation:
+      model:
+        name: "CURRENT_DEPENDENT_SATURATION_V1"
+        params:
+          - { name: "alpha_excitation_r", value: 0.02 }
+          - { name: "alpha_excitation_x", value: 0.02 }
+          - { name: "beta_excitation_x", value: 0.1 }
+      resistance: { value: 235.2941176, unit: "Ω" }
+      inductance: { value: 0.06709536625, unit: "H" }
+    secondary_inner:
+      model:
+        name: "CURRENT_DEPENDENT_SKIN_EFFECT_V1"
+        params:
+          - { name: "alpha_secondary_r", value: 0.02 }
+          - { name: "alpha_secondary_x", value: 0.02 }
+          - { name: "beta_secondary_r", value: 0.1 }
+          - { name: "beta_secondary_x", value: 0.1 }
+      resistance: { value: 0.3398, unit: "Ω" }
+      inductance: { value: 0.001785650652, unit: "H" }
+    secondary_outer:
+      model:
+        name: "CURRENT_DEPENDENT_SKIN_EFFECT_V1"
+        params:
+          - { name: "alpha_secondary_r", value: 0.018 }
+          - { name: "alpha_secondary_x", value: 0.018 }
+          - { name: "beta_secondary_r", value: 0.1 }
+          - { name: "beta_secondary_x", value: 0.1 }
+      resistance: { value: 0.42, unit: "Ω" }
+      inductance: { value: 0.00215, unit: "H" }

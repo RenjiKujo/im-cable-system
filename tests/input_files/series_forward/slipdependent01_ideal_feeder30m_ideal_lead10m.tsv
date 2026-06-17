@@ -1,0 +1,6 @@
+im_cable_system_name	SlipDependent01_IdealFeeder30m_IdealLead10m
+
+im_series_name	cable_series_name	cable_length	cable_conductor_model
+[-]	[-]	[m]	[-]
+SlipDependent01	FeederIdeal	30	Basic01
+	LeadIdeal	10

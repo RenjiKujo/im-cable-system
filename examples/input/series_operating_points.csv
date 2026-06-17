@@ -1,0 +1,6 @@
+im_cable_system_name,SlipAndCurrentDependent03_CurrentDependentSkin01_Feeder30m_Lead10m
+
+im_series_name,cable_series_name,cable_length,cable_conductor_model
+[-],[-],[m],[-]
+SlipAndCurrentDependent03,FeederReal,30,CurrentDependentSkin01
+,LeadReal,10,

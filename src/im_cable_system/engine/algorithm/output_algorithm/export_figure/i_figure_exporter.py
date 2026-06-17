@@ -1,0 +1,66 @@
+"""Figure export ステップ（Figure artifact のファイル保存）のインターフェース。
+
+build と分離した I/O 専用ステップ。エクスポート可否（ON/OFF）の判定は
+呼び出し側（orchestrator）が config フラグで行い、本ステップは渡された
+Figure の保存のみを担う（Figure の生成・加工はしない）。
+"""
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+
+from matplotlib.figure import Figure
+
+from im_cable_system.engine.shared.config import IConfig, ILogger
+from im_cable_system.engine.shared.dto.output import OutputDto
+
+
+class IFigureExporter(ABC):
+    """Figure をファイルへ保存する契約。"""
+
+    @classmethod
+    @abstractmethod
+    def create(
+        cls,
+        config: IConfig,
+        logger: ILogger,
+    ) -> IFigureExporter:
+        """config / logger からエクスポーターを生成する。
+
+        Args:
+            config: 設定オブジェクト。
+            logger: ロガーオブジェクト。
+
+        Returns:
+            IFigureExporter: 生成されたエクスポーター。
+        """
+        pass
+
+    @abstractmethod
+    def export(
+        self,
+        figure: Figure,
+        output_dto: OutputDto,
+        *,
+        kind: str = "figure",
+    ) -> None:
+        """渡された Figure をそのままファイルへ保存する。
+
+        本ステップは Figure を変更・再構築しない（生成・加工は make_figure の
+        責務）。保存先・ファイル名は ``config.dump_data_config.figures``
+        （sub_dir / filename_pattern）に従う。
+
+        ``output_dto`` の用途（意図）:
+            現状の filename_pattern
+            （``fig_{kind}_{im_cable_system_name}_{timestamp}.png``）では
+            未使用だが、将来ファイル名・サブディレクトリに系統名
+            （``output_dto.name``）や ``{kind}`` 等の文脈を反映できるよう
+            受け取っておく。描画内容には用いない。表示（display_figure）と
+            引数の対を揃える意図もある。
+
+        Args:
+            figure: 保存対象の matplotlib Figure（完成済み）。
+            output_dto: 出力データ DTO（ファイル名文脈。現状未使用）。
+            kind: Figure 種別（例: ``slip_axis`` / ``output_ratio_axis``）。
+        """
+        pass

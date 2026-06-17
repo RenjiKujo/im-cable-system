@@ -1,0 +1,182 @@
+"""電流依存導線イミタンス計算コンバーター群（表皮効果モデル, PIE型, V1）"""
+
+from __future__ import annotations
+
+import numpy as np
+
+from im_cable_system.engine.algorithm.execute_algorithm.build_model.build_cable_model.conductor_immittance.i_conductor_immittance_converter import (  # noqa: E501
+    IConductorImmittanceConverter,
+)
+from im_cable_system.engine.domain.physics.electrical import (
+    combine_impedance_series,
+    impedance_from_inductance_and_frequency,
+    impedance_from_resistance_and_frequency,
+)
+from im_cable_system.engine.shared.config import IConfig, ILogger
+from im_cable_system.engine.shared.dto.generic.im_cable_system import (
+    CableConductorModelDto,
+)
+from im_cable_system.engine.shared.dto.generic.physical_quantity import (
+    ArrayComplexCurrentDto,
+    ArrayComplexImpedanceDto,
+    ArrayFrequencyDto,
+    FloatInductanceDto,
+    FloatResistanceDto,
+)
+
+# NOTE: ケーブル固有の定格電流ではなく、電流依存係数を無次元化する
+#   固定正規化定数。beta が電流スケールを吸収するため 100 A に固定する。
+_CURRENT_NORMALIZATION_CURRENT_A: float = 100.0
+
+
+class CurrentDependentSkinEffectConductorImmittanceConverterV1(
+    IConductorImmittanceConverter
+):
+    """電流依存の表皮効果を考慮した導線イミタンス計算コンバーター（PIE型, V1）"""
+
+    def __init__(
+        self,
+        config: IConfig,
+        logger: ILogger,
+    ) -> None:
+        """電流依存表皮効果コンバーターを初期化する。
+
+        Args:
+            config: 計算に必要な設定。
+            logger: ロガーオブジェクト。
+        """
+        self._config: IConfig = config
+        self._logger: ILogger = logger
+
+    @classmethod
+    def create(
+        cls,
+        config: IConfig,
+        logger: ILogger,
+    ) -> IConductorImmittanceConverter:
+        """導線イミタンス計算コンバーターを生成する。
+
+        Args:
+            config: 計算に必要な設定。
+            logger: ロガーオブジェクト。
+
+        Returns:
+            IConductorImmittanceConverter: 生成されたコンバーター。
+        """
+        return cls(config=config, logger=logger)
+
+    def convert(
+        self,
+        conductor_model: CableConductorModelDto,
+        base_resistance_total: FloatResistanceDto,
+        base_inductance_total: FloatInductanceDto,
+        frequency: ArrayFrequencyDto | None = None,
+        conductor_current: ArrayComplexCurrentDto | None = None,
+    ) -> ArrayComplexImpedanceDto:
+        """導線インピーダンスを計算する。
+
+        Args:
+            conductor_model: 導線回路モデルDTO（パラメータを含む）。
+            base_resistance_total: 区間全体の基準抵抗 [Ω]。
+            base_inductance_total: 区間全体の基準インダクタンス [H]。
+            frequency: 周波数DTO（必須）。
+            conductor_current: 導体電流DTO。None の場合は周波数と同じ形状のゼロ電流として扱う。
+
+        Returns:
+            ArrayComplexImpedanceDto: 導線インピーダンスDTO。
+
+        Raises:
+            ValueError: 必要なパラメータがNoneの場合。
+        """
+        if conductor_model.params is None:
+            raise ValueError("conductor_model.paramsが必要ですが、Noneです。")
+
+        alpha_r = conductor_model.params.get_by_name("alpha_conductor_r")
+        beta_r = conductor_model.params.get_by_name("beta_conductor_r")
+        alpha_x = conductor_model.params.get_by_name("alpha_conductor_x")
+        beta_x = conductor_model.params.get_by_name("beta_conductor_x")
+
+        if alpha_r is None:
+            raise ValueError("alpha_conductor_rが必要ですが、Noneです。")
+        if beta_r is None:
+            raise ValueError("beta_conductor_rが必要ですが、Noneです。")
+        if alpha_x is None:
+            raise ValueError("alpha_conductor_xが必要ですが、Noneです。")
+        if beta_x is None:
+            raise ValueError("beta_conductor_xが必要ですが、Noneです。")
+
+        if frequency is None:
+            raise ValueError("frequency は None ではいけません。")
+
+        eps = self._config.numerical_guard_config.eps
+        max_mag = 1.0 / eps
+
+        freq_nd_dto = frequency.to_base_unit()
+
+        if conductor_current is not None:
+            conductor_current_dto = conductor_current.to_base_unit()
+            conductor_current_array = conductor_current_dto.get_value()
+        else:
+            ref_shape = freq_nd_dto.get_value().shape
+            conductor_current_dto = ArrayComplexCurrentDto(
+                value=np.zeros(ref_shape, dtype=np.complex128),
+                unit="A",
+            ).to_base_unit()
+            conductor_current_array = conductor_current_dto.get_value()
+
+        conductor_current_magnitude = np.abs(conductor_current_array)
+        current_ratio = np.where(
+            _CURRENT_NORMALIZATION_CURRENT_A > 0,
+            conductor_current_magnitude / _CURRENT_NORMALIZATION_CURRENT_A,
+            conductor_current_magnitude,
+        )
+
+        resistance_dto = base_resistance_total.to_base_unit()
+        z_r_base_dto = impedance_from_resistance_and_frequency(
+            resistance=resistance_dto,
+            frequency=freq_nd_dto,
+            eps=eps,
+            max_mag=max_mag,
+        ).to_base_unit()
+        z_r_base_real_part = z_r_base_dto.get_real_part()
+
+        alpha_r_value = alpha_r.get_value()
+        beta_r_value = beta_r.get_value()
+        z_r_real_part = (
+            z_r_base_real_part
+            * (
+                1.0
+                + alpha_r_value * (1.0 - np.exp(-beta_r_value * current_ratio))
+            )
+        ).astype(np.float64)
+        z_r_dto = ArrayComplexImpedanceDto(
+            value=z_r_real_part.astype(np.complex128), unit="Ω"
+        )
+
+        inductance_dto = base_inductance_total.to_base_unit()
+        z_x_base_dto = impedance_from_inductance_and_frequency(
+            inductance=inductance_dto,
+            frequency=freq_nd_dto,
+            eps=eps,
+            max_mag=max_mag,
+        ).to_base_unit()
+        z_x_base_imag_part = z_x_base_dto.get_imaginary_part()
+
+        alpha_x_value = alpha_x.get_value()
+        beta_x_value = beta_x.get_value()
+        reactance_scale = (
+            1.0 - alpha_x_value * (1.0 - np.exp(-beta_x_value * current_ratio))
+        ).astype(np.float64)
+        z_x_imag_part = (z_x_base_imag_part * reactance_scale).astype(
+            np.float64
+        )
+        z_x_dto = ArrayComplexImpedanceDto(
+            value=(1j * z_x_imag_part).astype(np.complex128), unit="Ω"
+        )
+
+        return combine_impedance_series(
+            z_r_dto,
+            z_x_dto,
+            eps=eps,
+            max_mag=max_mag,
+        )

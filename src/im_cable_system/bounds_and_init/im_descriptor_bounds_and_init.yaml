@@ -1,0 +1,164 @@
+## IM（誘導電動機）— estimate_params 用記述子の探索境界 / 初期化
+#
+# - 全エントリは「推定対象（fittable）」の bounds と init のみ。
+#   - ``<subsystem>.rl_parameters``    … R/L の探索境界。
+#   - ``<subsystem>.model_parameters`` … モデル係数（種別ごと）の探索境界。
+#   - subsystem: ``primary`` / ``excitation`` / ``secondary``。
+# - ``init`` は初期値の決め方を指定する。次の 4 種をサポート:
+#     init: { method: "midpoint" }                  # (lb + ub) / 2
+#     init: { method: "lb" }                        # lb をそのまま採用
+#     init: { method: "ub" }                        # ub をそのまま採用
+#     init: { method: "value", value: <float> }     # 明示的な値（[lb, ub] 内）
+# - 数値は「キリの良い数字」で広めに取り、上下比が概ね 100 倍程度になるよう
+#   設定する（探索を狭めすぎない方針）。``alpha_*`` の上限は原則 0.1（無次元）。
+#   例外（``alpha_*`` の ``ub`` のみ 1.0）: ``SLIP_DEPENDENT_LEAKAGE_SATURATION_V1``
+#   の ``alpha_primary_r`` / ``alpha_primary_x``、``CURRENT_DEPENDENT_SATURATION_V1``
+#   の ``alpha_excitation_r`` / ``alpha_excitation_x``、``SLIP_DEPENDENT_SKIN_EFFECT_V1``
+#   の ``alpha_secondary_r`` / ``alpha_secondary_x``。物理的に妥当な代表値の確認は
+#   ``src/im_cable_system/catalog/im_series_catalog.yaml`` を参照。
+# - ケーブル側は ``cable_descriptor_bounds_and_init.yaml``。
+# - ``rl_parameters`` の unit は SI 注記（Ω, H）。``model_parameters`` の係数は
+#   無次元（``FloatParamDto`` に unit なし）のため unit キーは書かない。
+# - 名板情報（電源周波数・定格電流など）は本ファイルでは持たず、入力 TSV の
+#   名板（``frequency`` / ``input_line_current`` 等）から導出する。
+# - 索引: docs/model_equations/index.md
+version: 1
+
+primary:
+  rl_parameters:
+    primary_resistance:
+      unit: "Ω"
+      bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+      init: { method: "midpoint" }
+    primary_inductance:
+      unit: "H"
+      bounds: { lb: 1.0e-5, ub: 1.0e-2 }
+      init: { method: "midpoint" }
+  model_parameters:
+    BASIC:
+      params: {}
+    SLIP_DEPENDENT_LEAKAGE_SATURATION_V1:
+      params:
+        alpha_primary_r:
+          bounds: { lb: 1.0e-3, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        alpha_primary_x:
+          bounds: { lb: 1.0e-3, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        beta_primary_x:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+    CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1:
+      params:
+        alpha_primary_leakage_x:
+          bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+          init: { method: "midpoint" }
+        beta_primary_leakage_x:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+
+excitation:
+  rl_parameters:
+    excitation_resistance:
+      unit: "Ω"
+      bounds: { lb: 1.0e+1, ub: 1.0e+3 }
+      init: { method: "midpoint" }
+    excitation_inductance:
+      unit: "H"
+      bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+      init: { method: "midpoint" }
+  model_parameters:
+    BASIC:
+      params: {}
+    SLIP_DEPENDENT_SATURATION_V1:
+      params:
+        alpha_excitation_r:
+          bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+          init: { method: "midpoint" }
+        alpha_excitation_x:
+          bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+          init: { method: "midpoint" }
+        beta_excitation_x:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+    CURRENT_DEPENDENT_SATURATION_V1:
+      params:
+        alpha_excitation_r:
+          bounds: { lb: 1.0e-3, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        alpha_excitation_x:
+          bounds: { lb: 1.0e-3, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        beta_excitation_x:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+
+secondary:
+  rl_parameters:
+    secondary_resistance:
+      unit: "Ω"
+      bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+      init: { method: "midpoint" }
+    secondary_inductance:
+      unit: "H"
+      bounds: { lb: 1.0e-5, ub: 1.0e-2 }
+      init: { method: "midpoint" }
+  model_parameters:
+    BASIC:
+      params: {}
+    SLIP_DEPENDENT_SKIN_EFFECT_V1:
+      params:
+        alpha_secondary_r:
+          bounds: { lb: 1.0e-3, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        beta_secondary_r:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        alpha_secondary_x:
+          bounds: { lb: 1.0e-3, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        beta_secondary_x:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+    CURRENT_DEPENDENT_SKIN_EFFECT_V1:
+      params:
+        alpha_secondary_r:
+          bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+          init: { method: "midpoint" }
+        beta_secondary_r:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        alpha_secondary_x:
+          bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+          init: { method: "midpoint" }
+        beta_secondary_x:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+    CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1:
+      params:
+        alpha_secondary_leakage_x:
+          bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+          init: { method: "midpoint" }
+        beta_secondary_leakage_x:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+    CURRENT_DEPENDENT_SKIN_EFFECT_AND_LEAKAGE_SATURATION_V1:
+      params:
+        alpha_secondary_r:
+          bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+          init: { method: "midpoint" }
+        beta_secondary_r:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        alpha_secondary_x:
+          bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+          init: { method: "midpoint" }
+        beta_secondary_x:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }
+        alpha_secondary_leakage_x:
+          bounds: { lb: 1.0e-3, ub: 1.0e-1 }
+          init: { method: "midpoint" }
+        beta_secondary_leakage_x:
+          bounds: { lb: 1.0e-2, ub: 1.0e+0 }
+          init: { method: "midpoint" }

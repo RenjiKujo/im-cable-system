@@ -1,0 +1,75 @@
+## ケーブル（π型導線・アース）— estimate_params 用記述子の探索境界 / 初期化
+#
+# - 全エントリは「推定対象（fittable）」の bounds と init のみ。
+#   - ``conductor.rl_parameters``    … 導体 R'/L' の探索境界。
+#   - ``conductor.model_parameters`` … 導体モデル係数（種別ごと）の探索境界。
+#   - ``ground.rc_parameters``       … アース側 R·L / C/m の探索境界。
+# - ``init`` は初期値の決め方を指定する。次の 4 種をサポート:
+#     init: { method: "midpoint" }                  # (lb + ub) / 2
+#     init: { method: "lb" }                        # lb をそのまま採用
+#     init: { method: "ub" }                        # ub をそのまま採用
+#     init: { method: "value", value: <float> }     # 明示的な値（[lb, ub] 内）
+# - IM 側は ``im_descriptor_bounds_and_init.yaml``。
+# - ``rl_parameters`` / ``rc_parameters`` の unit は SI 注記（Ω/m, H/m, Ω*m, F/m）。
+#   ``model_parameters`` の係数は無次元（``FloatParamDto`` に unit なし）のため
+#   unit キーは書かない。
+# - 正規化定数（``reference_frequency`` / ``reference_current`` 相当）は
+#   本ファイルでは持たず、コード内の固定値で扱う。``reference_current`` は
+#   ケーブル固有の定格電流ではなく、電流比を O(1) に保つための 100 A
+#   正規化定数である。CURRENT_DEPENDENT_SKIN_EFFECT_V1 の beta bounds は
+#   この 100 A 正規化を前提にしている。
+# - 索引: docs/model_equations/index.md
+version: 1
+
+conductor:
+  rl_parameters:
+    conductor_resistance_per_length:
+      unit: "Ω/m"
+      bounds: { lb: 1.0e-4, ub: 1.0e-2 }
+      init: { method: "midpoint" }
+    conductor_inductance_per_length:
+      unit: "H/m"
+      bounds: { lb: 1.0e-7, ub: 1.0e-6 }
+      init: { method: "midpoint" }
+  model_parameters:
+    BASIC:
+      params: {}
+    FREQUENCY_DEPENDENT_SKIN_EFFECT_V1:
+      params:
+        alpha_conductor_r:
+          bounds: { lb: 0.01, ub: 0.10 }
+          init: { method: "midpoint" }
+        beta_conductor_r:
+          bounds: { lb: 0.05, ub: 0.15 }
+          init: { method: "midpoint" }
+        alpha_conductor_x:
+          bounds: { lb: 0.01, ub: 0.10 }
+          init: { method: "midpoint" }
+        beta_conductor_x:
+          bounds: { lb: 0.05, ub: 0.15 }
+          init: { method: "midpoint" }
+    CURRENT_DEPENDENT_SKIN_EFFECT_V1:
+      params:
+        alpha_conductor_r:
+          bounds: { lb: 0.01, ub: 0.10 }
+          init: { method: "midpoint" }
+        beta_conductor_r:
+          bounds: { lb: 0.05, ub: 0.15 }
+          init: { method: "midpoint" }
+        alpha_conductor_x:
+          bounds: { lb: 0.01, ub: 0.10 }
+          init: { method: "midpoint" }
+        beta_conductor_x:
+          bounds: { lb: 0.05, ub: 0.15 }
+          init: { method: "midpoint" }
+
+ground:
+  rc_parameters:
+    ground_resistance_length:
+      unit: "Ω*m"
+      bounds: { lb: 5.0e9, ub: 5.0e11 }
+      init: { method: "midpoint" }
+    ground_capacitance_per_length:
+      unit: "F/m"
+      bounds: { lb: 5.0e-11, ub: 5.0e-9 }
+      init: { method: "midpoint" }

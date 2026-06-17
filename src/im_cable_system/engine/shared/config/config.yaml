@@ -1,0 +1,125 @@
+# im_cable_system プロジェクト設定（責務 x ステージの二軸構成）
+#
+# スキーマ・各キーの意味・フォールバック・dump 出力先方針の詳細は
+# docs/shared/config_and_logger.md を参照する。
+
+# プロジェクト基本情報
+project_info:
+  project_name: im_cable_system
+  version: 1.0.0
+  default_encoding: utf-8
+  timezone: "Asia/Tokyo"
+
+# ログ設定
+logging:
+  default_log_level: INFO
+  default_log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Forward シミュレーション用シリーズカタログ（設定ファイルからの相対パス）
+series_catalog_for_forward_simulation:
+  im_file_path: "../../../catalog/im_series_catalog.yaml"
+  cable_file_path: "../../../catalog/cable_series_catalog.yaml"
+
+# パラメータ推定用の境界・初期値（設定ファイルからの相対パス）
+bounds_and_init_for_estimation_parameters:
+  im_file_path: "../../../bounds_and_init/im_descriptor_bounds_and_init.yaml"
+  cable_file_path: "../../../bounds_and_init/cable_descriptor_bounds_and_init.yaml"
+
+# ステージ毎の入出力ファイル / DTO ダンプのパス
+dump:
+  # base_dir はクライアント側で指定する（同梱 config.yaml では未設定）。
+
+  input:
+    dtos:
+      enabled: false
+      sub_dir: "dtos/input"
+      filename_pattern: "input_{timestamp}.pkl"
+
+  execute:
+    dtos:
+      enabled: false
+      sub_dir: "dtos/itm"
+      filename_pattern: "itm_{timestamp}.pkl"
+
+  output:
+    figures:
+      enabled: false
+      sub_dir: "figures"
+      filename_pattern: "fig_{kind}_{im_cable_system_name}_{timestamp}.png"
+    tables:
+      enabled: false
+      sub_dir: "tables"
+      filename_pattern: "tbl_{kind}_{timestamp}.csv"
+    reports:
+      enabled: false
+      sub_dir: "reports"
+      fit_summary_pattern: "report_fit_summary_{im_cable_system_name}_{timestamp}.csv"  # フィット要約 CSV（実行条件含む）
+      fitted_catalog_pattern: "report_model_{im_cable_system_name}_{timestamp}.yaml"  # 推定モデル catalog 形式 YAML
+      numerical_stability_pattern: "report_numerical_stability_{im_cable_system_name}_{timestamp}.csv"  # 数値安定化イベント CSV
+    dtos:
+      enabled: false
+      sub_dir: "dtos/output"
+      filename_pattern: "output_{timestamp}.pkl"
+
+# 計算実行設定（各ステージ）
+calculation:
+  input:
+    validation:
+      max_reference_axes_grid_points: 25000000  # reference_axes 直積点数の上限。Forward / EstimateParams 共通。
+
+  execute:
+    data_processing:  # 並列／逐次の実行戦略
+      method: "sequential"  # "thread" | "process" | "sequential"
+      max_workers: 4  # null の場合は CPU コア数
+      timeout_seconds: 300  # 各タスクの最大実行時間（秒、null でタイムアウトなし）
+
+    numerical_guard:  # 数値安定化（スリップ近接ゼロ判定など）
+      eps: 1e-12
+
+    validation:  # 中間 DTO 検証
+      energy_conservation:
+        enabled: true
+        severity: "ERROR"  # "ERROR" | "WARNING" | "INFO"
+        tolerance: 1e-6  # 許容誤差（相対誤差）
+      current_voltage_range:
+        # NOTE: forward 系（Direct / Iteration）は (slip, 周波数, 線間電圧) の
+        #   広いグリッドで順計算するため、格子点ごとに定格±許容誤差内とは
+        #   限らない。検証の有効・無効は Config に一本化しており、forward を
+        #   主用途とする現状ではレンジ検証を無効（false）とする。
+        #   レンジ検証を効かせたい場合は true にする。
+        enabled: false
+        severity: "WARNING"
+        voltage_tolerance: 0.1  # 電圧許容（相対、0.1 = 10%）
+        current_tolerance: 10.0  # 電流許容（相対、始動電流を考慮）
+
+    current_estimation:  # スリップ依存インピーダンスの反復解法
+      convergence_failure_severity: "WARNING"
+      iteration:
+        max_iterations: 50
+        convergence_tolerance: 1.0e-6
+        convergence_criterion: "line_current"  # "line_current" | "phase_current" | "max_over_merged_currents"
+
+    estimate_params:  # estimate_params 固有のアルゴリズム設定
+      residual:
+        weights:
+          current: 1.0
+          power: 1.0
+          power_factor: 1.0
+          efficiency: 1.0
+        normalization:
+          method: "by_reference"  # "by_curve_scale" | "by_reference" | "none"
+          by_curve_scale:
+            statistic: "std"  # "max" | "mean" | "p95" | "std"
+            eps: 1e-12
+      optimizer:
+        algorithm: "least_squares"
+        least_squares:
+          max_nfev: 100
+          ftol: 1e-8
+          xtol: 1e-8
+          gtol: 1e-8
+
+  output:
+    figures:  # 計算結果の表示挙動（ファイル保存は dump.output.figures）
+      show: false
+      show_duration_seconds: 3.0  # show: true 時のみ使用。長く待ちたいテストは個別に上書きする

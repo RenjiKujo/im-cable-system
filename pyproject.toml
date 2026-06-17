@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "im-cable-system"
+version = "0.1.0"
+description = "Induction-motor cable system simulation and parameter estimation engine"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pandas>=2.0.0",
+  "numpy>=1.26.0",
+  "scipy>=1.11.0",
+  "matplotlib>=3.7.0",
+  "PyYAML>=6.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "lizard==1.17.10",
+  "mypy>=1.11.0",
+  "ruff>=0.14.0",
+  "pytest>=7.0.0",
+  "pytest-cov>=4.0.0",
+  "pandas-stubs>=2.0.0",
+  "types-PyYAML>=6.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["im_cable_system*"]
+
+[tool.setuptools.package-data]
+"im_cable_system.catalog" = ["*.yaml"]
+"im_cable_system.bounds_and_init" = ["*.yaml"]
+"im_cable_system.engine.shared.config" = ["*.yaml", "*.md"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_configs = true
+explicit_package_bases = true
+namespace_packages = true
+mypy_path = ["src", "."]
+files = ["src/im_cable_system", "tests"]
+follow_imports = "silent"
+check_untyped_defs = false
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+# Pyright（pyright 系が参照。型診断は mypy に任せ、ナビ用に解析のみ有効化）
+[tool.pyright]
+pythonVersion = "3.10"
+include = ["src", "tests"]
+extraPaths = ["src", "."]
+typeCheckingMode = "off"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+  "integration: 統合テスト（外部I/Oや長い経路を含む）",
+  "slow: 実行に時間がかかるテスト",
+]
+python_classes = ["Test*"]
+python_files = ["test_*.py", "*_test.py"]
+python_functions = ["test_*"]
+filterwarnings = [
+  "ignore::pytest.PytestCollectionWarning",
+]

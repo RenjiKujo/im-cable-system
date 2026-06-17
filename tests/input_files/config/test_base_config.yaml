@@ -1,0 +1,130 @@
+# テスト用ベース設定（im-cable-system）
+#
+# 配置: tests/input_files/config/test_base_config.yaml
+# スキーマは同梱 src/im_cable_system/engine/shared/config/config.yaml と同じ。
+#
+# このファイルの目的:
+#   - 同梱 config.yaml を毎テストで読み直す/マージする運用をやめ、
+#     テストはこの YAML をベースに `Config.create(...)` する。
+#   - 既定パス（カタログ / 境界 YAML）は tests/input_files/{catalog,bounds_and_init}/
+#     の最小サンプルを指す（本ファイル親ディレクトリ基準の相対パス）。
+#   - dump 系の検証は基本オフ。dump 先 ``base_dir`` は書かない。
+#     dump を伴うテストでは ``Config.create(dump_base_dir=tmp_path)``
+#     を渡して上書きする。
+#   - validation 失敗の severity はテストデータの揺れで止まらないよう一段下げる。
+
+project_info:
+  project_name: im_cable_system
+  version: 1.0.0
+  default_encoding: utf-8
+  timezone: "Asia/Tokyo"
+
+logging:
+  default_log_level: INFO
+  default_log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# 本ファイル親 Dir からの相対パス → tests/input_files/catalog/*
+series_catalog_for_forward_simulation:
+  im_file_path: "../catalog/im_series_catalog.yaml"
+  cable_file_path: "../catalog/cable_series_catalog.yaml"
+
+# 本ファイル親 Dir からの相対パス → tests/input_files/bounds_and_init/*
+bounds_and_init_for_estimation_parameters:
+  im_file_path: "../bounds_and_init/im_descriptor_bounds_and_init.yaml"
+  cable_file_path: "../bounds_and_init/cable_descriptor_bounds_and_init.yaml"
+
+dump:
+  # base_dir はテストごとに `Config.create(dump_base_dir=tmp_path)` で渡す。
+  # 本 YAML には書かない（書き出し位置の事故防止）。
+  input:
+    dtos:
+      enabled: false
+      sub_dir: "dtos/input"
+      filename_pattern: "input_{timestamp}.pkl"
+  execute:
+    dtos:
+      enabled: false
+      sub_dir: "dtos/itm"
+      filename_pattern: "itm_{timestamp}.pkl"
+  output:
+    figures:
+      enabled: false
+      sub_dir: "figures"
+      filename_pattern: "fig_{kind}_{im_cable_system_name}_{timestamp}.png"
+    reports:
+      enabled: false
+      sub_dir: "reports"
+      fit_summary_pattern: "report_fit_summary_{im_cable_system_name}_{timestamp}.csv"
+      fitted_catalog_pattern: "report_model_{im_cable_system_name}_{timestamp}.yaml"
+      numerical_stability_pattern: "report_numerical_stability_{im_cable_system_name}_{timestamp}.csv"
+    tables:
+      enabled: false
+      sub_dir: "tables"
+      filename_pattern: "tbl_{kind}_{timestamp}.csv"
+    dtos:
+      enabled: false
+      sub_dir: "dtos/output"
+      filename_pattern: "output_{timestamp}.pkl"
+
+calculation:
+  input:
+    validation:
+      # reference_axes 直積点数の上限（同梱と同値）。
+      max_reference_axes_grid_points: 25000000
+
+  execute:
+    data_processing:
+      # テストは原則 sequential。method を切り替えたいテストは
+      # tmp_path に上書き YAML を書き出して指定する。
+      method: "sequential"
+      max_workers: 2
+      timeout_seconds: 300
+
+    numerical_guard:
+      eps: 1.0e-12
+
+    validation:
+      energy_conservation:
+        enabled: true
+        severity: "ERROR"
+        tolerance: 1.0e-6
+      current_voltage_range:
+        enabled: true
+        # テストデータの揺れで止めないため INFO に下げる
+        severity: "INFO"
+        voltage_tolerance: 0.1
+        current_tolerance: 6.0
+
+    current_estimation:
+      # 反復不収束時はテストでは WARNING まで（同梱と同じ）。
+      convergence_failure_severity: "WARNING"
+      iteration:
+        max_iterations: 20
+        convergence_tolerance: 1.0e-6
+        convergence_criterion: "line_current"
+
+    estimate_params:
+      residual:
+        weights:
+          current: 1.0
+          power: 1.0
+          power_factor: 1.0
+          efficiency: 1.0
+        normalization:
+          method: "by_curve_scale"
+          by_curve_scale:
+            statistic: "std"
+            eps: 1.0e-12
+      optimizer:
+        algorithm: "least_squares"
+        least_squares:
+          # スモーク用に短く。収束確認したいテストは個別に上書きする。
+          max_nfev: 5
+          ftol: 1.0e-8
+          xtol: 1.0e-8
+          gtol: 1.0e-8
+
+  output:
+    figures:
+      show: false
+      show_duration_seconds: 3.0

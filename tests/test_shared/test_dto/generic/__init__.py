@@ -1,0 +1,1 @@
+"""shared.dto.generic のテスト。"""
