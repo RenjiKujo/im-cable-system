@@ -72,8 +72,9 @@ class BaseEntityDto(Generic[T], IEntityDtos[T]):
         Returns:
             str: String representation of the value.
         """
-        if hasattr(attr_value, "get_value"):
-            return attr_value.get_value()
+        get_value = getattr(attr_value, "get_value", None)
+        if callable(get_value):
+            return str(get_value())
         if isinstance(attr_value, str):
             return attr_value
         return str(attr_value)

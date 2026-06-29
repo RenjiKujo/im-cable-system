@@ -19,8 +19,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "lizard==1.17.10",
-  "vscode-common-python-lsp>=0.6.0",
-  "mypy>=1.11.0",
+  "basedpyright>=1.27.0",
   "ruff>=0.14.0",
   "pytest>=7.0.0",
   "pytest-cov>=4.0.0",
@@ -37,24 +36,20 @@ include = ["im_cable_system*"]
 "im_cable_system.bounds_and_init" = ["*.yaml"]
 "im_cable_system.engine.shared.config" = ["*.yaml", "*.md"]
 
-[tool.mypy]
-python_version = "3.10"
-warn_unused_configs = true
-explicit_package_bases = true
-namespace_packages = true
-mypy_path = ["src", "."]
-files = ["src/im_cable_system", "tests"]
-follow_imports = "silent"
-check_untyped_defs = false
-disallow_untyped_defs = false
-ignore_missing_imports = true
-
-# Pyright（pyright 系が参照。型診断は mypy に任せ、ナビ用に解析のみ有効化）
+# Pyright（IDE の cursorpyright と CI の basedpyright が参照）
 [tool.pyright]
 pythonVersion = "3.10"
-include = ["src", "tests"]
+include = ["src/im_cable_system", "tests"]
 extraPaths = ["src", "."]
-typeCheckingMode = "off"
+typeCheckingMode = "basic"
+reportMissingImports = false
+reportArgumentType = "none"
+
+[[tool.pyright.executionEnvironments]]
+root = "tests"
+extraPaths = ["src", "."]
+reportAttributeAccessIssue = "none"
+reportOptionalMemberAccess = "none"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
