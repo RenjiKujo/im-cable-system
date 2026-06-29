@@ -50,9 +50,8 @@ logs/
 .envrc
 
 # Type checking
-.mypy_cache/
-.dmypy.json
-dmypy.json
+.pyright/
+.basedpyright/
 
 # Linting
 .ruff_cache/

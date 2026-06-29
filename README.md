@@ -203,7 +203,7 @@ from im_cable_system.estimate_params import (
 - **Stage × DTO でプロセスとデータ契約を分離**: 実行を Input / Execute / Output の独立した Stage として連鎖させ、入力原値・モデル/計算中間・出力用を `InputDto` / `ItmDto` / `OutputDto` に分離。実行モードごとの差分を局所化し、Stage 間のデータ契約を明確にしている。
 - **設定駆動で拡張・再現**: 等価回路におけるインピーダンスを `BASIC`（一定）から slip／電流／周波数依存まで設定で切替でき、新しい依存モデルは下位層に追加するだけで上位の pipeline・CLI は無改修（拡張に開き、変更に閉じた Open-Closed 原則）。設定から対応するモデルオブジェクトを生成し、パラメータの不足・不一致は検証で弾く。
 - **数値と契約の二段で破綻を防ぐ**: ゼロ除算や極大/極小値を `eps` / `max_mag` で統一的に clamp し、特異点に近い条件も診断付きで評価できる（発火は数値安定化イベントとして出力 DTO / レポートに記録）。加えて入力（単位・配列軸・ケーブル/IM 契約）、実行（エネルギー保存・電流/電圧レンジ）、DTO 契約（形状・有限性・`P = Tω`）と、各ステージに自己整合性チェックを備え、実装ミスや設定ズレを早期に弾く。
-- **テストと CI で保守性を担保**: 型ヒントを全面導入し、`domain / algorithm / processor / pipeline / shared` の各層に対応する 150 本超・1,000 件規模のユニットテストと、実行モード別のパイプライン通しテストを整備。`ruff`（lint/format）・`mypy`（型）・`pytest` を CI（GitHub Actions）で検証して、チームでの変更に耐える構成にしている。
+- **テストと CI で保守性を担保**: 型ヒントを全面導入し、`domain / algorithm / processor / pipeline / shared` の各層に対応する 150 本超・1,000 件規模のユニットテストと、実行モード別のパイプライン通しテストを整備。`ruff`（lint/format）・`pyright`（型）・`pytest` を CI（GitHub Actions）で検証して、チームでの変更に耐える構成にしている。
 
 > 設計の詳細は [Documentation](#documentation) を参照してください。
 
@@ -211,7 +211,7 @@ from im_cable_system.estimate_params import (
 
 ### CI / テスト
 
-PR と `main` への push で、lint（ruff）・型（mypy）・テスト（pytest）を
+PR と `main` への push で、lint（ruff）・型（pyright）・テスト（pytest）を
 GitHub Actions で検証しています（`.github/workflows/ci.yml`）。
 テストは `domain / algorithm / processor / pipeline / shared` の各層に対応する
 単体テストと、各実行モードのパイプライン通しテストで構成しています。
@@ -221,7 +221,7 @@ GitHub Actions で検証しています（`.github/workflows/ci.yml`）。
 ```bash
 ruff format --check src tests   # 整形チェック
 ruff check src tests            # lint
-mypy                            # 型
+basedpyright                      # 型
 pytest -m "not slow" -q         # テスト（CI と同じ。slow を除外）
 ```
 
