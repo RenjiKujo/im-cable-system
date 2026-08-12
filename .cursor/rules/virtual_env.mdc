@@ -1,0 +1,11 @@
+---
+description: シェルは .venv_path の venv のみ使う。無いなら activate しない。作成禁止。
+alwaysApply: true
+---
+
+# venv
+
+1. ルートの `.venv_path` を読む（先頭の非空行。相対パスはリポジトリルート基準）
+2. ある → その venv の `bin/python` / `bin/pip`（Windows は `Scripts\`）で実行
+3. 無い／壊れている → activate も作成もせず、報告して確認
+4. 禁止: 勝手な venv 作成、素の `python`/`pip`、`pip install --user`、グローバル領域、`.venv` の推測利用

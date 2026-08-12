@@ -7,6 +7,7 @@ from typing import cast
 
 import numpy as np
 import pytest
+from scipy.optimize import OptimizeResult  # type: ignore[import-untyped]
 
 import im_cable_system.engine.algorithm.execute_algorithm.orchestrate.estimate_params.build_summary.estimate_params_fit_summary_builder as builder_module  # noqa: E501
 from im_cable_system.engine.algorithm.execute_algorithm.orchestrate.estimate_params.build_summary import (  # noqa: E501
@@ -300,7 +301,7 @@ class TestBuildIntegration:
             input_dto=input_dto,
             descriptors=descriptors,
             fitted_x=fitted_x,
-            optimize_result=optimize_result,
+            optimize_result=cast(OptimizeResult, optimize_result),
             pc_catalogs=input_dto.im_pc_catalogs,
             itm_done=cast(ItmDto, SimpleNamespace()),
         )

@@ -37,13 +37,12 @@ include = ["im_cable_system*"]
 "im_cable_system.engine.shared.config" = ["*.yaml", "*.md"]
 
 # Pyright（IDE の cursorpyright と CI の basedpyright が参照）
+# src は契約（引数型・import）を守る。tests のみ numpy 等の誤検知を緩和する。
 [tool.pyright]
 pythonVersion = "3.10"
 include = ["src/im_cable_system", "tests"]
 extraPaths = ["src", "."]
 typeCheckingMode = "basic"
-reportMissingImports = false
-reportArgumentType = "none"
 
 [[tool.pyright.executionEnvironments]]
 root = "tests"

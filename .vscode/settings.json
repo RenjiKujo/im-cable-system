@@ -1,0 +1,113 @@
+{
+  // im-cable-system: Pyright（型診断・ナビ）+ Ruff（lint/format）
+
+  // Markdown（設計ドキュメントの数式プレビュー用）
+  "markdown.math.enabled": true,
+
+  // Python インタープリタ（リポジトリルートの .venv を既定）
+  // Windows は .venv\Scripts\python.exe
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+
+  // Pyright（cursorpyright）: 型診断・定義ジャンプ・補完。厳しさは pyproject.toml [tool.pyright]
+  "cursorpyright.analysis.autoImportCompletions": true,
+  "cursorpyright.analysis.diagnosticMode": "workspace",
+  "cursorpyright.analysis.inlayHints.functionReturnTypes": true,
+  "cursorpyright.analysis.inlayHints.variableTypes": true,
+
+  // Testing（pytest：`pyproject.toml` の testpaths / pythonpath と整合）
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.testing.cwd": "${workspaceFolder}",
+  "python.testing.pytestArgs": ["tests", "-m", "not slow"],
+
+  // 統合ターミナル起動時から .venv を使う（activate プロンプトに依存しない）
+  "terminal.integrated.env.linux": {
+    "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
+    "VIRTUAL_ENV": "${workspaceFolder}/.venv"
+  },
+  "terminal.integrated.env.osx": {
+    "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
+    "VIRTUAL_ENV": "${workspaceFolder}/.venv"
+  },
+  "terminal.integrated.env.windows": {
+    "PATH": "${workspaceFolder}\\.venv\\Scripts;${env:PATH}",
+    "VIRTUAL_ENV": "${workspaceFolder}\\.venv"
+  },
+
+  // Python / Ruff（フォーマット・Lint は Ruff に寄せる）
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    },
+    "editor.formatOnType": false,
+    "editor.wordWrap": "on"
+  },
+  "python.formatting.provider": "none",
+  "python.linting.enabled": false,
+  "ruff.enable": true,
+  "ruff.importStrategy": "fromEnvironment",
+  "ruff.configuration": "${workspaceFolder}/ruff.toml",
+  "ruff.organizeImports": true,
+  "ruff.fixAll": true,
+
+  // YAML（.editorconfig 代替: インデント 2 スペース）
+  "[yaml]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+
+  // Markdown: 行末スペースを意味に使うことがあるため削除しない
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false
+  },
+
+  // Editor / Files（共通）— ruff.toml の line-length = 80 に合わせる
+  "editor.formatOnSave": true,
+  "editor.rulers": [80],
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.encoding": "utf8",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true
+  },
+
+  // TSV（タブ区切り）: インデント検出をしない・タブ維持・保存時フォーマットしない。
+  // 言語 ID `tsv` は拡張（例: Rainbow CSV）が登録する。未導入時は Plain Text のままなので
+  // `.editorconfig` の [*.tsv] も併用する。
+  "files.associations": {
+    "**/*.tsv": "tsv"
+  },
+  "[tsv]": {
+    "editor.detectIndentation": false,
+    "editor.insertSpaces": false,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null,
+    "editor.wordWrap": "off"
+  },
+
+  // Rainbow CSV 等が .tsv を `csv` として開いた場合も同様にする。
+  "[csv]": {
+    "editor.detectIndentation": false,
+    "editor.insertSpaces": false,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null,
+    "editor.wordWrap": "off"
+  },
+  "rainbow_csv.enable_auto_csv_lint": true,
+  "rainbow_csv.autodetect_separators": "TAB,;,|,",
+  "rainbow_csv.highlight_rows": true,
+
+  // Suggestion behavior
+  "editor.suggestSelection": "first",
+  "editor.acceptSuggestionOnCommitCharacter": false
+}
