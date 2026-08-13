@@ -5,7 +5,7 @@ alwaysApply: true
 
 # venv
 
-1. ルートの `.venv_path` を読む（先頭の非空行。相対パスはリポジトリルート基準）
-2. ある → その venv の `bin/python` / `bin/pip`（Windows は `Scripts\`）で実行
-3. 無い／壊れている → activate も作成もせず、報告して確認
-4. 禁止: 勝手な venv 作成、素の `python`/`pip`、`pip install --user`、グローバル領域、`.venv` の推測利用
+正本: `CLAUDE.md` の「Python 実行環境」節。手順を変えるときは両方を更新する。
+
+要点: ルートの `.venv_path` が指す venv のみを使う。無い/壊れている場合は
+勝手に作成・activate せず、報告して確認を待つ。
