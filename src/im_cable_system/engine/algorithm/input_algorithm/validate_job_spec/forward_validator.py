@@ -35,7 +35,7 @@ class ForwardJobSpecValidator(IJobSpecValidator[ForwardJobSpec]):
         """初期化する。
 
         本クラスは ``validate`` の中で ``config`` / ``logger`` を参照しないが、
-        開発ガイドライン（``docs/rules/``）の「``IConfig`` / ``ILogger`` は属性として保持する」
+        開発ガイドライン（``docs/conventions/``）の「``IConfig`` / ``ILogger`` は属性として保持する」
         ルールに従い保持する。
         """
         self._config: IConfig = config

@@ -83,7 +83,7 @@ src/im_cable_system/engine/algorithm/
 - 実装モジュールがあるディレクトリには `__init__.py` を置く（責務の docstring、必要なら公開窓口）。
 - Processor 等の外部から呼ぶ入口は、主に各 `orchestrator/__init__.py` およびステージ用 I/F モジュールとする。
 
-**インポート・パッケージ運用**: [`docs/rules/layering_and_imports.md`](../rules/layering_and_imports.md) を参照する。
+**インポート・パッケージ運用**: [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。
 
 ## Algorithm層の実装原則
 
@@ -98,7 +98,7 @@ Algorithm層のクラスは、インターフェースと実装を分離する�
 
 Algorithm層のクラスは、実装の選択（分岐）がある場合にファクトリーメソッド（`create()`）によりインスタンスを生成する。分岐がなければ必須ではない。
 
-引数の粒度は設計原則（[`docs/rules/design_principles.md`](../rules/design_principles.md) の「生成はファクトリーに集約する」）に従う。分岐が単純なときは列挙・フラグなどを明示するのが第一選択。分岐が複雑、またはオーケストレーターでの取り出し重複を避けるため、DTO（または必要なサブグラフのみ）を渡してファクトリー内で分岐条件を導出してもよい。その場合は docstring で分岐根拠を明記し、分岐組合せを単体テストでカバーする。
+引数の粒度は設計原則（[`docs/conventions/2_design_principles.md`](../conventions/2_design_principles.md) の「生成はファクトリーに集約する」）に従う。分岐が単純なときは列挙・フラグなどを明示するのが第一選択。分岐が複雑、またはオーケストレーターでの取り出し重複を避けるため、DTO（または必要なサブグラフのみ）を渡してファクトリー内で分岐条件を導出してもよい。その場合は docstring で分岐根拠を明記し、分岐組合せを単体テストでカバーする。
 
 ```python
 class IImModelBuilder(ABC):

@@ -60,7 +60,7 @@ src/im_cable_system/engine/shared/dto/
 └── output/     … 出力 DTO の公開窓口（figure 等のサブパッケージを含む）
 ```
 
-**インポート**: 層間・DTO の import 窓口は [`docs/rules/layering_and_imports.md`](../rules/layering_and_imports.md) を参照する。
+**インポート**: 層間・DTO の import 窓口は [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。
 
 ## 依存関係
 

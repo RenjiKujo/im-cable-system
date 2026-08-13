@@ -48,7 +48,7 @@ src/im_cable_system/engine/domain/
 └── validation/    … 物理・制約検証（energy_conservation / im_rated_value）
 ```
 
-**インポート**: [`docs/rules/layering_and_imports.md`](../rules/layering_and_imports.md) を参照する。
+**インポート**: [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。
 
 ## Domain層の実装原則
 
@@ -137,4 +137,4 @@ Domain層は、DTO層（汎用DTO、シミュレーション層固有DTO）を�
 - Domain層 → 汎用 DTO（`common.dto`）、設定インターフェイス（`shared.config`）
 - DTO層 → Domain層（依存しない）
 
-**インポート**: [`docs/rules/layering_and_imports.md`](../rules/layering_and_imports.md) を参照する。
+**インポート**: [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。

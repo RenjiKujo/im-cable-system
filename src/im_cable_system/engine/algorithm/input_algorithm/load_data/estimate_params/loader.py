@@ -86,7 +86,7 @@ class EstimateParamsLoader(
 
         Args:
             config: 探索境界 YAML パスを解決する設定。
-            logger: ロガー。開発ガイドライン（``docs/rules/``）の
+            logger: ロガー。開発ガイドライン（``docs/conventions/``）の
                 「``IConfig`` / ``ILogger`` は属性として保持する」ルールに従い保持する
                 （本クラスの ``load`` 内では現状参照しない）。
         """

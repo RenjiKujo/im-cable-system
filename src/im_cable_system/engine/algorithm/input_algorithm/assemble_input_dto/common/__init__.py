@@ -30,6 +30,6 @@ builder から内部利用されるヘルパ:
     層外向け窓口は ``assemble_input_dto/__init__.py`` および
     ``forward/__init__.py`` / ``estimate_params/__init__.py`` であり、
     そちらが ``Assembler`` クラスのみを再エクスポートする。
-    ``docs/rules/layering_and_imports.md`` の「``__all__`` なしの
+    ``docs/conventions/3_layering_and_imports.md`` の「``__all__`` なしの
     ``__init__.py``」運用に従う。
 """

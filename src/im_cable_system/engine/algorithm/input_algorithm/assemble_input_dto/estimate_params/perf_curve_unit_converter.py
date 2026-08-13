@@ -27,7 +27,7 @@ EstimateParams では 1 つの統合 TSV に名盤情報と観測曲線が併載
     本モジュールは EstimateParams アセンブラ内部のヘルパであり、
     ``estimate_params`` 配下からの **層内 import 専用**。層外・層横断
     （pipeline / processor / 他の algorithm サブツリー）からは直接
-    参照しない（``docs/rules/layering_and_imports.md`` の「非公開モジュールは
+    参照しない（``docs/conventions/3_layering_and_imports.md`` の「非公開モジュールは
     docstring に理由を書く」ルールに従い、公開窓口
     ``assemble_input_dto/estimate_params/__init__.py`` の ``__all__``
     にも載せない）。

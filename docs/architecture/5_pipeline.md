@@ -66,4 +66,4 @@ src/im_cable_system/engine/pipeline/
 └── *_pipeline.py            … 各ジョブ用実装
 ```
 
-**インポート**: [`docs/rules/layering_and_imports.md`](../rules/layering_and_imports.md) を参照する。
+**インポート**: [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。

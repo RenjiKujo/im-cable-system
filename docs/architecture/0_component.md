@@ -120,7 +120,7 @@ shared
 - **インターフェイスへの依存**: 具象クラスではなくインターフェイスに依存（依存性逆転の原則）
 - **DTOを介したデータ受け渡し**: 各ステージ間でDTOを介した明確なデータ受け渡し
 
-**インポートルール**（層間依存・import 禁止パターン）と **Dir・`__init__.py` 運用**は [`docs/rules/layering_and_imports.md`](../rules/layering_and_imports.md) を参照する。各コンポーネントのフォルダ構成は本ドキュメント群の `*_*.md` を参照する。
+**インポートルール**（層間依存・import 禁止パターン）と **Dir・`__init__.py` 運用**は [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。各コンポーネントのフォルダ構成は本ドキュメント群の `*_*.md` を参照する。
 
 ## 図の表記ルール（Mermaid クラス図）
 

@@ -109,6 +109,9 @@ tests/**/reports/
 tests/**/dtos/
 examples/outputs/
 
+# Claude Code の個人上書き（リポジトリに含めない）
+.claude/settings.local.json
+
 # Cursor: ディレクトリ自体は版管理する。.cursorrules 等のレガシー単体ファイルは除外。
 # 公開向けの規約は docs/rules/ に独立記述。
 .cursorrules

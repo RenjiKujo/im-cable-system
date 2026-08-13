@@ -1,53 +1,26 @@
 # Claude Code 利用量メモ（人間用）
 
-Claude / Cursor Agent は読まない。
-`.claude/settings.json` と `~/.claude/settings.json` の `permissions.deny` で
-`Read(.claude/usage-notes.md)` を禁止している。CLAUDE.md や `.claude/rules/` から
-参照しないこと。
+エージェントは読まない（`permissions.deny`）。CLAUDE.md から参照しない。
+仕様は変わる。食い違ったら公式: https://claude.ai/settings/usage / https://code.claude.com/docs/en/costs
 
-個人の Pro 運用メモ。課金・枠の仕様は変わるので、食い違ったら公式を優先する。
+## 課金
 
-- プラン枠: https://claude.ai/settings/usage
-- 公式: https://code.claude.com/docs/en/costs
+Pro はサブスクのみ。枠切れでも自動従量はしない。上限は **5h セッション** と **週次**。
+credits は自分でオンにしたときだけ追加課金。claude.ai と Claude Code は同じ枠。
 
-## 課金の前提
+残りは `/usage`。会話のコンテキスト % はプラン枠ではない。`/cost` は API 換算で請求額ではない。
 
-- Pro 本体は月額サブスクのみ。枠を使い切っても **自動では従量課金されない**（待たされる）。
-- 上限は **5時間セッション** と **週次**。included の月次上限は無い。
-- 追加課金は **Usage credits を自分でオンにしたときだけ**。オフなら追加請求なし。
-- claude.ai チャットと Claude Code は同じ枠。
+## 抑える
 
-## 調べる
+1. 終わったら `/clear`。続きは `/rename` → `/resume`
+2. 普段 Sonnet / effort `high`。Fable は Plan のみ。`/model` は **s（セッションのみ）**。Enter すると既定が変わる
+3. Fable で Plan → 方針をファイルへ → `/clear` → Sonnet で実装。同じ会話でモデルを跨がない
+4. プロンプトは狭く。パスで指す。巨大ログを貼らない
+5. 区切りは `/clear` の方が `/compact` より安い
 
-| 見たいもの | 方法 |
-|---|---|
-| 5h / 週次の残り・リセット | `/usage`、または https://claude.ai/settings/usage |
-| 作業中に常時 | Claude Code の statusline（`rate_limits`）。未設定なら後で足す |
-| 今の会話の埋まり | プロンプト横のバー、`/context`。これは **プラン枠ではない** |
-| セッションの $ 概算 | `/cost`。API 換算。Pro の請求額ではない |
-| Usage credits の今月 | Settings > Usage の credits 欄。オフなら無視 |
+## このマシン
 
-「そろそろ上限」= `/usage` の 5h / Week バー。コンテキスト % を見ない。
-
-## 抑える（効く順）
-
-1. タスクが終わったら `/clear`。無関係な履歴を残さない。続きは `/rename` → `/resume`。
-2. 普段は Sonnet。Fable は Plan のときだけ。`/model` は **s（このセッションのみ）**。Enter すると既定が上書きされる。
-3. 設計は Fable + Plan → 方針をファイルに残す → `/clear` → Sonnet で実装。同じ長い会話で Fable→Sonnet しない。
-4. Effort は普段 `high`。Fable の Plan だけその場で `/effort xhigh`。`max` / ultracode は使わない。
-5. プロンプトを狭くする。ファイルはパスで指す。巨大ログを貼らない。
-6. 使わない MCP / claude.ai connectors は切る（`disableClaudeAiConnectors`）。
-7. 区切りで `/compact`。auto-compact 待ちより自分で区切る。compact 自体もリクエストなので、終わった作業は `/clear` の方が安い。
-
-## このマシンの設定
-
-- 個人: `~/.claude/settings.json`  
-  `model: sonnet`, `effortLevel: high`, `alwaysThinkingEnabled: false`,
-  `autoCompactEnabled: true`, `disableClaudeAiConnectors: true`
-- このリポジトリ: `.claude/settings.json`（権限のみ。`.env` 拒否、`git push` / `pip install` は確認）
-
-## やらなくてよいこと
-
-- `MAX_THINKING_TOKENS` を設定する（Sonnet 5 / Fable では effort が本命）
-- 月次トークン上限を settings に書く（項目が無い）
-- このメモを CLAUDE.md に `@` で取り込む（毎ターンの固定コストになる）
+- `~/.claude/settings.json`: sonnet / high
+- 権限は `.claude/settings.json`。hook・agents・skills の正本は `.cursor/`
+- Claude から起動してよいスキルは `/pj-update-design-doc` のみ
+- レビューは Opus（完了・PR 前）。docs 同期は Sonnet

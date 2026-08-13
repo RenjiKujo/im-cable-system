@@ -3,8 +3,9 @@
 #
 # 正本(Single Source of Truth): 整形・lintの機械項目はこのファイルが正本。
 # 型チェックの機械項目は pyproject.toml の [tool.pyright] が正本。
-# docs/rules/coding_style.md には値を再掲せず、ここへのポインタのみを書く
+# docs/conventions/1_code_style.md には値を再掲せず、ここへのポインタのみを書く
 # (ruff が機械チェックできない人手ルールだけが docs 側に残る)。
+# 機械強制と人手ルールの全体の割り当ては docs/conventions/README.md の「正本マップ」を見る。
 
 # line-length: ruff format の折返し幅。下の [lint] ignore で E501(行長超過の警告)は
 # 無視しているため、この値は「lintで怒る基準」ではなく「format が整形する基準」として使われる。
@@ -46,7 +47,7 @@ select = [
 ignore = [
     "E501",     # 行長超過。line-length 分は ruff format が折返しで対応するため、
                 # 折り返せない残り(長い文字列・URL等)まで lint エラーにはしない。
-    "PLR0913",  # 引数過多。DTO/Factory を多用する設計(docs/rules/design_principles.md)では
+    "PLR0913",  # 引数過多。DTO/Factory を多用する設計(docs/conventions/2_design_principles.md)では
                 # コンストラクタや生成メソッドの引数が増えやすいため許容。
     "PLR2004",  # 構造チェック由来の小整数比較が本番にも多いため全体で無視
     "COM812",   # 末尾カンマ強制。ruff format と競合するため無効化(ruff公式が format 併用時の無効化を推奨)。
@@ -78,8 +79,12 @@ section-order = [
 # docstring の記法規約。ただし [lint] の select に "D"(pydocstyle)ルール自体が
 # 含まれていないため、現時点でこの設定は実質未使用(docstringの書式・記載漏れは
 # 機械チェックされていない。ruff check --select D を明示指定した場合のみ動く)。
-# Google スタイルの運用は docs/rules/coding_style.md の人手ルールとして継続する。
-# "D" を select に追加する提案は将来検討(このタスクでは変更しない)。
+#
+# "D" の全面採用はしない(結論)。src へ --select D をかけると 1756 件で、うち 1629 件が
+# D415(先頭行を "." 等で終える)。本プロジェクトの docstring は日本語で「。」終わりのため
+# D415 が構造的に全件発火し、ルールとして機能しない。D403(先頭語の大文字化, 55 件)も同様。
+# 記載漏れ系(D100/D102/D105/D107)だけなら 52 件で、部分採用の余地はある(未実施)。
+# Google スタイルの運用は docs/conventions/1_code_style.md の人手ルールとして継続する。
 [lint.pydocstyle]
 convention = "google"
 

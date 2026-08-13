@@ -23,7 +23,7 @@ dependencies = [
 [project.optional-dependencies]
 # 開発用ツール群(lint/型/テスト)。アプリケーションを import して使うだけの利用者には不要。
 dev = [
-  "lizard==1.17.10",       # 複雑度・行数の随時点検用(docs/rules/coding_style.md のモジュールサイズ目安)。
+  "lizard==1.17.10",       # 複雑度・行数の随時点検用(docs/conventions/1_code_style.md のモジュールサイズ目安)。
                             # CI では実行しない。手動/コードレビュー時に随時使う。
   "basedpyright>=1.27.0",
   "ruff>=0.14.0",
@@ -44,6 +44,7 @@ include = ["im_cable_system*"]
 
 # Pyright（IDE の cursorpyright と CI の basedpyright が参照）。型チェックの正本。
 # src は契約（引数型・import）を守る。tests のみ numpy 等の誤検知を緩和する。
+# 機械強制と人手ルールの全体の割り当ては docs/conventions/README.md の「正本マップ」を見る。
 [tool.pyright]
 # 型チェックが前提とする最低バージョン。requires-python と役割を揃える値
 # （開発・CI実行バージョンとは別軸。詳細は上の requires-python のコメント参照）。
@@ -63,7 +64,7 @@ reportAttributeAccessIssue = "none"
 reportOptionalMemberAccess = "none"
 
 # pytest 設定。テストの探索範囲・命名規約・マーカーの正本
-# （docs/rules/testing.md には値を再掲せず、ここへのポインタのみを書く）。
+# （docs/conventions/5_testing.md には値を再掲せず、ここへのポインタのみを書く）。
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]  # editable install していない状態でも `pytest` 単体実行で解決できるようにする
