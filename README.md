@@ -218,6 +218,8 @@ GitHub Actions で検証しています（`.github/workflows/ci.yml`）。
 
 手元でも CI と同じチェックを再現できます。
 
+> 正本は `.github/workflows/ci.yml`。以下は手元で打つためのクイックリファレンス。
+
 ```bash
 ruff format --check src tests   # 整形チェック
 ruff check src tests            # lint
