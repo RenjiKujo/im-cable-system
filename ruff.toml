@@ -1,43 +1,61 @@
 # Ruff設定ファイル
 # https://docs.astral.sh/ruff/configuration/
+#
+# 正本(Single Source of Truth): 整形・lintの機械項目はこのファイルが正本。
+# 型チェックの機械項目は pyproject.toml の [tool.pyright] が正本。
+# docs/rules/coding_style.md には値を再掲せず、ここへのポインタのみを書く
+# (ruff が機械チェックできない人手ルールだけが docs 側に残る)。
 
+# line-length: ruff format の折返し幅。下の [lint] ignore で E501(行長超過の警告)は
+# 無視しているため、この値は「lintで怒る基準」ではなく「format が整形する基準」として使われる。
 line-length = 80
+
+# target-version: 構文チェック・自動修正(UPルール等)が前提とする最低 Python バージョン。
+# pyproject.toml の requires-python(パッケージが対応する最低バージョン)に合わせる値。
+# 開発・CI実行時に実際に使う Python(.python-version / ci.yml の 3.12)とは役割が別の値なので、
+# 一致させる必要はない(詳細は pyproject.toml の requires-python のコメント参照)。
 target-version = "py310"
 
 indent-width = 4
 
 [lint]
+# 有効化するルール群。以下は各コードが由来する flake8 系プラグイン/ツールの略号。
 select = [
-    "E",
-    "W",
-    "F",
-    "I",
-    "N",
-    "UP",
-    "ANN",
-    "B",
-    "C4",
-    "DTZ",
-    "T20",
-    "RET",
-    "SIM",
-    "ARG",
-    "PTH",
-    "ERA",
-    "PD",
-    "PL",
-    "NPY",
+    "E",    # pycodestyle(エラー): PEP8 の基本フォーマット違反
+    "W",    # pycodestyle(警告): 同上の軽微な違反
+    "F",    # Pyflakes: 未使用 import/変数、未定義名などの基本静的検査
+    "I",    # isort: import の並び順・グループ化(詳細は下の [lint.isort])
+    "N",    # pep8-naming: クラス・関数・変数などの命名規則(PEP8)
+    "UP",   # pyupgrade: 古い書き方(typing.List 等)を新しい構文に統一する検出
+    "ANN",  # flake8-annotations: 型ヒントの付与漏れ
+    "B",    # flake8-bugbear: バグになりやすい/紛らわしい書き方
+    "C4",   # flake8-comprehensions: 内包表記の非効率・冗長な書き方
+    "DTZ",  # flake8-datetimez: タイムゾーン未指定の datetime 使用
+    "T20",  # flake8-print: print の呼び出し検出(本番・テストとも対象。ロガー使用を促す)
+    "RET",  # flake8-return: return 文の一貫性・不要な分岐
+    "SIM",  # flake8-simplify: 冗長な条件式・書き方の簡略化余地
+    "ARG",  # flake8-unused-arguments: 未使用の関数/メソッド引数
+    "PTH",  # flake8-use-pathlib: os.path ではなく pathlib の使用を推奨
+    "ERA",  # eradicate: コメントアウトされた死んだコードの検出
+    "PD",   # pandas-vet: pandas の非推奨/事故りやすい使い方
+    "PL",   # Pylint 由来ルールのサブセット: 一般的な設計・複雑度系の指摘
+    "NPY",  # NumPy 固有ルール: 非推奨 API・挙動差異になりやすい書き方
 ]
 
+# 常時無視するルール(プロジェクト方針として恒常的に外すもの)。
 ignore = [
-    "E501",
-    "PLR0913",
+    "E501",     # 行長超過。line-length 分は ruff format が折返しで対応するため、
+                # 折り返せない残り(長い文字列・URL等)まで lint エラーにはしない。
+    "PLR0913",  # 引数過多。DTO/Factory を多用する設計(docs/rules/design_principles.md)では
+                # コンストラクタや生成メソッドの引数が増えやすいため許容。
     "PLR2004",  # 構造チェック由来の小整数比較が本番にも多いため全体で無視
-    "COM812",
-    "ISC001",
+    "COM812",   # 末尾カンマ強制。ruff format と競合するため無効化(ruff公式が format 併用時の無効化を推奨)。
+    "ISC001",   # 暗黙の文字列結合の分割強制。同上、ruff format と競合するため無効化。
 ]
 
 [lint.per-file-ignores]
+# 公開窓口(__init__.py)は再エクスポート専用で、import した名前をそのファイル内で
+# 「使わない」のが正常なため、未使用import警告(F401)を許容する。
 "__init__.py" = ["F401"]
 # テスト本体・補助モジュール(stub/fake/builder)は型ヒント(ANN)を緩める
 "test_*.py" = ["ANN"]
@@ -57,6 +75,11 @@ section-order = [
     "local-folder",
 ]
 
+# docstring の記法規約。ただし [lint] の select に "D"(pydocstyle)ルール自体が
+# 含まれていないため、現時点でこの設定は実質未使用(docstringの書式・記載漏れは
+# 機械チェックされていない。ruff check --select D を明示指定した場合のみ動く)。
+# Google スタイルの運用は docs/rules/coding_style.md の人手ルールとして継続する。
+# "D" を select に追加する提案は将来検討(このタスクでは変更しない)。
 [lint.pydocstyle]
 convention = "google"
 
