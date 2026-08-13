@@ -38,7 +38,7 @@
   // Python / Ruff（フォーマット・Lint は Ruff に寄せる）
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.tabSize": 4,
+    "editor.tabSize": 4, // ruff.toml の indent-width に合わせる
     "editor.insertSpaces": true,
     "editor.codeActionsOnSave": {
       "source.fixAll.ruff": "explicit",
@@ -55,7 +55,8 @@
   "ruff.organizeImports": true,
   "ruff.fixAll": true,
 
-  // YAML（.editorconfig 代替: インデント 2 スペース）
+  // YAML: インデント 2 スペース。正本は docs/rules/coding_style.md の人手ルール
+  // （.editorconfig はこのリポジトリに未導入。ruff は YAML を対象外なので機械強制はできない）
   "[yaml]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true
@@ -80,8 +81,8 @@
   },
 
   // TSV（タブ区切り）: インデント検出をしない・タブ維持・保存時フォーマットしない。
-  // 言語 ID `tsv` は拡張（例: Rainbow CSV）が登録する。未導入時は Plain Text のままなので
-  // `.editorconfig` の [*.tsv] も併用する。
+  // 言語 ID `tsv` は拡張（例: Rainbow CSV）が登録する。未導入時は Plain Text のままだが、
+  // このリポジトリに `.editorconfig` は未導入のため、この VSCode 設定のみで担保する。
   "files.associations": {
     "**/*.tsv": "tsv"
   },
