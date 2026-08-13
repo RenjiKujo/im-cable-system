@@ -5,15 +5,14 @@
 
 ## フォーマット・型
 
-- `ruff format` に従う（行長は 80）。lint は `ruff check` で警告ゼロを保つ。
-- import 順は `ruff` の isort 規約で揃える。
-- インデントは Python が**半角スペース 4**、YAML が**半角スペース 2**。
-- すべての関数・メソッドの引数／戻り値、クラス属性に**型ヒント**を付ける。
-- 型ヒントは組み込みジェネリクスを使う（`list[int]` / `dict[str, int]` / `tuple[int, int]`）。
-  `typing.List` などの旧表記は使わない。任意型は `typing.Any`。
+整形・lint・型ヒント要否・import 順は `ruff.toml`（lint/format）と
+`pyproject.toml` の `[tool.pyright]`（型）が正本。ここでは機械強制されない項目のみ書く。
+
+- インデントは YAML が半角スペース 2（Python は `ruff.toml` の `indent-width` に従う）。
 - 前方参照はファイル先頭の `from __future__ import annotations` で解決し、
   戻り値型を文字列リテラルで書かない。
-- 文字列のクォートはプロジェクト内で統一する（クォート文字自体を含む場合を除く）。
+- 任意型が必要な場合は `typing.Any` を使う（`ANN401` は原則禁止。許容箇所は
+  `ruff.toml` の `per-file-ignores` を参照）。
 
 ## 命名
 
@@ -39,7 +38,7 @@
 - 1 文字変数（例外: ループの `i` / `k` / `v`、`except` の `e`、`with` の `f`）
 - 予約語・組み込み関数と同名の変数
 - 素の `except:` / `except BaseException:`
-- `print`（代わりにロガーを使う。テストコードは可）
+- `print`（代わりにロガーを使う。テストコードも含め ruff の `T20` で機械的に禁止）
 - 本番コードの `assert`（テストコードは可）
 - クラスの private 属性への外部からの直接アクセス
 
