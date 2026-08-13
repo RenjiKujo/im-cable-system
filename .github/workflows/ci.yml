@@ -13,6 +13,9 @@ concurrency:
 env:
   MPLBACKEND: Agg  # matplotlib をヘッドレスで動かす
 
+# 各ジョブの python-version: "3.12" は .python-version(3.12.11)と値が一致しているだけで、
+# このワークフローは .python-version を自動参照していない(直書き)。
+# 変更時は .python-version 側も手動で合わせる。
 jobs:
   lint:
     name: Lint & Format (ruff)
