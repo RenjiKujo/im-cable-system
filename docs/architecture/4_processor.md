@@ -23,9 +23,9 @@ Processor層の主な責務は以下の通りとする。
 
 ## データフロー概要
 
-Processor 層のステージは `JobSpec(s) → InputDtos → ItmDtos → OutputDtos` の順で Dtos を受け渡す。実行時入力はファイル専用 DTO ではなく、実行モードごとのジョブ仕様（例: `ForwardJobSpecs`）である。
+Processor 層のステージは `JobSpec(s) → InputDtos → ItmDtos → OutputDtos` の順で Dtos を受け渡す。実行時入力はファイル専用 DTO ではなく、実行モードごとのジョブ仕様である。入力側の型は**モードで単数・複数が異なる**（forward 系: `ForwardJobSpecs` = 複数、EstimateParams: `EstimateParamsJobSpec` = 単数）。出力側（`InputDtos` 以降）は全モード共通で Dtos（複数）に統一される。
 
-1. **Input Stage**: ジョブ仕様（`JobSpecs`）から InputDtos を構築する。Processor 層はジョブ仕様の各要素ごとに Algorithm 層の入力オーケストレーターを呼び出し、結果を集約して InputDtos を構築する。
+1. **Input Stage**: ジョブ仕様（forward 系は `ForwardJobSpecs`、EstimateParams は `EstimateParamsJobSpec`）から InputDtos を構築する。Processor 層はジョブ仕様の各要素ごとに Algorithm 層の入力オーケストレーターを呼び出し、結果を集約して InputDtos を構築する。
 2. **Execute Stage**: InputDtos を受け取り、各 InputDto ごとに Algorithm 層の実行オーケストレーターを呼び出して ItmDtos を生成する。
 3. **Output Stage**: ItmDtos を受け取り、各 ItmDto ごとに Algorithm 層の出力オーケストレーターを呼び出して OutputDtos を生成・出力する。
 
@@ -42,28 +42,29 @@ Processor層の各ステージインターフェイスでは、**引数・戻り
 - `create()`: ファクトリーメソッド（ステージインスタンス生成）
 - `process(dtos) -> Dtos`: ステージ処理の実行（入出力はDtos）
 
-各ステージの引数・戻り値は Dtos であり、層・ステージごとに次のように完全に定義される。
+各ステージの引数・戻り値は Dtos であり、層・ステージごとに次のように完全に定義される。InputStage の入力型のみモードで異なる（下記）。
 
-- InputStage: `process(JobSpecs) -> InputDtos`
+- InputStage: `process(ForwardJobSpecs) -> InputDtos`（forward 系） / `process(EstimateParamsJobSpec) -> InputDtos`（EstimateParams）
 - ExecuteStage: `process(InputDtos) -> ItmDtos`
 - OutputStage: `process(ItmDtos) -> OutputDtos`
 
 パイプラインは `create` 時に各ステージの `IStage.create` で Input / Execute / Output を組み立て、コンストラクタへ注入する。`run` は注入済みステージを順に実行するだけとする。
 
 パイプラインからは **IStage のみ**が見える。各ステージ（Input/Execute/Output）はすべて `IStage` を実装し、
-公開メソッドは `create` と `process(dtos)` のみとする。ステージ種別ごとの名目型（`IInputStage`, `IOutputStage` など）を
-定義する場合は `IStage` を継承するが、パイプラインは型としては `IStage` のみを参照する。
+公開メソッドは `create` と `process(dtos)` のみとする。**現時点でステージ種別ごとの名目型（`IInputStage`, `IOutputStage` など）は未実装**であり、
+各モードの具体クラス（例: `ForwardByCartesianGridInputStage`）が `IStage` を直接実装する。将来そうした名目型を
+追加する場合も `IStage` を継承する設計とし、パイプラインは型としては `IStage` のみを参照する。
 具体的なステージ実装の生成と実行は、Processor層のファクトリとパイプラインが制御する。
 
 ## 各ステージの役割
 
 ### InputStage
 
-ジョブ仕様（`JobSpecs`）を受け取り、Algorithm 層の入力オーケストレーターを呼び出して InputDtos を構築・検証する。ジョブ仕様・入力 DTO の検証（`validate_job_spec` / `validate_input_dto`）も Algorithm 層に委譲する。
+ジョブ仕様を受け取り、Algorithm 層の入力オーケストレーターを呼び出して InputDtos を構築・検証する。ジョブ仕様・入力 DTO の検証（`validate_job_spec` / `validate_input_dto`）も Algorithm 層に委譲する。
 
 #### InputStage と IStage
 
-InputStage の契約は `IStage[JobSpecs, InputDtos]` で表現する（`JobSpecs` は実行モードごとに具体型が異なる。例: `ForwardJobSpecs`）。引数・戻り値は Dtos。
+InputStage の契約は `IStage[JobSpecT, InputDtos]` で表現する。`JobSpecT` は実行モードで異なり、**forward 系（CartesianGrid / OperatingPoints）は `ForwardJobSpecs`（複数）、EstimateParams は `EstimateParamsJobSpec`（単数）**を使う。EstimateParams は 1 つの統合ジョブ仕様から候補直積で複数 `InputDto` を生成するため、入力側は単数のままでよい（出力側の `InputDtos` は全モード共通）。引数・戻り値は Dtos（InputStage の入力のみ上記の例外）。
 load / validate などは実装の内部（private）で `process(dtos)` から呼び、インターフェースには公開しない。
 
 #### 処理フロー

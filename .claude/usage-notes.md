@@ -1,26 +1,23 @@
-# Claude Code 利用量メモ（人間用）
+# Claude Code 確認メモ（人間用）
 
-エージェントは読まない（`permissions.deny`）。CLAUDE.md から参照しない。
-仕様は変わる。食い違ったら公式: https://claude.ai/settings/usage / https://code.claude.com/docs/en/costs
+Claude / Cursor Agent は読まない（`permissions.deny`）。`CLAUDE.md` から参照しない。
+このリポジトリで Claude Code を使うときの手元確認用。正本の文章は `.cursor/`。
 
-## 課金
+## フォルダが2つある理由
 
-Pro はサブスクのみ。枠切れでも自動従量はしない。上限は **5h セッション** と **週次**。
-credits は自分でオンにしたときだけ追加課金。claude.ai と Claude Code は同じ枠。
+Cursor と Claude Code は、それぞれ決まったフォルダしか見ない。
+本文は片方だけ置き、もう片方は同じファイルを指すリンクにする。
+エディタで入口側を開くと全文が出るのは、実体が同じだから。
+入口を空の「参照せよ」だけにはできない。ランタイムはそこの本文を指示として読む。
 
-残りは `/usage`。会話のコンテキスト % はプラン枠ではない。`/cost` は API 換算で請求額ではない。
+- **Skill** = 手順の入口。docs 同期だけ Claude から起動してよい
+- **Agent** = 別役。レビューは名前で起動。Git / テスト手順は Claude からは起動しない
 
-## 抑える
+## 回し方
 
-1. 終わったら `/clear`。続きは `/rename` → `/resume`
-2. 普段 Sonnet / effort `high`。Fable は Plan のみ。`/model` は **s（セッションのみ）**。Enter すると既定が変わる
-3. Fable で Plan → 方針をファイルへ → `/clear` → Sonnet で実装。同じ会話でモデルを跨がない
-4. プロンプトは狭く。パスで指す。巨大ログを貼らない
-5. 区切りは `/clear` の方が `/compact` より安い
+終わったら `/clear`。続きは `/resume`。普段は Sonnet。プロンプトは狭く、パスで指す。
+モデルの正本は `.cursor/agents/` の定義。
 
-## このマシン
+## 枠
 
-- `~/.claude/settings.json`: sonnet / high
-- 権限は `.claude/settings.json`。hook・agents・skills の正本は `.cursor/`
-- Claude から起動してよいスキルは `/pj-update-design-doc` のみ
-- レビューは Opus（完了・PR 前）。docs 同期は Sonnet
+`/usage`。会話のコンテキスト % はプラン枠ではない。

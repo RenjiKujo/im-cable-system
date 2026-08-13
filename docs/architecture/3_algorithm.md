@@ -1,5 +1,9 @@
 # シミュレーションロジック設計 - Algorithm層設計方針
 
+> **この文書が正本である範囲**: Algorithm 層のフォルダ構成・ステージ内データフローの契約（各ステージの引数と戻り値）・オーケストレーター方式。
+>
+> **正本ではない（参照先）**: 設計原則一般（インターフェース・ファクトリー・生成の分離）は [`conventions/2_design_principles.md`](../conventions/2_design_principles.md)、各ステージの詳細は [`algorithm/`](./algorithm/) サブツリー、import 規約は [`conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md)。
+
 ## 概要
 
 本ドキュメントは、本シミュレーションエンジンにおけるAlgorithm層（`src/im_cable_system/engine/algorithm/`）の構成と設計方針を定義する。
@@ -27,20 +31,21 @@ Domain層の設計方針については、`2_domain.md`を参照してくださ�
 
 - **Inputステージ（input_algorithm）**
   - 入出力: ジョブ仕様 1 本 → 出力 `InputDto` / `InputDtos`。実行モードにより生成件数が変わる（**forward**: 単一 `InputDto`、**estimate_params**: 候補の直積に対応する複数 `InputDto`（`InputDtos`））。
-  - 入口は `build_input_dto`。前段の入力を変換・検証して `InputDto` / `InputDtos` を返す。詳細は [`algorithm/input/`](./algorithm/input/0_overview.md) を参照。
-  - **Note**: Inputステージのオーケストレーター契約（親IF）は未定である。
+  - 契約: 共通親IF `IInputAlgorithmsOrchestrator` の `build_input_dto(input_data) -> InputDtoT`。インスタンス生成（`create`）はモードごとに必要引数が異なる（Forward は `reference_axes` が必要、EstimateParams は不要）ため共通IFには置かず、per-mode IF 側で定義する（LSP 違反を避けるため）。
+  - 内部フロー: `_validate_job_spec`（ロード前の軽量チェック）→ `_load_data`（`LoadedDataT` 構築）→ `_assemble_input_dto`（`InputDtoT` 構築）→ `_validate_input_dto`（DTO 横断の整合検証）の順で実行。詳細は [`algorithm/input/`](./algorithm/input/0_overview.md) を参照。
 - **Executeステージ（execute_algorithm）**
   - 入出力: 入力 **InputDto** 1 本 → 出力 **ItmDto** 1 本。
   - 契約: 全体実行オーケストレーターの `execute(input_dto) -> ItmDto`。
   - 内部フロー: build_model（InputDto → ItmDto）→ simulate（ItmDto → ItmDto）→ validate_itm_dto（ItmDto）の順で実行。
 - **Outputステージ（output_algorithm）**
   - 入出力: 入力 **ItmDto** 1 本 → 出力 **OutputDto** 1 本。
-  - 契約: 出力オーケストレーターの `output(itm_dto) -> OutputDto`。
-  - 内部フロー: 変換（convert）→ 図表・表・レポート生成（make_figure / make_table / make_report）→ エクスポート（export_*）→ アセンブル（OutputDto へ統合）。詳細は [`algorithm/output/`](./algorithm/output/0_overview.md) を参照。
+  - 契約: 共通IF `IOutputOrchestrator` の `run(itm_dto) -> OutputDto`。実装はモード別（`orchestrate/` 配下の 3 クラス）。
+  - 内部フロー: 変換（convert）→ 図・表・レポート生成（make_figure / make_table / make_report）→ 保存・表示（export_* / display_figure）。図・表・レポートは**ファイルへの side effect** として出力し、戻り値の `OutputDto` には載せない。詳細は [`algorithm/output/`](./algorithm/output/0_overview.md) を参照。
 
 ### 拡張性の原則
 
-- 新規アルゴリズムはオプショナル属性として追加し、既存コードへの影響を最小化
+- 新しいモデル・アルゴリズムは Factory の分岐追加と実装クラスの追加で吸収し、
+  上位層（Processor / Pipeline）は無改修とする（Open-Closed 原則）
 - アルゴリズムの実装状況に応じて段階的に統合可能
 
 ### 依存関係の原則

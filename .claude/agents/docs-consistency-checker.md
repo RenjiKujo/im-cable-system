@@ -1,0 +1,1 @@
+../../.cursor/agents/docs-consistency-checker.md

@@ -2,36 +2,103 @@
 
 ## 概要
 
-この文書は、Output アルゴリズムの主要コンポーネントと責務境界を示す。実装クラスの詳細はコードを正とし、ここでは公開向けに必要な構造だけを扱う。
+この文書は、Output アルゴリズムの主要コンポーネントと責務境界を示す。実装クラスや
+メソッドの詳細はコードを正とし、ここでは上位層が依存してよい入口と、ステップ間の
+分離だけを記載する。
 
-## FigureBuildingOrchestrator
+- データフロー: [`1_data_flow.md`](./1_data_flow.md)
+- 設計方針: [`3_design_principles.md`](./3_design_principles.md)
+- 共通 Algorithm 設計: [`../../3_algorithm.md`](../../3_algorithm.md)
 
-`FigureBuildingOrchestrator` は、図表生成の入口である。`ItmDto` と `ImSeriesPerformanceCurveDtos | None` を受け取り、利用可能な図表 DTO を `OutputFiguresDto` にまとめる。
+## 公開入口
 
-主な責務は次の通り。
+Output の公開入口は `IOutputOrchestrator` である。層外（Processor / Pipeline）から
+見える出力アルゴリズムの契約はこの 1 つだけで、具象はモード別に
+`orchestrate/` サブパッケージへ置く。
 
-- `ItmDto` の参照軸が図表生成に必要な条件を満たすか確認する。
-- シミュレーション結果から slip 軸・出力比軸の図表 DTO を生成する。
-- カタログ性能カーブがある場合は、同じ軸の図表 DTO へ変換する。
-- 生成できない図表は optional として扱い、呼び出し側が結果の有無を判断できるようにする。
+```mermaid
+classDiagram
+  class IOutputOrchestrator {
+    <<interface>>
+    +create(IConfig, ILogger) IOutputOrchestrator
+    +run(ItmDto) OutputDto
+  }
+  class ForwardByCartesianGridOutputOrchestrator
+  class ForwardByOperatingPointsOutputOrchestrator
+  class EstimateParamsOutputOrchestrator
 
-## FiguresBuilder
+  ForwardByCartesianGridOutputOrchestrator ..|> IOutputOrchestrator
+  ForwardByOperatingPointsOutputOrchestrator ..|> IOutputOrchestrator
+  EstimateParamsOutputOrchestrator ..|> IOutputOrchestrator
+```
 
-図表の種類ごとの差分は Builder に分ける。
+Input / Execute と異なり、実装を選ぶ Factory は持たない。モードごとに Pipeline が
+分かれており、選択時点でモードが確定するため、対応するオーケストレーターの
+`create` を直接呼ぶ。
 
-- **SlipAxisFiguresBuilder**: slip 軸上で、出力、入力電流、力率、効率を並べる。
-- **OutputRatioAxisFiguresBuilder**: 出力比を x 軸にし、回転数、電流率、効率、力率を並べる。
-- **ImPerformanceFiguresBuilder**: カタログ性能カーブを slip 軸の図表 DTO へ変換する。
-- **OutputRatioAxisImPerformanceFiguresBuilder**: カタログ性能カーブを出力比軸の図表 DTO へ変換する。
+## ステップのインターフェース
 
-この分割により、図表の追加や軸の変更を Orchestrator に集中させず、図表単位で変更できる。
+オーケストレーターは、注入された各ステップへ処理を委譲する。すべてのステップは
+`create(config, logger)` で生成し、`OutputDto` を入力とする（`convert` のみ `ItmDto`）。
 
-## Export
+| ステップ | インターフェース | 契約 |
+|---|---|---|
+| convert | `IOutputDtoConverter` | `convert(ItmDto) -> OutputDto` |
+| make_figure | `IFigureBuilder` | `build(OutputDto) -> Figure` |
+| make_table | `ITableBuilder` | `build(OutputDto) -> DataFrame` |
+| make_report | `IReportBuilder` | `build(OutputDto) -> ReportDto \| None` |
+| export_figure | `IFigureExporter` | `export(figure, output_dto, kind) -> None` |
+| display_figure | `IFigureDisplayer` | `show(figure, output_dto) -> None` |
+| export_table | `ITableExporter` | `export(table, output_dto) -> None` |
+| export_report | `IReportArtifactExporter` | `export(report) -> None` |
 
-グラフ描画は、`OutputDto` に含まれる図表 DTO を具体的な描画オブジェクトへ変換する責務を持つ。Output アルゴリズム本体は、描画ライブラリに依存しない図表 DTO の構築を優先し、描画・保存形式の差分を Export 側へ寄せる。
+## Builder の実装
 
-## DTO の位置付け
+図・表の差分は Builder の実装に閉じ込める。形状（supply_grid / operating_points）
+ごとにサブパッケージを分ける。
 
-`OutputFiguresDto` は、生成済みの図表 DTO をまとめるコンテナである。`OutputDto` は、対象システム名と `OutputFiguresDto` を持つトップレベル DTO として扱う。
+**make_figure**
 
-テーブル DTO は現時点では主要実装範囲外である。追加する場合も、図表 DTO と同じく、列・単位・値を持つ描画/出力ライブラリ非依存の DTO として設計する。
+- `SupplyGridSlipAxisFigureBuilder`: (f, V) をサブプロット軸、slip を横軸とし、
+  力率 / 線電流の大きさ / 出力 / 効率 / トルクを描く。
+- `SupplyGridOutputRatioFigureBuilder`: (f, V) をサブプロット軸、出力比 [%] を
+  横軸とし、電流比 [%] / 回転数 [rpm] / 力率 [%] / 効率 [%] を描く。参照カタログが
+  同じ (f, V) 条件にあれば破線で重ね描きする。
+- `OperatingPointsFigureBuilder`: 運転点（リスト番号）を横軸に、回転数 / 電流 /
+  電圧 / 周波数 / 出力 / トルク / 効率 / 力率を、スケール差を保つよう複数の
+  縦軸へ分けて描く。
+
+**make_table**
+
+- `SupplyGridTableBuilder`: 参照軸直積（slip × (V, f)）を 1 行 1 点の long 形式へ
+  展開する。カタログがあれば `catalog_` 接頭の参照列を右側へ追加する。
+- `OperatingPointsTableBuilder`: 運転点を 1 行 1 点で並べる。`array_layout` に
+  無い供給条件軸の列は省く。
+
+## レポート（EstimateParams 専用）
+
+`make_report` は `ReportDto` を組み立て、`export_report` の 3 つの exporter が
+それぞれの形式へ直列化する。
+
+- `FitSummaryCsvExporter`: 最適化要約・適合指標・推定パラメータ。
+- `FittedCatalogYamlExporter`: 推定モデルを catalog 形式の入れ子マッピングで出力。
+- `NumericalStabilityCsvExporter`: 数値安定化イベント集計。catalog YAML には
+  含めず専用 CSV へ分ける（重複回避）。
+
+CSV のレイアウト（行整形）は `export_report` の責務であり、`ReportDto` は意味の
+ある数値・構造データだけを保持する。
+
+## 境界の考え方
+
+Processor 層から見える Output は「`ItmDto` を渡すと `OutputDto` が返り、必要な
+ファイルが書き出される黒箱」である。図・表・レポートの中間 artifact
+（`Figure` / `DataFrame` / `ReportDto`）は Output 内部に閉じ込め、層外へは
+公開しない。
+
+新しい出力形式を追加する場合は、対応する Builder / Exporter を足してモード別
+オーケストレーターへ配線する。Processor 層には `IOutputOrchestrator` だけを
+見せる。
+
+> **NOTE**: モード別オーケストレーターは `run` とゲート判定の実装が重複するが、
+> 出力モードごとに独立させる方針のため、意図的に共通化していない
+> （実装の `NOTE:` コメントも参照）。

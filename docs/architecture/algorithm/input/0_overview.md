@@ -13,7 +13,7 @@ Input アルゴリズムは、ジョブ仕様（ファイルパス束や統合 T
 - **forward**: 1 ジョブ分のパス束から単一の `InputDto` を構築する。CartesianGrid / OperatingPoints の差は参照軸（`reference_axes`）の選び方だけで吸収する。
 - **estimate_params**: 1 つの統合 TSV から、候補の直積に対応する複数 `InputDto`（`InputDtos`）を構築する。
 
-いずれも `build_input_dto` を入口とし、内部で `validate_job_spec -> load_data -> assemble_input_dto -> validate_input_dto` の 4 段を順に実行する。
+いずれも `build_input_dto` を入口とし、内部で `_validate_job_spec -> _load_data -> _assemble_input_dto -> _validate_input_dto` の 4 段を順に実行する（いずれも外部非公開の private メソッド。パッケージ名としては underscore なしの `validate_job_spec/` 等を使う）。
 
 ## 関連ドキュメント
 

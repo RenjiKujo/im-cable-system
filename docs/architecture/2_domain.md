@@ -1,5 +1,9 @@
 # シミュレーションロジック設計 - Domain層設計方針
 
+> **この文書が正本である範囲**: Domain 層のパッケージ構成・責務分離（`numerics` / `physics` / `predicate` / `validation`）・実装原則（関数ベース、設定値注入）・Domain と Algorithm のバリデーション責務分担。
+>
+> **正本ではない（参照先）**: 数値ガードの判定規則は [`conventions/4_numerical_robustness.md`](../conventions/4_numerical_robustness.md)、DTO 構成は [`1_shared.md`](./1_shared.md)、import 規約は [`conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md)。
+
 ## 概要
 
 本ドキュメントは、本シミュレーションエンジンにおけるDomain層（`src/im_cable_system/engine/domain/`）の構成と設計方針を定義する。
@@ -24,7 +28,7 @@ Domain層は、シミュレーションエンジンにおけるビジネスロ�
 - **`validation/`**: 計算処理後の結果検証に使用。複数のDTOにまたがる物理法則・制約の検証を行い、検証失敗時は例外を発生させる。
 
 ### 拡張性の原則
-- 新規ドメインはオプショナル属性として追加し、既存コードへの影響を最小化
+- 新しい物理計算・判定・検証は、既存の関数・クラスを変更せず新規関数・新規モジュールとして追加する
 - ドメインの実装状況に応じて段階的に統合可能
 
 ## Domain層のパッケージ構成とフォルダ管理方針
@@ -101,12 +105,17 @@ Domain層では、設定ファイルや設定管理オブジェクトへの依�
 
 - **原則**: Domain層は `Config` / YAMLキー構造に依存してはならない
 - **設定解決の責務**: Algorithm / Orchestrator / Builder層で設定を読み取り、Domainへ値を渡す
-- **ドメイン既定値**: Domain層に `EPS` / `MAX_MAG` などの既定定数を置くことは許容する
+- **数値ガードの既定値を持たない**: `eps` / `max_mag` は Domain 層に既定定数・デフォルト引数を置かず、
+  必ず呼び出し側から必須引数として注入する。判定規則・比較演算子の正本は
+  [`docs/conventions/4_numerical_robustness.md`](../conventions/4_numerical_robustness.md)
+- **物理・数学定数は可**: 相数や位相回転のように運用で変わらない値
+  （例: `_PHASE_COUNT`, `_PHASE_ROTATION`）は Domain 層のモジュール定数として持ってよい
 - **運用上書き**: 設定による上書きは上位層で行い、Domain関数・Domainクラスへ引数として注入する
 - **テスト方針**: Domainテストでは `Config` を使わず、必要な数値を直接与えて検証する
 
 **例**:
 - NG: Domain関数内で `config.get(...)` を呼び出す
+- NG: Domain関数のシグネチャを `eps: float = 1.0e-12` のように既定値付きで定義する
 - OK: 上位層で `slip_eps`, `slip_max_magnitude` を解決してDomainへ渡す
 
 ### バリデーションの責務分離
@@ -131,10 +140,7 @@ Domain層とAlgorithm層のバリデーション責務は以下のように分�
 
 ## Domain層とDTO層の関係
 
-Domain層は、DTO層（汎用DTO、シミュレーション層固有DTO）を参照する。
-
-**依存関係**:
-- Domain層 → 汎用 DTO（`common.dto`）、設定インターフェイス（`shared.config`）
-- DTO層 → Domain層（依存しない）
+Domain層は、DTO層（汎用DTO、シミュレーション層固有DTO）を参照する。DTO層はDomain層を参照しない（依存は一方向）。
+DTOパッケージ構成の詳細は[`1_shared.md`](./1_shared.md)を参照する。
 
 **インポート**: [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。
