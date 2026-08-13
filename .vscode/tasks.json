@@ -1,5 +1,7 @@
 {
   "version": "2.0.0",
+  // 以下4タスクは .github/workflows/ci.yml の lint/typecheck/test 3ジョブと同じコマンドの
+  // 手動ミラー(IDEはci.ymlを読めないため)。ci.yml のコマンドを変えたらここも手動で合わせる。
   "tasks": [
     {
       "label": "CI: ruff format",
