@@ -209,6 +209,10 @@ from im_cable_system.estimate_params import (
 
 ## Development
 
+エディタ用の設定（`.cursor/`、`.claude/`、`.vscode/`）は
+Cursor + Claude Code を Linux で使う場合の作業手順であり、貢献の必須条件ではない。
+PR が満たすべきなのは CI（下記）だけ。流用するなら参考にしてよい。
+
 ### CI / テスト
 
 PR と `main` への push で、lint（ruff）・型（pyright）・テスト（pytest）を
