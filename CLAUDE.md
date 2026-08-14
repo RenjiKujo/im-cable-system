@@ -39,37 +39,41 @@ Cursor が本体。`.cursor/` が正本。このファイルは Claude Code 用�
 それ以外は `git commit` / `git push` / `git add` しない
 （`git add` はユーザーの未コミット変更を巻き込むため。diff を見せるだけなら不要）。
 実装後は `git status` と `git diff --stat` を出して止まる。
-`git mv` / `git rm` は結果が index に載るが、rename 追跡に必要なためそのままでよい。
-手順スキルの正本は `.cursor/skills/`。Git / テスト手順はここからは起動しない。
+`git mv` / `git rm` は rename 追跡に必要なため index に載ってよい。
+手順スキルの正本は `.cursor/skills/`。Git / テストの**手順**をここに書かない
+（下記「整合性チェック」の締め処理だけは例外。手順ではなく必須の確認のため）。
 docs 同期だけ `/pj-update-design-doc` を許可する（`.claude/skills/` から正本への symlink）。
 
 ## エージェント
 
 正本は `.cursor/agents/`（`.claude/agents/` は symlink）。3 体とも報告のみで、直さない。
+モデルは各 frontmatter が正本（設計判断は opus、機械的な照合は sonnet）。
 
-| エージェント | 役割 | 起動タイミング |
+| エージェント | 見るもの | 諮るタイミング |
 |---|---|---|
-| `implementation-reviewer` | 差分を docs に照らしてレビュー | タスク完了時・PR 作成前 |
-| `docs-consistency-checker` | docs 側を実装に照らして検査 | PR 前・大きな docs リファクタ後 |
+| `implementation-reviewer` | 差分 → docs（層・公開窓口・DTO / Factory 契約・数値ガード） | `src/` を編集したターンの締め |
+| `docs-consistency-checker` | docs → 実装（陳腐化した設計判断・正本と再掲のドリフト） | `docs/` を編集したターンの締め |
 | `design-doc-writer` | コードを読んで docs を書く | docs 更新が必要なとき |
 
-いずれも**起動を提案する**。実行はユーザーの承認による
-（環境によっては明示要求がないとエージェントを起動できない。その場合は提案にとどめ、
-起動できなかった事実を報告に書く）。毎タスク・小さな編集のたびには呼ばない。
+**実行はユーザーの承認による。** 環境によっては起動できないので、その場合は提案に
+とどめ、起動できなかった事実を報告に書く。
 
-モデルは各 `.cursor/agents/*.md` の frontmatter が正本（現状: reviewer / writer は opus、
-consistency-checker は sonnet）。設計判断を伴うものは opus、機械的な照合が主体のものは
-sonnet、という基準。合わなければ frontmatter を変える。
+## 整合性チェック
 
-## docs 整合性チェック
+**正本: `.cursor/rules/consistency_check.mdc`**（`docs/` か `src/` を編集したターンの
+締め方。機械チェックの実行と、レビューエージェントを諮る手順）。編集する前に Read して従う。
 
-機械チェックはエージェント不要で即時実行できる。docs を編集したら回す。
+CI で確認するテストは `tests/` に一本化する。`tests/test_docs/` の外に整合性
+チェック用のスクリプトを置かない（二重管理はそれ自体が drift 源になる）。
 
-```bash
-.venv/bin/python scripts/check_docs_consistency.py
-```
+### テストの更新義務
 
-検出するのは 4 種（リンク切れ・パス実在・ディレクトリツリー整合・識別子実在）。
-`design-doc-writer` は Bash を持たないため、**その実行後は必ず呼び出し側がこれを回す**。
-意味的な矛盾（陳腐化した設計判断・正本と再掲のドリフト）はスクリプトでは取れないため、
-`docs-consistency-checker` が担当する（`docs/conventions/` は対象外）。
+**実装・docs を変えたら、対応するテストも同じ変更で更新する。**
+テストを消して通さない。落ちたまま報告を終えない。
+`model_equations/` は `TestModelEquationsCoverage` がテスト自身の更新漏れも検出する。
+
+### 自動修正はしない
+
+「docs とコードのどちらが正しいか」の判断を要するため（`design-doc-writer` の
+「思想を変えない。警告する」と同じ理由）。`design-doc-writer` は Bash を持たないので、
+その実行後は呼び出し側が上記 pytest を回す。

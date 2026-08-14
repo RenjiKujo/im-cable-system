@@ -29,7 +29,9 @@ agent: design-doc-writer
 2. 対応する `src/im_cable_system/` を読む
 3. 差分リストを作る
 4. 更新する（クラス処理の詳細は書かない）
-5. 変更ファイルを報告する
+5. `.venv/bin/python -m pytest tests/test_docs/ -q` を回す
+   （`design-doc-writer` は Bash を持たないため、検証は呼び出し側の責務）
+6. 変更ファイルとテスト結果を報告する
 
 ## 方針
 

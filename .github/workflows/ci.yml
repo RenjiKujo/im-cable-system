@@ -61,5 +61,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv pip install -e ".[dev]" --system
+      # docs↔実装の整合性テスト（tests/test_docs/）もこの pytest に含まれる。
+      # 専用ジョブは置かず、CI で確認するテストは tests/ に一本化する。
       - name: Pytest (not slow)
         run: pytest -m "not slow" -q

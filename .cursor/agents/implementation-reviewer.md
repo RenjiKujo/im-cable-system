@@ -28,6 +28,8 @@ description: 実装完了時・PR 作成前の実装レビュー。コードは�
 - **コード品質**: 型ヒントを消していないか。Google 形式 docstring。コメント削除禁止。`()` 改行。人手ルールは `docs/conventions/1_code_style.md`。
 - **数値**: `eps` / `max_mag` を新設していないか（`docs/conventions/4_numerical_robustness.md`）。
 - **テスト**: 公開窓口から import しているか。内部テストなら docstring に明記。Factory は分岐ごとか。
+  **変更に対応するテストが更新されているか**（`model_equations/` のモデル種別・係数を
+  触ったなら `tests/test_docs/` も追随しているか）。テストを消して通していないか。
 - **潜在問題**: テストへの影響、公開 API の漏れ、秘密情報、意図しない挙動変化。
 
 ## 方針
