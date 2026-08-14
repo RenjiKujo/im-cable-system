@@ -11,10 +11,10 @@ Input アルゴリズムは、ジョブ仕様を受け取り、`build_input_dto`
 ```mermaid
 flowchart LR
   spec[JobSpec]
-  validateSpec[validate_job_spec]
-  load[load_data]
-  assemble[assemble_input_dto]
-  validateDto[validate_input_dto]
+  validateSpec[_validate_job_spec]
+  load[_load_data]
+  assemble[_assemble_input_dto]
+  validateDto[_validate_input_dto]
   output[InputDto / InputDtos]
 
   spec --> validateSpec
@@ -24,10 +24,10 @@ flowchart LR
   validateDto --> output
 ```
 
-1. `validate_job_spec`: ファイルを開く前に、パスの存在や必須フィールドの非空など、軽量に確認できる項目だけを検証する。
-2. `load_data`: ファイルを読み、`LoadedData` を構築する。ファイル構造の破綻（ヘッダ欠落、変換失敗、カタログキー未登録など）でのみ raise する。
-3. `assemble_input_dto`: `LoadedData` から `InputDto` を組み立てる。フィールド単体の値域・単位などの契約は各 DTO の `__post_init__` が担う。
-4. `validate_input_dto`: 組み立て済み DTO に対して、構造整合・単位整合・DTO 横断整合・物理関係式などを意図的に重く検証する。
+1. `_validate_job_spec`: ファイルを開く前に、パスの存在や必須フィールドの非空など、軽量に確認できる項目だけを検証する。
+2. `_load_data`: ファイルを読み、`LoadedData` を構築する。ファイル構造の破綻（ヘッダ欠落、変換失敗、カタログキー未登録など）でのみ raise する。
+3. `_assemble_input_dto`: `LoadedData` から `InputDto` を組み立てる。フィールド単体の値域・単位などの契約は各 DTO の `__post_init__` が担う。
+4. `_validate_input_dto`: 組み立て済み DTO に対して、構造整合・単位整合・DTO 横断整合・物理関係式などを意図的に重く検証する。
 
 ## モード別の流れ
 

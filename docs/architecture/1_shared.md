@@ -1,5 +1,9 @@
 # シミュレーションロジック設計 - SharedコンポーネントとDTO設計方針
 
+> **この文書が正本である範囲**: Shared 層の役割・提供要素・DTO パッケージ構成（層レベル）。
+>
+> **正本ではない（参照先）**: DTO の命名規則・属性・モード別差分は [`shared/dto_principle.md`](./shared/dto_principle.md)、数値ガードは [`conventions/4_numerical_robustness.md`](../conventions/4_numerical_robustness.md)、import 規約は [`conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md)。
+
 ## 概要
 
 本ドキュメントは、**シミュレーション全体で汎用的に参照される共通ルール**を定義する。Sharedコンポーネント（`src/im_cable_system/engine/shared/`）の構成とDTO設計方針について、共通する原則のみを記載し、具体的なクラス名・属性名・パッケージ名などは**例として示すに留める**。各シミュレーションタイプ固有の詳細は、当該シミュレーションタイプのドキュメントを参照すること。
@@ -42,9 +46,11 @@ Shared 層は、各ステージ間のデータ受け渡しを担う DTO を提�
 - **OutputDto**: 出力・可視化のもととなる結果データを保持する。
 
 ### 設計原則
-- 単体 DTO は `*Dto`、コレクションは `*Dtos` に揃える。トップレベル DTO は `@dataclass(frozen=True)` の不変オブジェクトとする。
-- DTO は値・単位・状態の保持と単位変換のみを担い、数値ガード（クランプ）・数値安定化イベント記録は持たない（これらは domain / algorithm 層の責務）。
+- DTO は値・単位・状態の保持と単位変換のみを担う。数値ガード（クランプ）・数値安定化イベント記録は持たない
+  （判定規則の正本は [`conventions/4_numerical_robustness.md`](../conventions/4_numerical_robustness.md)、
+  発火は domain / algorithm 層の責務）。
 - 拡張時は新規ドメインをオプショナル属性として追加し、既存コードへの影響を最小化する。
+- 命名規則・不変性など、上記以外の詳細は [`shared/dto_principle.md`](./shared/dto_principle.md) を正とする。
 
 ### 汎用DTOとの関係
 
@@ -60,7 +66,7 @@ src/im_cable_system/engine/shared/dto/
 └── output/     … 出力 DTO の公開窓口（figure 等のサブパッケージを含む）
 ```
 
-**インポート**: 層間・DTO の import 窓口は [`docs/rules/layering_and_imports.md`](../rules/layering_and_imports.md) を参照する。
+**インポート**: 層間・DTO の import 窓口は [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。
 
 ## 依存関係
 

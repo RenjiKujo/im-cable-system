@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.debugpy",
+    "anysphere.cursorpyright",
+    "charliermarsh.ruff",
+    "redhat.vscode-yaml",
+    "bierner.github-markdown-preview",
+    "mechatroner.rainbow-csv"
+  ]
+}

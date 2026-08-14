@@ -218,6 +218,8 @@ GitHub Actions で検証しています（`.github/workflows/ci.yml`）。
 
 手元でも CI と同じチェックを再現できます。
 
+> 正本は `.github/workflows/ci.yml`。以下は手元で打つためのクイックリファレンス。
+
 ```bash
 ruff format --check src tests   # 整形チェック
 ruff check src tests            # lint
@@ -233,7 +235,7 @@ slow を含む全テストは `pytest -q` で実行できます。
 
 - **等価回路モデルの数式 ↔ YAML キー ↔ 実装の対応**: [docs/model_equations/index.md](docs/model_equations/index.md) — 本プロジェクトの差別化点。等価回路の各インピーダンスモデルの数式と、設定 YAML の係数キー、実装コードを 1 対 1 で対応づけた索引。
 - **メーカー曲線が完全には合わない理由（EstimateParams）**: [docs/estimate_params_curve_fitting_consistency.md](docs/estimate_params_curve_fitting_consistency.md) — 4 量の過剰決定・カタログ側の非整合・残差重みの推奨段取り。
-- 俯瞰ビュー: [docs/overview.md](docs/overview.md)
+- 入口・俯瞰・目次: [docs/README.md](docs/README.md)
 - アーキテクチャ（層別設計）: [docs/architecture/](docs/architecture/)
 - Algorithm 層（input / execute / output）の設計: [docs/architecture/3_algorithm.md](docs/architecture/3_algorithm.md)（詳細: [docs/architecture/algorithm/](docs/architecture/algorithm/)）
 - Processor 層の設計: [docs/architecture/4_processor.md](docs/architecture/4_processor.md)

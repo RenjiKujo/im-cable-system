@@ -1,0 +1,138 @@
+{
+  "version": "0.2.0",
+  // 以下の各 configuration が持つ "env": {"PYTHONPATH": "${workspaceFolder}"} は、
+  // pyproject.toml の [tool.pytest.ini_options] pythonpath = ["src"] と値が異なる。
+  // pip install -e の editable install 前提であれば通常は不要な設定の可能性があり、
+  // 用途未確定(将来調査・整理候補。今回は値を変更しない)。
+  "configurations": [
+    {
+      "name": "Python: pytest All Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "linux": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "osx": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      },
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": ["-v"],
+      "justMyCode": true,
+      "presentation": {
+        "group": "pytest",
+        "order": 1
+      }
+    },
+    {
+      "name": "Python: pytest Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "linux": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "osx": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      },
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": ["${file}", "-v", "-s"],
+      "justMyCode": true,
+      "presentation": {
+        "group": "pytest",
+        "order": 2
+      }
+    },
+    {
+      "name": "Python: pytest Current Directory",
+      "type": "debugpy",
+      "request": "launch",
+      "linux": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "osx": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      },
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": ["${relativeFileDirname}", "-v", "-s"],
+      "justMyCode": true,
+      "presentation": {
+        "group": "pytest",
+        "order": 3
+      }
+    },
+    {
+      "name": "Python: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "linux": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "osx": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      },
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": true,
+      "presentation": {
+        "group": "script",
+        "order": 10
+      }
+    },
+    {
+      "name": "Python: Current File (with args)",
+      "type": "debugpy",
+      "request": "launch",
+      "linux": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "osx": {
+        "python": "${workspaceFolder}/.venv/bin/python"
+      },
+      "windows": {
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      },
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": [],
+      "justMyCode": true,
+      "presentation": {
+        "group": "script",
+        "order": 11
+      }
+    }
+  ]
+}

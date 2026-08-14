@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  // 以下4タスクは .github/workflows/ci.yml の lint/typecheck/test 3ジョブと同じコマンドの
+  // 手動ミラー(IDEはci.ymlを読めないため)。ci.yml のコマンドを変えたらここも手動で合わせる。
+  "tasks": [
+    {
+      "label": "CI: ruff format",
+      "type": "shell",
+      "command": ".venv/bin/ruff format --check src tests",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "CI: ruff lint",
+      "type": "shell",
+      "command": ".venv/bin/ruff check src tests",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "CI: pyright",
+      "type": "shell",
+      "command": ".venv/bin/basedpyright",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "CI: pytest (not slow)",
+      "type": "shell",
+      "command": ".venv/bin/pytest -m \"not slow\" -q",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "CI: all checks",
+      "dependsOn": [
+        "CI: ruff format",
+        "CI: ruff lint",
+        "CI: pyright",
+        "CI: pytest (not slow)"
+      ],
+      "dependsOrder": "sequence",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "shared" }
+    }
+  ]
+}

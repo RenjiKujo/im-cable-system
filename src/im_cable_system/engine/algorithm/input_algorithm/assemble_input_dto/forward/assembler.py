@@ -4,7 +4,7 @@
 受け取り、その指定どおりに ``ArrayLayoutDto`` を構築する。
 
 SI 正規化・各種 DTO ビルダーは ``assemble_input_dto.common`` 配下の
-リーフを直 import して共通利用する（``docs/rules/layering_and_imports.md``
+リーフを直 import して共通利用する（``docs/conventions/3_layering_and_imports.md``
 の「同一責務ツリー内はリーフ直 import 可」に該当）。
 アセンブラレベルでは他経路と完全分離しており、別経路アセンブラ
 への委譲は行わない。
@@ -63,7 +63,7 @@ class ForwardInputDtoAssembler(
         """初期化する。
 
         Args:
-            config: 設定。開発ガイドライン（``docs/rules/``）の
+            config: 設定。開発ガイドライン（``docs/conventions/``）の
                 「``IConfig`` / ``ILogger`` は属性として保持する」ルールに従い保持する
                 （本クラスの ``assemble`` 内では現状参照しない）。
             logger: ロガー。同上の理由で保持する。

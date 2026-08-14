@@ -13,6 +13,9 @@ concurrency:
 env:
   MPLBACKEND: Agg  # matplotlib をヘッドレスで動かす
 
+# 各ジョブの python-version: "3.12" は .python-version(3.12.11)と値が一致しているだけで、
+# このワークフローは .python-version を自動参照していない(直書き)。
+# 変更時は .python-version 側も手動で合わせる。
 jobs:
   lint:
     name: Lint & Format (ruff)
@@ -58,5 +61,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv pip install -e ".[dev]" --system
+      # docs↔実装の整合性テスト（tests/test_docs/）もこの pytest に含まれる。
+      # 専用ジョブは置かず、CI で確認するテストは tests/ に一本化する。
       - name: Pytest (not slow)
         run: pytest -m "not slow" -q

@@ -2,7 +2,7 @@
 
 NOTE:
     Despite the implementation-inheritance guideline in
-    ``docs/rules/design_principles.md``, this base
+    ``docs/conventions/2_design_principles.md``, this base
     is limited to ``generic/im_cable_system/im`` and ``cable`` name modules as
     shared boilerplate. String-backed name objects should at least provide
     ``get_value``, equality with ``str``, hashing, and string representation

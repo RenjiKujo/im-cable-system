@@ -58,7 +58,7 @@ class ForwardInputDtoValidator(IInputDtoValidator):
         """初期化する。
 
         Args:
-            config: 設定。開発ガイドライン（``docs/rules/``）の
+            config: 設定。開発ガイドライン（``docs/conventions/``）の
                 「``IConfig`` / ``ILogger`` は属性として保持する」ルールに従い保持する。
             logger: ロガー。``@timer`` デコレータ（``logger=None``）が
                 ``self._logger`` を参照するためにも用いる。

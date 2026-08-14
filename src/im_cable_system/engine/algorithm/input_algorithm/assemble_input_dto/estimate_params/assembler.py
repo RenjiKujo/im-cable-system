@@ -118,7 +118,7 @@ class EstimateParamsAssembler(
         """初期化する。
 
         Args:
-            config: 設定。開発ガイドライン（``docs/rules/``）の
+            config: 設定。開発ガイドライン（``docs/conventions/``）の
                 「``IConfig`` / ``ILogger`` は属性として保持する」ルールに従い保持する
                 （本クラスの ``assemble`` 内では現状参照しない）。
             logger: ロガー。同上の理由で保持する。

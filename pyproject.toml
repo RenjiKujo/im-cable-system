@@ -7,6 +7,10 @@ name = "im-cable-system"
 version = "0.1.0"
 description = "Induction-motor cable system simulation and parameter estimation engine"
 readme = "README.md"
+# パッケージが対応する最低 Python バージョン。
+# 開発・CI実行時に実際に使う Python(.python-version = 3.12.11、ci.yml の python-version = "3.12")
+# とは役割が別の値。ci.yml は .python-version を自動参照せず 3.12 を直書きしているため、
+# 対応バージョンや実行バージョンを変える際は該当ファイルを手動で揃える。
 requires-python = ">=3.10"
 dependencies = [
   "pandas>=2.0.0",
@@ -17,12 +21,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# 開発用ツール群(lint/型/テスト)。アプリケーションを import して使うだけの利用者には不要。
 dev = [
-  "lizard==1.17.10",
+  "lizard==1.17.10",       # 複雑度・行数の随時点検用(docs/conventions/1_code_style.md のモジュールサイズ目安)。
+                            # CI では実行しない。手動/コードレビュー時に随時使う。
   "basedpyright>=1.27.0",
   "ruff>=0.14.0",
   "pytest>=7.0.0",
-  "pytest-cov>=4.0.0",
+  "pytest-cov>=4.0.0",     # カバレッジ計測プラグイン。現状 CI では --cov を使っておらず未使用。
   "pandas-stubs>=2.0.0",
   "types-PyYAML>=6.0.0",
 ]
@@ -36,24 +42,32 @@ include = ["im_cable_system*"]
 "im_cable_system.bounds_and_init" = ["*.yaml"]
 "im_cable_system.engine.shared.config" = ["*.yaml", "*.md"]
 
-# Pyright（IDE の cursorpyright と CI の basedpyright が参照）
+# Pyright（IDE の cursorpyright と CI の basedpyright が参照）。型チェックの正本。
+# src は契約（引数型・import）を守る。tests のみ numpy 等の誤検知を緩和する。
+# 機械強制と人手ルールの全体の割り当ては docs/conventions/README.md の「正本マップ」を見る。
 [tool.pyright]
+# 型チェックが前提とする最低バージョン。requires-python と役割を揃える値
+# （開発・CI実行バージョンとは別軸。詳細は上の requires-python のコメント参照）。
 pythonVersion = "3.10"
 include = ["src/im_cable_system", "tests"]
 extraPaths = ["src", "."]
+# "strict" ではなく "basic" を採用。numpy/pandas など動的型付けが強いライブラリを多用するため、
+# "strict" は誤検知が増えやすい想定（将来 "strict" 化を検討する余地はある）。
 typeCheckingMode = "basic"
-reportMissingImports = false
-reportArgumentType = "none"
 
 [[tool.pyright.executionEnvironments]]
 root = "tests"
 extraPaths = ["src", "."]
+# tests だけ緩める2項目。numpy/pandas の動的属性・Optional 解決をテストコードが
+# 誤検知しやすいため無効化する（src 側はこの緩和を適用せず、契約は通常どおり守らせる）。
 reportAttributeAccessIssue = "none"
 reportOptionalMemberAccess = "none"
 
+# pytest 設定。テストの探索範囲・命名規約・マーカーの正本
+# （docs/conventions/5_testing.md には値を再掲せず、ここへのポインタのみを書く）。
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src"]  # editable install していない状態でも `pytest` 単体実行で解決できるようにする
 markers = [
   "integration: 統合テスト（外部I/Oや長い経路を含む）",
   "slow: 実行に時間がかかるテスト",

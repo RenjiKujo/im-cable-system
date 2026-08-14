@@ -1,5 +1,9 @@
 # シミュレーションロジック設計 - コンポーネント構成
 
+> **この文書が正本である範囲**: レイヤー構造・各層の役割と依存先・コンポーネントとディレクトリ構成の対応・Mermaid 表記ルール。
+>
+> **正本ではない（参照先）**: import 規約と `__init__.py` 運用は [`conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md)、各層の詳細設計は本ディレクトリの `1_shared.md`〜`5_pipeline.md`。
+
 ## コンポーネント構成概要
 
 本ドキュメントは、本シミュレーションエンジンにおけるコンポーネント構成について記載する。
@@ -120,7 +124,7 @@ shared
 - **インターフェイスへの依存**: 具象クラスではなくインターフェイスに依存（依存性逆転の原則）
 - **DTOを介したデータ受け渡し**: 各ステージ間でDTOを介した明確なデータ受け渡し
 
-**インポートルール**（層間依存・import 禁止パターン）と **Dir・`__init__.py` 運用**は [`docs/rules/layering_and_imports.md`](../rules/layering_and_imports.md) を参照する。各コンポーネントのフォルダ構成は本ドキュメント群の `*_*.md` を参照する。
+**インポートルール**（層間依存・import 禁止パターン）と **Dir・`__init__.py` 運用**は [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。各コンポーネントのフォルダ構成は本ドキュメント群の `*_*.md` を参照する。
 
 ## 図の表記ルール（Mermaid クラス図）
 
