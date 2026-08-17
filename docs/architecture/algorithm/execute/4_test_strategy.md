@@ -50,4 +50,4 @@ ArrayLayout の電流キーなど、Itm から次回入力へ戻す契約は、�
   `im.stray_load_model.params.*`）も同じ descriptor 適用経路で検証する。
 - カタログ 4 量の自己無矛盾性に依存しすぎない設計になっていること。
 
-カタログ性能カーブとの構造的な不整合は [`estimate_params_curve_fitting_consistency.md`](./estimate_params_curve_fitting_consistency.md) を参照。
+カタログ性能カーブとの構造的な不整合は [`curve_fitting_consistency.md`](../../../model/curve_fitting_consistency.md) を参照。

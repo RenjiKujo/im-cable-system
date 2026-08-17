@@ -51,7 +51,7 @@ supply_grid 形状では両方を生成する。
 
 比較では、参照面と単位を揃えることを優先する。カタログ値そのものが自己無矛盾で
 ない場合があるため、完全一致を前提にした評価は避ける（構造的な理由は
-[`../execute/estimate_params_curve_fitting_consistency.md`](../execute/estimate_params_curve_fitting_consistency.md) を参照）。
+[`curve_fitting_consistency.md`](../../../model/curve_fitting_consistency.md) を参照）。
 
 ## build と export の分離
 

@@ -240,8 +240,7 @@ slow を含む全テストは `pytest -q` で実行できます。
 
 設計意図・前提条件は `docs/` にまとめています（コードから読めない「なぜ」を中心に記述）。
 
-- **等価回路モデルの数式 ↔ YAML キー ↔ 実装の対応**: [docs/model_equations/index.md](docs/model_equations/index.md) — 本プロジェクトの差別化点。等価回路の各インピーダンスモデルの数式と、設定 YAML の係数キー、実装コードを 1 対 1 で対応づけた索引。
-- **メーカー曲線が完全には合わない理由（EstimateParams）**: [docs/estimate_params_curve_fitting_consistency.md](docs/estimate_params_curve_fitting_consistency.md) — 4 量の過剰決定・カタログ側の非整合・残差重みの推奨段取り。
+- **等価回路モデル**: [docs/model/README.md](docs/model/README.md) — 回路の構成、計算の流れ、数式 ↔ YAML ↔ 実装、カタログ曲線への当てはめ。
 - 入口・俯瞰・目次: [docs/README.md](docs/README.md)
 - アーキテクチャ（層別設計）: [docs/architecture/](docs/architecture/)
 - Algorithm 層（input / execute / output）の設計: [docs/architecture/3_algorithm.md](docs/architecture/3_algorithm.md)（詳細: [docs/architecture/algorithm/](docs/architecture/algorithm/)）

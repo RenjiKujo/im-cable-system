@@ -15,7 +15,7 @@
 $P_N$ は `ImSeriesDto.nameplate_power`（**3相合計**）。$I_N$ は
 `ImSeriesDto.nameplate_current`（銘牌電流）。$|I_N| \le \mathrm{eps}$（近接ゼロ、数値ガードの
 共通閾値）のときは正規化せず $r_{I_2} = |I_2|$ にフォールバックする。他サブシステムの
-`r_I` 正規化（`model_equations/index.md` の記号の共通前提）が単純な「$0$ 以下」判定なのに対し、
+`r_I` 正規化（[index.md](index.md) の記号の共通前提）が単純な「$0$ 以下」判定なのに対し、
 本サブシステムは `docs/conventions/4_numerical_robustness.md` の極小ガード規約
 （`abs(x) <= eps` をクランプ対象にする）に合わせて eps 判定にする。
 $P_{stray}$ は $P_N$ に比例するため**3相合計**であり、「1相で計算して3相へ変換」の

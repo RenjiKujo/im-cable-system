@@ -20,7 +20,7 @@ from im_cable_system.engine.shared.dto.itm import ItmImModelDto
 class ConstantFrictionWindageLossCalculator(IFrictionWindageLossCalculator):
     """一定の摩擦・風損（``CONSTANT_V1``）を計算する計算器。
 
-    数式は ``docs/model_equations/im_friction_windage.md`` を正とする。
+    数式は ``docs/model/equations/im_friction_windage.md`` を正とする。
     """
 
     def __init__(self, config: IConfig, logger: ILogger) -> None:

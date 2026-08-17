@@ -1,4 +1,4 @@
-"""戦略C（摩擦・風損＋漂遊負荷損）の効果検証。
+"""軸出力控除（摩擦・風損＋漂遊負荷損）の効果検証。
 
 ``input_for_estimate_params_mechanical_loss.tsv``（合成教師曲線、正解モデルは
 ``SlipDependentShaftDeduction01`` = SlipDependent01 と同一の R/L・一次/励磁/二次
@@ -15,8 +15,8 @@
       Rm（excitation_resistance）が真値からの相対偏差の許容内に収まる。
     - 両方有効時、``k_friction_windage`` / ``k_stray_load`` が真値近傍に戻る。
 
-力率重みは 0.1 に下げる（``docs/estimate_params_curve_fitting_consistency.md``
-戦略C: 力率は電気損モデルの第 4 自由度を生まないため参考値扱いとする方針、
+力率重みは 0.1 に下げる（``docs/model/curve_fitting_consistency.md``:
+力率はモデルの第 4 自由度を生まないため参考値扱いとする方針、
 かつローカル実測での知見「記載力率が外れ値」と同じ理由）。
 """
 
@@ -74,7 +74,7 @@ _MAX_EFFICIENCY_RMSE_BOTH_ENABLED = 1.0e-4
 
 @pytest.fixture
 def estimate_params_residual_weights() -> dict[str, float]:
-    """力率重みを 0.1 に下げる（戦略C の検証方針。モジュール docstring 参照）。"""
+    """力率重みを 0.1 に下げる（軸出力控除の検証方針。モジュール docstring 参照）。"""
     return {
         "current": 1.0,
         "power": 1.0,

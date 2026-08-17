@@ -76,7 +76,7 @@ class ImLossBranchLoadedData:
 
     ``ImBranchLoadedData`` と異なり ``resistance`` / ``inductance`` を
     持たない（イミタンスを持たないサブシステムのため。
-    docs/model_equations/index.md 参照）。
+    docs/model/equations/index.md 参照）。
 
     Attributes:
         model: モデル名（例: ``"NONE"`` / ``"CONSTANT_V1"``）。

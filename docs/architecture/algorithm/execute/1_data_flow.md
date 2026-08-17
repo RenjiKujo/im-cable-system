@@ -44,4 +44,4 @@ forward は slip / frequency / input_line_voltage が既知の順計算である
 
 `EstimateParams` は forward とは別インターフェースのオーケストレーターとして扱う。目標パフォーマンスカーブに合わせてパラメータを推定し、候補パラメータで forward 相当の `ItmDto` を評価する。
 
-カタログ曲線と等価回路モデルの自由度の不整合、残差重みの考え方は [`estimate_params_curve_fitting_consistency.md`](./estimate_params_curve_fitting_consistency.md) を参照。
+カタログ曲線と等価回路モデルの自由度の不整合、残差重みの考え方は [`curve_fitting_consistency.md`](../../../model/curve_fitting_consistency.md) を参照。

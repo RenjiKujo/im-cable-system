@@ -169,11 +169,11 @@ im_series:
     stray_load:
       model: { name: "NONE", params: [] }
 
-  # SlipDependentShaftDeduction01: 戦略C（摩擦・風損＋漂遊負荷損）の効果検証用合成教師系列。
+  # SlipDependentShaftDeduction01: 軸出力控除（摩擦・風損＋漂遊負荷損）の効果検証用合成教師系列。
   # SlipDependent01 と同一の R/L・一次/励磁/二次モデルに、friction_windage /
   # stray_load を追加しただけ。この 2 軸を NONE のまま推定すると、電気損だけの
   # モデルが R1/R2/Rm へ軸出力控除を無理やり吸収するため、η チャネル残差が悪化する
-  # （docs/estimate_params_curve_fitting_consistency.md 戦略C の検証仮説）。
+  # （docs/model/curve_fitting_consistency.md）。
   - name: "SlipDependentShaftDeduction01"
     poles: 4
     nameplate:

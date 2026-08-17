@@ -17,7 +17,7 @@
 #   無次元（``FloatParamDto`` に unit なし）のため unit キーは書かない。
 # - 名板情報（電源周波数・定格電流など）は本ファイルでは持たず、入力 TSV の
 #   名板（``frequency`` / ``input_line_current`` 等）から導出する。
-# - 索引: docs/model_equations/index.md
+# - 索引: docs/model/equations/index.md
 version: 1
 
 primary:

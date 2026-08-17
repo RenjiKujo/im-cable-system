@@ -7,7 +7,7 @@
 機械損と呼ぶためではない。
 
 サブパッケージ ``friction_windage`` / ``stray_load`` はそれぞれ独立した
-Strategy + Factory を持つ（`docs/model_equations/index.md` の「イミタンスを
+Strategy + Factory を持つ（`docs/model/equations/index.md` の「イミタンスを
 持たない2サブシステム」を参照）。境界をまたぐ利用（同一責務ツリー外）は
 本ファイルの ``__all__`` 経由に限る。
 

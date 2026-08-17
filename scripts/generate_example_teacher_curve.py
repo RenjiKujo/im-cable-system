@@ -37,9 +37,9 @@ def _rpm_grid(
     """教師曲線用の回転数格子 [rpm]。
 
     既定は同期速度 1500 rpm を含む（slip 0 を含む）。摩擦・風損／漂遊負荷損
-    （戦略C）の教師曲線では、s≈0 で軸出力が負になり得るため、呼び出し側が
+    の教師曲線では、s≈0 で軸出力が負になり得るため、呼び出し側が
     ``rpm_max`` を同期速度未満に指定して s≈0 を除外する
-    （docs/estimate_params_curve_fitting_consistency.md 戦略C 参照）。
+    （docs/model/curve_fitting_consistency.md）。
     """
     count = int(round((rpm_max - rpm_min) / rpm_step)) + 1
     return rpm_max - rpm_step * np.arange(count, dtype=np.float64)

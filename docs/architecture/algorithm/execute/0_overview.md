@@ -13,10 +13,10 @@ Processor 層からは `IForwardExecutionOrchestrator` のみが見え、`Forwar
 
 **別インターフェース**（`IEstimateParamsExecutionOrchestrator`）を `orchestrate/estimate_params/` 配下に配置する。入口に **パフォーマンス曲線が必須**であり、指定モデルでインピーダンスやそのパラメータが不足している場合（または Config で指定した場合）に、目標パフォーマンス曲線に合うようにパラメータを推定する。出口は **推定パラメータ** と、推定値で求めた中間 DTO。
 
-**カタログとの整合性問題と推定方針**は別途まとめている。`(|I|, P_{\mathrm{out}}, \cos\varphi, \eta)` がモデル自由度との関係で過剰決定になっていること、カタログ側が自己無矛盾ではないこと、それらを踏まえた残差設計（重み・吸収パラメータ）の方針は [`estimate_params_curve_fitting_consistency.md`](./estimate_params_curve_fitting_consistency.md) を参照。
+**カタログとの整合性問題と推定方針**は別途まとめている。`(|I|, P_{\mathrm{out}}, \cos\varphi, \eta)` がモデル自由度との関係で過剰決定になっていること、カタログ側が自己無矛盾ではないこと、それらを踏まえた残差設計（重み・空白セル・軸出力控除）の方針は [`curve_fitting_consistency.md`](../../../model/curve_fitting_consistency.md) を参照。
 
 - データフロー: [1_data_flow.md](./1_data_flow.md)
 - コンポーネント詳細: [2_component.md](./2_component.md)
 - 設計原則: [3_design_principles.md](./3_design_principles.md)
 - テスト戦略: [4_test_strategy.md](./4_test_strategy.md)
-- パラメータ推定とパフォーマンスカーブの整合性問題: [estimate_params_curve_fitting_consistency.md](./estimate_params_curve_fitting_consistency.md)
+- パラメータ推定とパフォーマンスカーブの整合性問題: [curve_fitting_consistency.md](../../../model/curve_fitting_consistency.md)

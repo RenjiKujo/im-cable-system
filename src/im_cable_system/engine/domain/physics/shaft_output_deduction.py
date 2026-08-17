@@ -4,8 +4,8 @@
 軸出力控除の純粋計算ロジックを提供する。
 
 対応するモデルの数式・記号の定義（正）は
-``docs/model_equations/im_friction_windage.md`` /
-``docs/model_equations/im_stray_load.md``。
+``docs/model/equations/im_friction_windage.md`` /
+``docs/model/equations/im_stray_load.md``。
 
 特徴:
     - 入力・出力はすべて DTO（``physical_quantity`` DTO）。

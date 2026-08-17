@@ -44,24 +44,22 @@ Cursor が本体。`.cursor/` が正本。このファイルは Claude Code 用�
 （下記「整合性チェック」の締め処理だけは例外。手順ではなく必須の確認のため）。
 docs 同期だけ `/pj-update-design-doc` を許可する（`.claude/skills/` から正本への symlink）。
 
-## エージェント
-
-正本は `.cursor/agents/`（`.claude/agents/` は symlink）。3 体とも報告のみで、直さない。
-モデルは各 frontmatter が正本（設計判断は opus、機械的な照合は sonnet）。
-
-| エージェント | 見るもの | 諮るタイミング |
-|---|---|---|
-| `implementation-reviewer` | 差分 → docs（層・公開窓口・DTO / Factory 契約・数値ガード） | `src/` を編集したターンの締め |
-| `docs-consistency-checker` | docs → 実装（陳腐化した設計判断・正本と再掲のドリフト） | `docs/` を編集したターンの締め |
-| `design-doc-writer` | コードを読んで docs を書く | docs 更新が必要なとき |
-
-**実行はユーザーの承認による。** 環境によっては起動できないので、その場合は提案に
-とどめ、起動できなかった事実を報告に書く。
-
 ## 整合性チェック
 
-**正本: `.cursor/rules/consistency_check.mdc`**（`docs/` か `src/` を編集したターンの
-締め方。機械チェックの実行と、レビューエージェントを諮る手順）。編集する前に Read して従う。
+`docs/` か `src/` を編集したターンの締め。機械チェックを回し、下表のどれを
+起動すべきか、推奨と理由を添えて提案する。実行はユーザーの承認による。
+
+手順の正本: `.cursor/rules/consistency_check.mdc`（編集する前に Read）。
+各体の正本: `.cursor/agents/`（`.claude/agents/` は symlink）。
+モデルは各 frontmatter が正本（設計判断は opus、機械的な照合は sonnet）。
+環境によっては起動できないので、その場合は提案にとどめ、起動できなかった事実を報告に書く。
+レビュー 2 体は報告のみで、直さない。`design-doc-writer` は docs を書くが思想は変えない。
+
+| エージェント | 見るもの | 提案するとき |
+|---|---|---|
+| `implementation-reviewer` | 差分 → docs（層・公開窓口・DTO / Factory 契約・数値ガード） | `src/` を編集したとき |
+| `docs-consistency-checker` | docs → 実装（陳腐化した設計判断・正本と再掲のドリフト） | `docs/` を編集したとき |
+| `design-doc-writer` | コードを読んで docs を書く | docs 更新が必要なとき |
 
 CI で確認するテストは `tests/` に一本化する。`tests/test_docs/` の外に整合性
 チェック用のスクリプトを置かない（二重管理はそれ自体が drift 源になる）。
@@ -70,7 +68,6 @@ CI で確認するテストは `tests/` に一本化する。`tests/test_docs/` 
 
 **実装・docs を変えたら、対応するテストも同じ変更で更新する。**
 テストを消して通さない。落ちたまま報告を終えない。
-`model_equations/` は `TestModelEquationsCoverage` がテスト自身の更新漏れも検出する。
 
 ### 自動修正はしない
 

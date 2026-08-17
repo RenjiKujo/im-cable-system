@@ -19,9 +19,8 @@ agent: design-doc-writer
 
 - `docs/README.md`（俯瞰・目次）
 - `docs/architecture/`（層別。algorithm / shared のサブツリー含む）
-- `docs/model_equations/`
+- `docs/model/`（equations / curve_fitting_consistency を含む）
 - `docs/conventions/`（規約が変わったときだけ）
-- `docs/estimate_params_curve_fitting_consistency.md`（該当するとき）
 
 ## 手順
 

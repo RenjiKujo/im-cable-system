@@ -24,7 +24,7 @@ class CurrentDependentQuadraticStrayLoadLossCalculator(
     """二次電流比の2乗に比例する漂遊負荷損
     （``CURRENT_DEPENDENT_QUADRATIC_V1``）を計算する計算器。
 
-    数式は ``docs/model_equations/im_stray_load.md`` を正とする。
+    数式は ``docs/model/equations/im_stray_load.md`` を正とする。
     """
 
     def __init__(self, config: IConfig, logger: ILogger) -> None:

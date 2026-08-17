@@ -1,19 +1,19 @@
-"""model_equations/ の 3 者（コード・docs・bounds_and_init YAML）整合性テスト。
+"""docs/model/equations/ の 3 者（コード・docs・bounds_and_init YAML）整合性テスト。
 
-docs/model_equations/index.md が「モデル種別（Enum）と各種別が要求する係数名は
+docs/model/equations/index.md が「モデル種別（Enum）と各種別が要求する係数名は
 shared の DTO / Enum を正とする」と宣言している契約を、実行時に検証する。
 
 対象は「モデル種別 → 必須係数名の集合」で、次の 3 箇所が完全一致することを保証する。
 
 - **コード**: 各 ``*ModelDto.get_required_parameter_names()`` の分岐（正）。
-- **docs**: ``docs/model_equations/*.md`` の記号 ↔ YAML キー対応表。
+- **docs**: ``docs/model/equations/*.md`` の記号 ↔ YAML キー対応表。
 - **YAML**: ``bounds_and_init/*.yaml`` の ``model_parameters.<種別>.params`` キー。
 
 3 者のいずれかだけを更新（モデル追加・係数名変更）すると、このテストが落ちる。
 
 さらに :class:`TestModelEquationsCoverage` が「本テスト自身の網羅」を守る。
 モデル種別の追加は既存のパラメータ化で自動的に検証対象へ入るが、**サブシステムを
-新設した場合**（新しい ``*ModelDto`` や ``model_equations/*.md`` の追加）は
+新設した場合**（新しい ``*ModelDto`` や ``docs/model/equations/*.md`` の追加）は
 ``_SUBSYSTEMS`` を更新しない限り検証されない。その取りこぼしを検出する。
 """
 
@@ -45,7 +45,7 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
 )
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_MODEL_EQUATIONS_DIR = _REPO_ROOT / "docs" / "model_equations"
+_MODEL_EQUATIONS_DIR = _REPO_ROOT / "docs" / "model" / "equations"
 _IM_BOUNDS_PATH = (
     _REPO_ROOT
     / "src"
@@ -282,14 +282,14 @@ class TestModelEquationsCoverage:
         )
 
     def test_all_model_equation_docs_are_covered(self) -> None:
-        """``model_equations/`` の各 md がすべて ``_SUBSYSTEMS`` に登録されている。"""
+        """``docs/model/equations/`` の各 md がすべて ``_SUBSYSTEMS`` に登録されている。"""
         # index.md は索引であり、個別モデルの係数表を持たないため対象外。
         doc_files = {
             path.name for path in _MODEL_EQUATIONS_DIR.glob("*.md")
         } - {_INDEX_DOC_PATH.name}
         covered = {subsystem.doc_path.name for subsystem in _SUBSYSTEMS}
         assert doc_files == covered, (
-            "model_equations/ の md と _SUBSYSTEMS が一致しない\n"
+            "docs/model/equations/ の md と _SUBSYSTEMS が一致しない\n"
             f"  テスト未登録の md: {sorted(doc_files - covered)}\n"
             f"  md が無い登録    : {sorted(covered - doc_files)}"
         )

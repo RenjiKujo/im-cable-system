@@ -36,7 +36,8 @@ def apply_shaft_output_deduction(
 ) -> tuple[ArrayComplexPowerDto, ArrayComplexPowerDto, ArrayComplexPowerDto]:
     """摩擦・風損／漂遊負荷損を計算し、二次負荷電力から引いた軸出力を返す。
 
-    計算式（`docs/estimate_params_curve_fitting_consistency.md` 戦略C）:
+    計算式（`docs/model/equations/im_friction_windage.md` /
+    `docs/model/equations/im_stray_load.md`）:
         output_power = secondary_load_total - friction_windage_loss_power
                        - stray_load_loss_power
 

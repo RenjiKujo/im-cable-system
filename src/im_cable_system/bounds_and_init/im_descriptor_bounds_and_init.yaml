@@ -6,7 +6,7 @@
 #   - subsystem: ``primary`` / ``excitation`` / ``secondary`` /
 #     ``friction_windage`` / ``stray_load``。
 #   - ``friction_windage`` / ``stray_load`` は ``rl_parameters`` を持たない
-#     （イミタンスを持たないサブシステムのため。docs/model_equations/index.md 参照）。
+#     （イミタンスを持たないサブシステムのため。docs/model/equations/index.md 参照）。
 # - ``friction_windage`` / ``stray_load`` の各係数は ``lb: 0.0`` にする。
 #   0 を含まないと「考慮するが実質ゼロ」に到達できない。実測値に釘付けしたい
 #   場合は ``lb == ub`` にする（固定次元として扱われ、report に
@@ -28,7 +28,7 @@
 #   無次元（``FloatParamDto`` に unit なし）のため unit キーは書かない。
 # - 名板情報（電源周波数・定格電流など）は本ファイルでは持たず、入力 TSV の
 #   名板（``frequency`` / ``input_line_current`` 等）から導出する。
-# - 索引: docs/model_equations/index.md
+# - 索引: docs/model/equations/index.md
 version: 1
 
 primary:
