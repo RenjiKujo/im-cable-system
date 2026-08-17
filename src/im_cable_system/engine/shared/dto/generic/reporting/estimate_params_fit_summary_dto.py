@@ -31,6 +31,8 @@ class FittedModelLabelsDto:
         im_excitation: 励磁モデル名。
         im_secondary_inner: 二次内側モデル名。単一かご時は None。
         im_secondary_outer: 二次（単一かごまたは外側）モデル名。
+        im_friction_windage: 摩擦・風損モデル名（``NONE`` を含め常に存在する）。
+        im_stray_load: 漂遊負荷損モデル名（``im_friction_windage`` と同様）。
         cable_conductor: ケーブル導体モデル名。ケーブル無し時は None。
     """
 
@@ -38,6 +40,8 @@ class FittedModelLabelsDto:
     im_excitation: str
     im_secondary_inner: str | None
     im_secondary_outer: str
+    im_friction_windage: str
+    im_stray_load: str
     cable_conductor: str | None
 
 

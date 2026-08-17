@@ -21,6 +21,8 @@ class TestEstimateParamsFitSummaryDto:
                 im_excitation="BASIC",
                 im_secondary_inner=None,
                 im_secondary_outer="BASIC",
+                im_friction_windage="NONE",
+                im_stray_load="NONE",
                 cable_conductor=None,
             ),
             optimizer_settings=OptimizerSettingsDto(

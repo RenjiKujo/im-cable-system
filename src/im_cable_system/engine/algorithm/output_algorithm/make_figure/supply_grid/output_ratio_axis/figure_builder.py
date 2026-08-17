@@ -17,6 +17,9 @@ from matplotlib.lines import Line2D
 from im_cable_system.engine.algorithm.output_algorithm.make_figure.i_figure_builder import (  # noqa: E501
     IFigureBuilder,
 )
+from im_cable_system.engine.algorithm.output_algorithm.make_figure.supply_grid import (  # noqa: E501
+    model_label_lines,
+)
 from im_cable_system.engine.algorithm.output_algorithm.make_figure.supply_grid.catalog import (  # noqa: E501
     _build_catalog_slices,
     _CatalogSlice,
@@ -34,7 +37,7 @@ from im_cable_system.engine.algorithm.output_algorithm.make_figure.supply_grid.p
     _COLOR_POWER_FACTOR,
     _COLOR_SPEED,
     _PRINT_DPI,
-    _output_name,
+    _output_display_name,
     _public_lines,
     _subplot_layout,
     _subplot_title,
@@ -274,9 +277,17 @@ class SupplyGridOutputRatioFigureBuilder(IFigureBuilder):
             axes_flat[index].set_visible(False)
 
         figure.suptitle(
-            f"{_output_name(output_dto)} - output ratio performance",
+            f"{_output_display_name(output_dto)} - output ratio performance",
             fontsize=11,
         )
-        figure.tight_layout(rect=(0.055, 0.16, 0.91, 0.93))
+        figure.text(
+            0.02,
+            0.02,
+            "\n".join(model_label_lines(output_dto)),
+            fontsize=7,
+            va="bottom",
+            ha="left",
+        )
+        figure.tight_layout(rect=(0.055, 0.22, 0.91, 0.93))
         _attach_figure_legend(figure)
         return figure

@@ -133,9 +133,7 @@ def _downscale_to_width(image: Image.Image, width_px: int) -> Image.Image:
 def _parse_args() -> argparse.Namespace:
     """コマンドライン引数を解釈する。"""
     parser = argparse.ArgumentParser(
-        description=(
-            "slip 軸図（左）と出力比軸図（右）を 1 枚に合成する。"
-        ),
+        description=("slip 軸図（左）と出力比軸図（右）を 1 枚に合成する。"),
     )
     parser.add_argument(
         "--figures-dir",

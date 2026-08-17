@@ -58,6 +58,7 @@ from im_cable_system.engine.domain.physics.electrical.power.power_calculator imp
     power_from_current_and_impedance,
     power_from_voltage_and_admittance,
     power_from_voltage_and_current,
+    subtract_power,
 )
 from im_cable_system.engine.domain.physics.electrical.power.three_phase_power_builder import (  # noqa: E501
     sum_power_dict_values,
@@ -144,6 +145,7 @@ __all__ = [
     "power_from_voltage_and_current",
     "solve_kirchhoff_current",
     "solve_kirchhoff_voltage",
+    "subtract_power",
     "sum_power_dict_values",
     "three_phase_power_dict_from_voltage_and_current_phase_dict",
     "three_phase_power_from_voltage_and_current_phase",

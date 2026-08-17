@@ -114,6 +114,11 @@ class ItmDto:
 
     Attributes:
         id (str): シミュレーションジョブの一意識別子。
+        name (ImCableSystemName): IM ケーブルシステムの一意識別子。
+            ``name.get_value()`` をファイル名・CSV 行識別子・report キーに
+            使い、``name.get_base()``（表示専用の基底名。候補インデックスを
+            除いた名前。forward では ``get_value()`` と同値）を図タイトル等
+            の表示にのみ使う。
 
         model (ItmModelDto): 回路モデルDTO（グループ1）。
             build_modelメソッドで構築されます。

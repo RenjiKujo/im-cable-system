@@ -45,20 +45,23 @@ from tests.test_processor.test_all_stage.supply_slice_extraction import (
 
 # ``input_for_estimate_params*.tsv`` 上の候補列番号（1-based）から組み立てた名前。
 # 順序は ``loader._build_system_name`` の
-# ``{perf}_{primary}_{excitation}_{secondary_single}_{double_outer}_{double_inner}_{cable}``。
+# ``{perf}_{primary}_{excitation}_{secondary_single}_{double_outer}_{double_inner}``
+# ``_{friction_windage}_{stray_load}_{cable}``。
+# im_friction_windage / im_stray_load 行は ``NONE`` の 1 候補のみを書いて
+# いるため、両軸とも常に列番号 1（8 インデックス化: rev.2）。
 # cable_conductor 列: 1=NONE, 2=BASIC, 3=FREQUENCY_DEPENDENT_SKIN_EFFECT_V1,
 # 4=CURRENT_DEPENDENT_SKIN_EFFECT_V1。
 _CURRENT_DEPENDENT03_INPUT_NAMES: tuple[str, ...] = (
     # 1) すべて BASIC + ケーブル無し
-    "CurrentDependent03_1_1_1_0_0_1",
+    "CurrentDependent03_1_1_1_0_0_1_1_1",
     # 2) SLIP_DEPENDENT 系のみ非 BASIC + ケーブル無し
-    "CurrentDependent03_1_2_2_0_0_1",
+    "CurrentDependent03_1_2_2_0_0_1_1_1",
     # 3) 正解モデル（CURRENT_DEPENDENT 系で揃える）+ ケーブル無し
-    "CurrentDependent03_3_3_4_0_0_1",
+    "CurrentDependent03_3_3_4_0_0_1_1_1",
     # 4) すべて BASIC + ケーブル(CURRENT_DEPENDENT_SKIN_EFFECT_V1)
-    "CurrentDependent03_1_1_1_0_0_4",
+    "CurrentDependent03_1_1_1_0_0_1_1_4",
 )
-_CURRENT_DEPENDENT03_CORRECT_MODEL_NAME = "CurrentDependent03_3_3_4_0_0_1"
+_CURRENT_DEPENDENT03_CORRECT_MODEL_NAME = "CurrentDependent03_3_3_4_0_0_1_1_1"
 
 # 正解モデルは CurrentDependent03 自身の曲線を生成した等価回路と同一構造のため、
 # 真値が bounds 内にある限りモデル結果は性能カーブを厳密に再現する。残差は
@@ -67,7 +70,7 @@ _CURRENT_DEPENDENT03_CORRECT_MODEL_NAME = "CurrentDependent03_3_3_4_0_0_1"
 _CURRENT_DEPENDENT03_MAX_NORMALIZED_ERROR = 1.0e-4
 
 # Basic01 の正解モデル: すべて BASIC + ケーブル無し。
-_BASIC01_CORRECT_MODEL_NAME = "Basic01_1_1_1_0_0_1"
+_BASIC01_CORRECT_MODEL_NAME = "Basic01_1_1_1_0_0_1_1_1"
 
 # Basic01 を Basic01 自身の曲線にフィットさせた際の最大正規化誤差。
 # 等価回路が同一かつ真値（primary/secondary inductance 1.79e-3 H）が bounds 内に

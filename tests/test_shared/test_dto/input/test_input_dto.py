@@ -35,6 +35,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImDto,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImName,
     ImPoles,
     ImPrimaryModelDto,
@@ -44,6 +46,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImSecondaryModelType,
     ImSeriesDto,
     ImSeriesName,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
     ArrayComplexVoltageDto,
@@ -95,6 +99,10 @@ def _make_im_dto(name: str = "M1") -> ImDto:
         secondary_inductances={
             branch: FloatInductanceDto(value=2.0, unit="mH"),
         },
+        friction_windage_model=ImFrictionWindageModelDto(
+            name=ImFrictionWindageModelType.NONE
+        ),
+        stray_load_model=ImStrayLoadModelDto(name=ImStrayLoadModelType.NONE),
     )
     return ImDto(name=ImName(value=name), im_series=series)
 
@@ -164,14 +172,14 @@ def _make_minimal_layout() -> ArrayLayoutDto:
 class TestInputDtoBasicConstruction:
     def test_minimal_construction_ok(self) -> None:
         InputDto(
-            name=ImCableSystemName(value="SYS"),
+            name=ImCableSystemName(base="SYS"),
             array_layout=_make_minimal_layout(),
             im=_make_im_dto(),
         )
 
     def test_with_cable(self) -> None:
         InputDto(
-            name=ImCableSystemName(value="SYS"),
+            name=ImCableSystemName(base="SYS"),
             array_layout=_make_minimal_layout(),
             im=_make_im_dto(),
             cable=_make_cable_dto(),
@@ -179,7 +187,7 @@ class TestInputDtoBasicConstruction:
 
     def test_default_im_pc_catalogs_is_empty(self) -> None:
         dto = InputDto(
-            name=ImCableSystemName(value="SYS"),
+            name=ImCableSystemName(base="SYS"),
             array_layout=_make_minimal_layout(),
             im=_make_im_dto(),
         )
@@ -190,7 +198,7 @@ class TestInputDtoValidation:
     def test_array_layout_none_rejected(self) -> None:
         with pytest.raises(ValueError, match="array_layout is required"):
             InputDto(
-                name=ImCableSystemName(value="SYS"),
+                name=ImCableSystemName(base="SYS"),
                 array_layout=None,  # type: ignore[arg-type]
                 im=_make_im_dto(),
             )
@@ -208,7 +216,7 @@ class TestInputDtoValidation:
         )
         with pytest.raises(ValueError, match="missing required axes"):
             InputDto(
-                name=ImCableSystemName(value="SYS"),
+                name=ImCableSystemName(base="SYS"),
                 array_layout=layout,
                 im=_make_im_dto(),
             )
@@ -223,12 +231,12 @@ class TestReferenceAxisAllowed:
 class TestInputDtosCollection:
     def test_lookup_by_name(self) -> None:
         a = InputDto(
-            name=ImCableSystemName(value="SYS_A"),
+            name=ImCableSystemName(base="SYS_A"),
             array_layout=_make_minimal_layout(),
             im=_make_im_dto("A"),
         )
         b = InputDto(
-            name=ImCableSystemName(value="SYS_B"),
+            name=ImCableSystemName(base="SYS_B"),
             array_layout=_make_minimal_layout(),
             im=_make_im_dto("B"),
         )
@@ -238,7 +246,7 @@ class TestInputDtosCollection:
 
     def test_get_names(self) -> None:
         a = InputDto(
-            name=ImCableSystemName(value="SYS_A"),
+            name=ImCableSystemName(base="SYS_A"),
             array_layout=_make_minimal_layout(),
             im=_make_im_dto("A"),
         )

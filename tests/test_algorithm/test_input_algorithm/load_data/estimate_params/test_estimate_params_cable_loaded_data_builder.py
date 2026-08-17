@@ -25,8 +25,10 @@ from im_cable_system.engine.shared.config import IConfig
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ConductorModelType,
     ImExcitationModelType,
+    ImFrictionWindageModelType,
     ImPrimaryModelType,
     ImSecondaryModelType,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E501
     CableParameterFitDescriptorBounds,
@@ -42,6 +44,16 @@ def _combo(
         secondary_inner=None,
         secondary_outer=ImSecondaryModelType.BASIC,
         cable_conductor=cable_conductor,
+        friction_windage=ImFrictionWindageModelType.NONE,
+        stray_load=ImStrayLoadModelType.NONE,
+        primary_index=1,
+        excitation_index=1,
+        secondary_single_index=1,
+        secondary_double_outer_index=0,
+        secondary_double_inner_index=0,
+        cable_conductor_index=0 if cable_conductor is None else 1,
+        friction_windage_index=1,
+        stray_load_index=1,
     )
 
 

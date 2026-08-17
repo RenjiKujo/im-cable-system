@@ -170,3 +170,42 @@ def add_power(
 
     combined_value = power1_base.value + power2_base.value
     return ArrayComplexPowerDto(value=combined_value, unit="VA")
+
+
+def subtract_power(
+    power1: ArrayComplexPowerDto,
+    power2: ArrayComplexPowerDto,
+) -> ArrayComplexPowerDto:
+    """2つの電力DTOを減算する（power1 - power2）。
+
+    計算式: S_result = S1 - S2
+    単位が異なる場合は、両方を基本単位（VA）に変換してから減算します。
+
+    Args:
+        power1: 被減数の電力DTO
+        power2: 減数の電力DTO
+
+    Returns:
+        ArrayComplexPowerDto: 減算された電力DTO（単位: VA）
+
+    Raises:
+        ValueError: 配列の形状が一致しない場合
+
+    Notes:
+        - 戻りのunitは常に "VA"。
+        - 入力配列は同一形状である必要がある（ブロードキャストは行わない）。
+        - ``add_power`` と対になる関数（IM 軸出力 = 二次負荷電力 - 軸出力控除 の
+          計算で使う）。
+    """
+    if power1.value.shape != power2.value.shape:
+        raise ValueError(
+            f"電力配列の形状が一致しません: "
+            f"{power1.value.shape} vs {power2.value.shape}"
+        )
+
+    # 単位を統一してから減算
+    power1_base = power1.to_base_unit()
+    power2_base = power2.to_base_unit()
+
+    combined_value = power1_base.value - power2_base.value
+    return ArrayComplexPowerDto(value=combined_value, unit="VA")

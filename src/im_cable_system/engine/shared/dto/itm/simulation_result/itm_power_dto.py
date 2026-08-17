@@ -47,16 +47,29 @@ class ItmImPowerDto:
         secondary_base_loss_power (dict[ImSecondaryCageBranchType, ArrayComplexPowerDto]):
             IM二次側基本損失電力[VA]（枝ごと）。
         secondary_load_power (dict[ImSecondaryCageBranchType, ArrayComplexPowerDto]):
-            IM二次側負荷電力[VA]（枝ごと、IM出力電力）。
+            IM二次側負荷電力[VA]（枝ごと。軸出力控除を引く前の内部機械出力）。
         secondary_branch_total_power (dict[ImSecondaryCageBranchType, ArrayComplexPowerDto]):
             IM二次側（base+load の直列枝）合計電力[VA]（枝ごと）。
         secondary_total_power (ArrayComplexPowerDto):
             二次側合計電力[VA]（枝電流合計と二次電圧で計算した合計）。
+        friction_windage_loss_power (ArrayComplexPowerDto): 摩擦・風損[VA]。
+            虚部は常に 0（有効電力のみ）。`ImFrictionWindageModelDto` が
+            `NONE` のときはゼロ配列。`ImSeriesDto.nameplate_power`
+            （3相合計）基準で計算するため、この量だけ「1相で計算して3相へ
+            変換」の経路を通らない。
+        stray_load_loss_power (ArrayComplexPowerDto): 漂遊負荷損[VA]。
+            虚部は常に 0（有効電力のみ）。`ImStrayLoadModelDto` が `NONE`
+            のときはゼロ配列。基準の扱いは `friction_windage_loss_power`
+            と同じ。
         output_power (ArrayComplexPowerDto): 特性値計算で参照するIM正規出力電力[VA]。
             目的: 単かご/多重かご等のモデル差を **電力計算段で吸収**し、特性値計算では
             `output_power` のみを参照して一律にトルク・効率を計算できるようにする。
-            定義: `sum(secondary_load_power.values())`。
+            定義: `sum(secondary_load_power.values()) − friction_windage_loss_power
+            − stray_load_loss_power`（軸出力。実部のみ減算）。両損失が `NONE`
+            のときは従来どおり `sum(secondary_load_power.values())` と一致する。
         total_loss_power (ArrayComplexPowerDto): IM全体損失電力[VA]。
+            一次銅損・二次銅損・鉄損に加え、`friction_windage_loss_power` と
+            `stray_load_loss_power` を含む。
         copper_loss_power (ArrayComplexPowerDto): IM銅損電力[VA]。
         iron_loss_power (ArrayComplexPowerDto): IM鉄損電力[VA]。
     """
@@ -74,6 +87,9 @@ class ItmImPowerDto:
         ImSecondaryCageBranchType, ArrayComplexPowerDto
     ]
     secondary_total_power: ArrayComplexPowerDto
+
+    friction_windage_loss_power: ArrayComplexPowerDto
+    stray_load_loss_power: ArrayComplexPowerDto
 
     output_power: ArrayComplexPowerDto
     total_loss_power: ArrayComplexPowerDto

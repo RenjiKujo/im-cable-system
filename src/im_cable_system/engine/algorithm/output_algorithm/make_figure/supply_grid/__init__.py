@@ -14,4 +14,15 @@
 - ``plotting_common``: 多軸描画・統合凡例・A4 レイアウト。
 
 層外向けの公開窓口ではなく、orchestrate から利用する内部ステップ。
+
+``model_label_annotation.model_label_lines`` のみ例外的に公開する。
+表示チャート種別に依存しない共有ユーティリティ（データ源は
+``OutputDto.im`` / ``OutputDto.cable`` のみ）で、``operating_points``
+サブパッケージ（別の責務ツリー）からもこの窓口経由で利用する。
 """
+
+from im_cable_system.engine.algorithm.output_algorithm.make_figure.supply_grid.model_label_annotation import (  # noqa: E501
+    model_label_lines,
+)
+
+__all__ = ["model_label_lines"]

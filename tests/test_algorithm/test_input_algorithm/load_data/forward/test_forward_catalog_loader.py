@@ -100,6 +100,8 @@ def _basic_im_entry(name: str = "Basic01") -> dict[str, Any]:
         "primary": copy.deepcopy(branch),
         "excitation": copy.deepcopy(branch),
         "secondary": copy.deepcopy(branch),
+        "friction_windage": {"model": {"name": "NONE", "params": []}},
+        "stray_load": {"model": {"name": "NONE", "params": []}},
     }
 
 
@@ -247,6 +249,82 @@ class TestForwardImCatalogValidation:
         with pytest.raises(
             ValueError,
             match=r"im_series\[\d+\] に name キーが",
+        ):
+            _loader(test_config, logger).load(spec)
+
+
+class TestForwardImCatalogShaftOutputDeduction:
+    """軸出力控除 2 軸（``friction_windage`` / ``stray_load``）は必須。
+
+    一次・励磁・二次と同格の必須ブロックであり、欠落は他の必須キー
+    欠落と同じ ``require_mapping_key`` 経由のエラーになる。
+    """
+
+    def test_missing_friction_windage_raises_value_error(
+        self,
+        config: IConfig,
+        logger: ILogger,
+        tmp_path: Path,
+    ) -> None:
+        entry = _basic_im_entry()
+        entry.pop("friction_windage")
+        catalog = tmp_path / "im_missing_friction_windage.yaml"
+        _write_yaml(catalog, {"im_series": [entry]})
+        spec = _make_spec()
+        test_config = _config_with_catalog_paths(
+            config,
+            im_series_catalog_path=catalog,
+        )
+        with pytest.raises(
+            ValueError,
+            match=r"必須キー 'friction_windage' がありません",
+        ):
+            _loader(test_config, logger).load(spec)
+
+    def test_missing_stray_load_raises_value_error(
+        self,
+        config: IConfig,
+        logger: ILogger,
+        tmp_path: Path,
+    ) -> None:
+        entry = _basic_im_entry()
+        entry.pop("stray_load")
+        catalog = tmp_path / "im_missing_stray_load.yaml"
+        _write_yaml(catalog, {"im_series": [entry]})
+        spec = _make_spec()
+        test_config = _config_with_catalog_paths(
+            config,
+            im_series_catalog_path=catalog,
+        )
+        with pytest.raises(
+            ValueError,
+            match=r"必須キー 'stray_load' がありません",
+        ):
+            _loader(test_config, logger).load(spec)
+
+    def test_missing_model_in_friction_windage_names_the_axis(
+        self,
+        config: IConfig,
+        logger: ILogger,
+        tmp_path: Path,
+    ) -> None:
+        """``friction_windage.model`` 欠落時、エラーがどちらの軸か明示する。
+
+        ``_loss_branch_from_entry`` 内の ``model`` 取り出しに
+        ``f"{context}.{key}"`` を渡す修正の回帰テスト。
+        """
+        entry = _basic_im_entry()
+        entry["friction_windage"] = {}
+        catalog = tmp_path / "im_missing_fw_model.yaml"
+        _write_yaml(catalog, {"im_series": [entry]})
+        spec = _make_spec()
+        test_config = _config_with_catalog_paths(
+            config,
+            im_series_catalog_path=catalog,
+        )
+        with pytest.raises(
+            ValueError,
+            match=r"friction_windage: 必須キー 'model' がありません",
         ):
             _loader(test_config, logger).load(spec)
 

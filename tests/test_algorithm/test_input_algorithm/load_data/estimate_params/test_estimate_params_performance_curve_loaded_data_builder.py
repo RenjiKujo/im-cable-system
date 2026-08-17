@@ -31,6 +31,8 @@ def _make_parsed(
         candidate_secondary_single=(),
         candidate_secondary_double_inner=(),
         candidate_secondary_double_outer=(),
+        candidate_friction_windage=(),
+        candidate_stray_load=(),
         candidate_cable_conductor=(),
         supply_block={
             "frequency": (50.0, "Hz"),

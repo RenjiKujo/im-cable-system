@@ -19,8 +19,14 @@ class BaseNameId:
     inherit this base and
     satisfy the behavior defined here (implementation contract).
 
-    Each name class should only define ``value`` and validation in
-    ``__post_init__``, and multiply-inherit this base.
+    Each name class should define ``value`` and validation in
+    ``__post_init__``, and multiply-inherit this base. ``value`` is usually a
+    plain field, but a subclass may instead expose it as a read-only
+    ``@property`` derived from other fields when the identifier itself is
+    composed from more than one part (see ``ImCableSystemName``, whose
+    ``value`` joins a display-only ``base`` with an optional
+    ``discriminator``). Either way ``value`` must stay non-blank, immutable
+    once constructed, and hashable.
     Use ``@dataclass(frozen=True, eq=False)`` so dataclass-generated ``__eq__``
     does not override the base ``__eq__``.
     """
@@ -44,7 +50,12 @@ class BaseNameId:
         return hash(self.value)
 
     def __str__(self) -> str:
-        """Return string representation."""
+        """Return the identifier string (``value``).
+
+        Some subclasses (e.g. ``ImCableSystemName``) additionally expose a
+        display-only accessor such as ``get_base()``; prefer that over
+        ``str()``/``value`` for human-facing display.
+        """
         return self.value
 
 

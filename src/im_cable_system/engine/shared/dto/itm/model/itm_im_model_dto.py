@@ -27,12 +27,14 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImCircuitType,
     ImConnectionType,
     ImExcitationModelDto,
+    ImFrictionWindageModelDto,
     ImName,
     ImPoles,
     ImPrimaryModelDto,
     ImSecondaryCageBranchType,
     ImSecondaryModelDto,
     ImSeriesName,
+    ImStrayLoadModelDto,
     expected_branch_keys_for_cage_multiplicity,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
@@ -258,6 +260,12 @@ class ItmImModelDto:
         excitation_model (ItmImExcitationDto): 励磁モデル情報（グループ4）。
         secondary_model (ItmImSecondaryDto): 二次側モデル情報（グループ5）。
         total_model (ItmImTotalDto): 全範囲モデル情報（グループ6）。
+        friction_windage_model (ImFrictionWindageModelDto): 摩擦・風損モデル
+            （タイプとパラメータ）。イミタンス配列も入力 R/L も持たないため、
+            グループ3〜5のようなグループ DTO（イミタンス結果を包む器）は
+            作らず、モデル DTO をそのまま保持する。
+        stray_load_model (ImStrayLoadModelDto): 漂遊負荷損モデル（タイプと
+            パラメータ）。理由は :attr:`friction_windage_model` と同じ。
     """
 
     name: ImName
@@ -267,6 +275,8 @@ class ItmImModelDto:
     excitation_model: ItmImExcitationDto
     secondary_model: ItmImSecondaryDto
     total_model: ItmImTotalDto
+    friction_windage_model: ImFrictionWindageModelDto
+    stray_load_model: ImStrayLoadModelDto
 
     @property
     def poles(self) -> ImPoles:

@@ -20,7 +20,11 @@ from im_cable_system.engine.domain.physics.electrical import (
 )
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImCageMultiplicityType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImSecondaryCageBranchType,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
     PieCableConductorKey,
     PieCableGroundKey,
 )
@@ -143,6 +147,12 @@ def test_power_calculation_orchestrator_pie_single_cage() -> None:
     class _ImModel:
         def __init__(self) -> None:
             self.secondary_model = _SecondaryModel()
+            self.friction_windage_model = ImFrictionWindageModelDto(
+                name=ImFrictionWindageModelType.NONE
+            )
+            self.stray_load_model = ImStrayLoadModelDto(
+                name=ImStrayLoadModelType.NONE
+            )
 
     class _ModelDto:
         def __init__(self) -> None:

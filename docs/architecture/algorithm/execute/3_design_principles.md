@@ -26,6 +26,14 @@ forward の計算順序は `build_model -> simulate -> validate_itm_dto` に固�
 
 ケーブルが存在しない場合は、完全導体・完全絶縁の擬似ケーブルモデルとして扱う。`None` を計算途中で特別扱いし続けるより、回路モデルとして表現した方が、システムモデル構築とシミュレーションの責務を単純に保てる。
 
+### 軸出力（軸出力控除を含む場合）
+
+IM の軸出力（`ItmImPowerDto.output_power`）は、両軸（`im_friction_windage` / `im_stray_load`）が `NONE`（必須軸だが、ゼロ損失の明示的なモデル種別）のときは二次負荷支路電力の総和と一致する。摩擦・風損・漂遊負荷損を有効にした場合は、`output_power = Σ secondary_load_power − P_FW − P_stray`（実部のみ減算）として、軸出力控除を差し引いたものを軸出力とする。両損失を `total_loss_power` にも含めるため、`validate_energy_conservation`（複素のまま比較）は構造的に破れない。
+
+「軸出力控除」は摩擦・風損と漂遊負荷損を**役割**（二次負荷支路電力から引いて軸出力を得る）で括った呼び名であり、損失分類の総称ではない。規格（IEC 60034-2-1 / IEEE 112）の損失分類では機械損は摩擦・風損のみを指し、漂遊負荷損は追加負荷損として別枠に置かれる。摩擦・風損は引き続き機械損と呼んでよいが、漂遊負荷損を機械損と呼ばない。
+
+摩擦・風損と漂遊負荷損は、イミタンス（インピーダンス・アドミタンス）を持たないサブシステムである。他の IM 部分（一次・励磁・二次）は「1 相で計算して 3 相へ変換」する経路（`build_model/` → `simulate/`）を通るが、この 2 つは `ImSeriesDto.nameplate_power`（銘板電力、定義上すでに 3 相合計）を基準に電力計算段（`simulate/power/calculate_im_shaft_output_deduction/`）で直接計算し、二次負荷電力から減算する。「1 相 → 3 相変換」を経ない唯一の量である。数式・記号の正本は [`model_equations/im_friction_windage.md`](../../../model_equations/im_friction_windage.md) / [`model_equations/im_stray_load.md`](../../../model_equations/im_stray_load.md)。
+
 ## 配列レイアウト
 
 forward の必須軸は `slip`, `frequency`, `input_line_voltage` である。これらは回路計算を定める外生変数であり、`InputDto` の時点で存在している必要がある。

@@ -28,10 +28,21 @@ _RPM_STEP = 1.5
 _RPM_MIN = 1440.0
 
 
-def _rpm_grid() -> np.ndarray:
-    """教師曲線用の回転数格子 [rpm]。"""
-    count = int(round((_SYNC_RPM - _RPM_MIN) / _RPM_STEP)) + 1
-    return _SYNC_RPM - _RPM_STEP * np.arange(count, dtype=np.float64)
+def _rpm_grid(
+    *,
+    rpm_max: float = _SYNC_RPM,
+    rpm_min: float = _RPM_MIN,
+    rpm_step: float = _RPM_STEP,
+) -> np.ndarray:
+    """教師曲線用の回転数格子 [rpm]。
+
+    既定は同期速度 1500 rpm を含む（slip 0 を含む）。摩擦・風損／漂遊負荷損
+    （戦略C）の教師曲線では、s≈0 で軸出力が負になり得るため、呼び出し側が
+    ``rpm_max`` を同期速度未満に指定して s≈0 を除外する
+    （docs/estimate_params_curve_fitting_consistency.md 戦略C 参照）。
+    """
+    count = int(round((rpm_max - rpm_min) / rpm_step)) + 1
+    return rpm_max - rpm_step * np.arange(count, dtype=np.float64)
 
 
 def _slip_from_rpm(rpm: np.ndarray) -> np.ndarray:
@@ -81,10 +92,13 @@ def _run_forward(
     im_catalog: Path,
     cable_catalog: Path,
     work_dir: Path,
+    rpm_max: float = _SYNC_RPM,
+    rpm_min: float = _RPM_MIN,
+    rpm_step: float = _RPM_STEP,
 ) -> tuple[
     np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
 ]:
-    rpm = _rpm_grid()
+    rpm = _rpm_grid(rpm_max=rpm_max, rpm_min=rpm_min, rpm_step=rpm_step)
     slips = _slip_from_rpm(rpm)
     series_path = work_dir / "series_selection.csv"
     axes_path = work_dir / "axes.csv"
@@ -215,6 +229,17 @@ def main() -> int:
         default=_REPO_ROOT
         / "src/im_cable_system/catalog/cable_series_catalog.yaml",
     )
+    parser.add_argument(
+        "--rpm-max",
+        type=float,
+        default=_SYNC_RPM,
+        help=(
+            "回転数格子の上限 [rpm]（既定は同期速度 = slip 0 を含む）。"
+            "軸出力控除の教師曲線では同期速度未満を指定して s≈0 を除外する。"
+        ),
+    )
+    parser.add_argument("--rpm-min", type=float, default=_RPM_MIN)
+    parser.add_argument("--rpm-step", type=float, default=_RPM_STEP)
     args = parser.parse_args()
     work_dir = _REPO_ROOT / "examples" / "_tmp_teacher_curve"
     work_dir.mkdir(parents=True, exist_ok=True)
@@ -224,6 +249,9 @@ def main() -> int:
         im_catalog=args.im_catalog,
         cable_catalog=args.cable_catalog,
         work_dir=work_dir,
+        rpm_max=args.rpm_max,
+        rpm_min=args.rpm_min,
+        rpm_step=args.rpm_step,
     )
     csv_text = _format_performance_curve_csv(
         args.series_name,

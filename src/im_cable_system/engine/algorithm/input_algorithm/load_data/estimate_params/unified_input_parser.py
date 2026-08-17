@@ -47,6 +47,8 @@ _CANDIDATE_AXIS_LABELS = {
     "im_secondary(single)": "secondary_single",
     "im_secondary(double_inner)": "secondary_double_inner",
     "im_secondary(double_outer)": "secondary_double_outer",
+    "im_friction_windage": "friction_windage",
+    "im_stray_load": "stray_load",
     "cable_conductor_model": "cable_conductor",
 }
 
@@ -227,6 +229,13 @@ class EstimateParamsParsedTables:
             候補（二重かご探索の内側、空のとき二重かご探索を行わない）。
         candidate_secondary_double_outer: ``im_secondary(double_outer)``
             候補（二重かご探索の外側、空のとき二重かご探索を行わない）。
+        candidate_friction_windage: ``im_friction_windage`` 候補。必須軸
+            （``im_primary`` / ``im_excitation`` と同格）。最低 1 候補
+            （ゼロ損失なら ``NONE``）を持つ。行が無い、または行はあるが
+            候補セルが全て空の場合は :func:`_validate_required_candidate_axes`
+            が ``ValueError`` を送出する。
+        candidate_stray_load: ``im_stray_load`` 候補。規約は
+            ``candidate_friction_windage`` と同じ。
         candidate_cable_conductor: ``cable_conductor_model`` 候補。
         supply_block: ``supply`` セクションの ``{key: (value, unit)}``。
             必須行は ``frequency`` / ``voltage``。
@@ -247,6 +256,8 @@ class EstimateParamsParsedTables:
     candidate_secondary_single: tuple[str, ...]
     candidate_secondary_double_inner: tuple[str, ...]
     candidate_secondary_double_outer: tuple[str, ...]
+    candidate_friction_windage: tuple[str, ...]
+    candidate_stray_load: tuple[str, ...]
     candidate_cable_conductor: tuple[str, ...]
     supply_block: dict[str, tuple[float, str]]
     curve_header_row: list[str]
@@ -288,6 +299,8 @@ class _CandidateAxes:
     secondary_single: tuple[str, ...] = ()
     secondary_double_inner: tuple[str, ...] = ()
     secondary_double_outer: tuple[str, ...] = ()
+    friction_windage: tuple[str, ...] = ()
+    stray_load: tuple[str, ...] = ()
     cable_conductor: tuple[str, ...] = ()
 
 
@@ -337,6 +350,8 @@ def _parse_candidate_axes_block(
             secondary_single=axes.get("secondary_single", ()),
             secondary_double_inner=axes.get("secondary_double_inner", ()),
             secondary_double_outer=axes.get("secondary_double_outer", ()),
+            friction_windage=axes.get("friction_windage", ()),
+            stray_load=axes.get("stray_load", ()),
             cable_conductor=axes.get("cable_conductor", ()),
         ),
         idx,
@@ -374,6 +389,8 @@ def parse_unified_estimate_params_csv(
         candidate_secondary_single=candidate_axes.secondary_single,
         candidate_secondary_double_inner=candidate_axes.secondary_double_inner,
         candidate_secondary_double_outer=candidate_axes.secondary_double_outer,
+        candidate_friction_windage=candidate_axes.friction_windage,
+        candidate_stray_load=candidate_axes.stray_load,
         candidate_cable_conductor=candidate_axes.cable_conductor,
         supply_block=supply_block,
         curve_header_row=rows[curve_idx],
@@ -383,12 +400,18 @@ def parse_unified_estimate_params_csv(
 
 
 def _validate_required_candidate_axes(axes: _CandidateAxes) -> None:
-    """``primary`` / ``excitation`` および二次軸の必須条件を検証する。
+    """``primary`` / ``excitation`` / 二次軸 / 軸出力控除 2 軸の必須条件を検証する。
 
     二次軸は ``single`` または ``(double_inner AND double_outer)`` の
     どちらか少なくとも一方が指定されている必要がある。``double_inner``
     と ``double_outer`` は **同時に指定** する必要があり、片方だけ
     指定するとエラー。
+
+    ``friction_windage`` / ``stray_load`` は ``primary`` / ``excitation``
+    と同格の必須軸。「行が無い」と「行はあるが候補セルが全て空」は
+    ``_CandidateAxes`` の時点で既に区別できない（どちらも空タプルに潰れる）
+    ため、ここでも区別しない。どちらの場合もエラーにする（＝最低でも
+    ``NONE`` と書くことを要求する）。
     """
     if not axes.primary:
         raise ValueError(
@@ -411,4 +434,14 @@ def _validate_required_candidate_axes(axes: _CandidateAxes) -> None:
             "model_candidate_axis には im_secondary(single)、または "
             "im_secondary(double_inner) と im_secondary(double_outer) の"
             "両方のいずれかを指定する必要があります。"
+        )
+    if not axes.friction_windage:
+        raise ValueError(
+            "model_candidate_axis に im_friction_windage 候補がありません。"
+            "ゼロ損失なら NONE を明示してください。"
+        )
+    if not axes.stray_load:
+        raise ValueError(
+            "model_candidate_axis に im_stray_load 候補がありません。"
+            "ゼロ損失なら NONE を明示してください。"
         )

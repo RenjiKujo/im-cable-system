@@ -10,7 +10,7 @@ import pytest
 from im_cable_system.engine.algorithm.output_algorithm.make_figure.supply_grid.plotting_common import (  # noqa: E501, PLC2701
     _CATALOG_LABEL_PREFIX,
     _legend_sort_key,
-    _output_name,
+    _output_display_name,
     _subplot_layout,
     _subplot_title,
 )
@@ -59,15 +59,12 @@ class TestSubplotTitle:
         assert _subplot_title(cast(Any, supply_slice)) == "f = 60 Hz, V = 460 V"
 
 
-class TestOutputName:
-    """``_output_name`` は名前 DTO / 文字列の双方を扱う。"""
+class TestOutputDisplayName:
+    """``_output_display_name`` は ``name.get_base()``（候補一意化接尾辞を
+    除いた表示専用の基底名）を返す。"""
 
-    def test_name_with_get_value(self) -> None:
+    def test_returns_base_from_name(self) -> None:
         output_dto = SimpleNamespace(
-            name=SimpleNamespace(get_value=lambda: "sys-a")
+            name=SimpleNamespace(get_base=lambda: "sys-a")
         )
-        assert _output_name(cast(Any, output_dto)) == "sys-a"
-
-    def test_name_as_plain_string(self) -> None:
-        output_dto = SimpleNamespace(name="sys-b")
-        assert _output_name(cast(Any, output_dto)) == "sys-b"
+        assert _output_display_name(cast(Any, output_dto)) == "sys-a"

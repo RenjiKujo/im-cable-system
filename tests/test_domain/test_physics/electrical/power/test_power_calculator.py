@@ -1,8 +1,8 @@
 """``physics.electrical.power.power_calculator`` の単体テスト。
 
 ``power_from_voltage_and_current`` / ``power_from_voltage_and_admittance`` /
-``power_from_current_and_impedance`` / ``add_power`` の基本動作と整合性、
-形状不一致の例外を検証する。
+``power_from_current_and_impedance`` / ``add_power`` / ``subtract_power`` の
+基本動作と整合性、形状不一致の例外を検証する。
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from im_cable_system.engine.domain.physics.electrical import (
     power_from_current_and_impedance,
     power_from_voltage_and_admittance,
     power_from_voltage_and_current,
+    subtract_power,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
     ArrayComplexAdmittanceDto,
@@ -126,6 +127,33 @@ class TestAddPower:
     def test_raises_on_shape_mismatch(self) -> None:
         with pytest.raises(ValueError, match="電力配列の形状が一致しません"):
             add_power(
+                power1=ArrayComplexPowerDto(value=np.array([1.0]), unit="VA"),
+                power2=ArrayComplexPowerDto(
+                    value=np.array([1.0, 2.0]), unit="VA"
+                ),
+            )
+
+
+class TestSubtractPower:
+    """``subtract_power`` は基本単位 VA で power1 - power2 を計算する。"""
+
+    def test_subtracts_two_powers_element_wise(self) -> None:
+        s1 = ArrayComplexPowerDto(value=np.array([10.0 + 0j, 5.0]), unit="VA")
+        s2 = ArrayComplexPowerDto(value=np.array([1.0 + 2.0j, 3.0]), unit="VA")
+        result = subtract_power(power1=s1, power2=s2)
+        np.testing.assert_allclose(result.value, [9.0 - 2.0j, 2.0])
+        assert result.get_unit() == "VA"
+
+    def test_is_inverse_of_add_power(self) -> None:
+        s1 = ArrayComplexPowerDto(value=np.array([7.0 + 3.0j]), unit="VA")
+        s2 = ArrayComplexPowerDto(value=np.array([2.0 - 1.0j]), unit="VA")
+        total = add_power(power1=s1, power2=s2)
+        back = subtract_power(power1=total, power2=s2)
+        np.testing.assert_allclose(back.value, s1.value)
+
+    def test_raises_on_shape_mismatch(self) -> None:
+        with pytest.raises(ValueError, match="電力配列の形状が一致しません"):
+            subtract_power(
                 power1=ArrayComplexPowerDto(value=np.array([1.0]), unit="VA"),
                 power2=ArrayComplexPowerDto(
                     value=np.array([1.0, 2.0]), unit="VA"

@@ -260,6 +260,8 @@ class EstimateParamsFitSummaryBuilder(IEstimateParamsFitSummaryBuilder):
             im_excitation=series.excitation_model.get_name(),
             im_secondary_inner=inner_label,
             im_secondary_outer=outer_label,
+            im_friction_windage=series.friction_windage_model.get_name(),
+            im_stray_load=series.stray_load_model.get_name(),
             cable_conductor=cable_conductor,
         )
 

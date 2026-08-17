@@ -67,6 +67,9 @@ MPLBACKEND=Agg .venv/bin/python runner/run_forward_by_cartesian_grid.py \
 （`SlipAndCurrentDependent03` 相当の正解構造のみ、1 組み合わせ）に絞ってあり、
 Quick Start の計算時間を短縮しています。構造同定デモは ``candidate_2`` 以降に
 候補を追加すると直積展開されます（パイプライン通しテスト参照）。
+``im_friction_windage`` / ``im_stray_load``（摩擦・風損／漂遊負荷損）の 2 軸も
+同様に候補を追加できます（必須軸。ゼロ損失は ``NONE`` を明示的に書きます）。
+``NONE`` のみなら組み合わせは増えず、両軸に候補を書くと最大 4 倍になります。
 
 ```bash
 MPLBACKEND=Agg .venv/bin/python runner/run_estimate_params.py \

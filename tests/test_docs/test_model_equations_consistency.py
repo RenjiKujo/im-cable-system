@@ -34,10 +34,14 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ConductorModelType,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImPrimaryModelDto,
     ImPrimaryModelType,
     ImSecondaryModelDto,
     ImSecondaryModelType,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
 )
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -116,6 +120,22 @@ _SUBSYSTEMS = (
         doc_path=_MODEL_EQUATIONS_DIR / "cable_conductor.md",
         yaml_path=_CABLE_BOUNDS_PATH,
         yaml_top_key="conductor",
+    ),
+    _Subsystem(
+        label="im_friction_windage",
+        enum_cls=ImFrictionWindageModelType,
+        dto_cls=ImFrictionWindageModelDto,
+        doc_path=_MODEL_EQUATIONS_DIR / "im_friction_windage.md",
+        yaml_path=_IM_BOUNDS_PATH,
+        yaml_top_key="friction_windage",
+    ),
+    _Subsystem(
+        label="im_stray_load",
+        enum_cls=ImStrayLoadModelType,
+        dto_cls=ImStrayLoadModelDto,
+        doc_path=_MODEL_EQUATIONS_DIR / "im_stray_load.md",
+        yaml_path=_IM_BOUNDS_PATH,
+        yaml_top_key="stray_load",
     ),
 )
 

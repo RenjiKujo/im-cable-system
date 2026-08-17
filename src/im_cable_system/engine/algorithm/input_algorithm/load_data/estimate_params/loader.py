@@ -255,6 +255,7 @@ class EstimateParamsLoader(
                 perf_curve_name=parsed.im_performance_curve_name,
                 combo=combo,
             )
+            name_discriminator = _build_name_discriminator(combo)
             im_name = _build_im_name(combo)
             cable_name = _build_cable_name(combo)
             im_loaded = build_im_loaded_data(
@@ -275,6 +276,7 @@ class EstimateParamsLoader(
             built.append(
                 EstimateParamsInputLoadedData(
                     im_cable_system_name=system_name,
+                    name_discriminator=name_discriminator,
                     im=im_loaded,
                     cable=cable_loaded,
                     axes=axes,
@@ -291,15 +293,28 @@ def _build_system_name(
 ) -> str:
     """``ImCableSystemName`` 用文字列を組み立てる。
 
-    形式: ``{perf}_{p}_{e}_{ss}_{sdo}_{sdi}_{c}``。採用しない軸は ``0``。
+    形式: ``{perf}_{p}_{e}_{ss}_{sdo}_{sdi}_{fw}_{sl}_{c}``。
+    IM 軸（``fw`` / ``sl`` 含む）をまとめ、ケーブルを末尾に置く既存の組み立て順に
+    従う。採用しない軸は ``0``（``fw`` / ``sl`` は必ず採用されるため常に ``1`` 以上）。
+    """
+    return f"{perf_curve_name}_{_build_name_discriminator(combo)}"
+
+
+def _build_name_discriminator(combo: EstimateParamsModelCombo) -> str:
+    """``ImCableSystemName.discriminator`` 用文字列を組み立てる。
+
+    形式: ``{p}_{e}_{ss}_{sdo}_{sdi}_{fw}_{sl}_{c}``（``_build_system_name`` から
+    ``perf_curve_name`` プレフィックスを除いたもの）。``im_cable_system_name``
+    を文字列分解して求めるのではなく、同じ ``combo`` から並行して組み立てる。
     """
     return (
-        f"{perf_curve_name}"
-        f"_{combo.primary_index}"
+        f"{combo.primary_index}"
         f"_{combo.excitation_index}"
         f"_{combo.secondary_single_index}"
         f"_{combo.secondary_double_outer_index}"
         f"_{combo.secondary_double_inner_index}"
+        f"_{combo.friction_windage_index}"
+        f"_{combo.stray_load_index}"
         f"_{combo.cable_conductor_index}"
     )
 
@@ -307,7 +322,8 @@ def _build_system_name(
 def _build_im_name(combo: EstimateParamsModelCombo) -> str:
     """``ImSeriesName`` 用文字列を組み立てる。
 
-    形式: ``IM_{p}_{e}_{ss}_{sdo}_{sdi}``。採用しない軸は ``0``。
+    形式: ``IM_{p}_{e}_{ss}_{sdo}_{sdi}_{fw}_{sl}``。採用しない軸は ``0``
+    （``fw`` / ``sl`` は必ず採用されるため常に ``1`` 以上）。
     """
     return (
         f"IM"
@@ -316,6 +332,8 @@ def _build_im_name(combo: EstimateParamsModelCombo) -> str:
         f"_{combo.secondary_single_index}"
         f"_{combo.secondary_double_outer_index}"
         f"_{combo.secondary_double_inner_index}"
+        f"_{combo.friction_windage_index}"
+        f"_{combo.stray_load_index}"
     )
 
 

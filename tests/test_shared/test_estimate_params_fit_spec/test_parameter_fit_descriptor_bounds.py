@@ -236,6 +236,85 @@ class TestImFromEstimationDocument:
             ImParameterFitDescriptorBounds.from_estimation_document({})
 
 
+def _flat_im_document_with_shaft_output_deduction() -> dict[str, Any]:
+    document = _flat_im_document()
+    document["friction_windage"] = {
+        "model_parameters": {
+            "NONE": {"params": {}},
+            "CONSTANT_V1": {
+                "params": {
+                    "k_friction_windage": {
+                        "bounds": {"lb": 0.0, "ub": 0.05},
+                        "init": {"method": "value", "value": 0.01},
+                    },
+                }
+            },
+        },
+    }
+    document["stray_load"] = {
+        "model_parameters": {
+            "NONE": {"params": {}},
+            "CURRENT_DEPENDENT_QUADRATIC_V1": {
+                "params": {
+                    "k_stray_load": {
+                        "bounds": {"lb": 0.0, "ub": 0.05},
+                        "init": {"method": "value", "value": 0.005},
+                    },
+                }
+            },
+        },
+    }
+    return document
+
+
+class TestImShaftOutputDeductionBounds:
+    """friction_windage / stray_load（イミタンスを持たない2ノード）の解釈。"""
+
+    def test_resolves_friction_windage_model_param(self) -> None:
+        bounds = ImParameterFitDescriptorBounds.from_estimation_document(
+            _flat_im_document_with_shaft_output_deduction()
+        )
+        assert bounds.im_model_param(
+            subsystem="friction_windage",
+            model_type_name="CONSTANT_V1",
+            param_name="k_friction_windage",
+        ) == (0.0, 0.05)
+
+    def test_resolves_stray_load_model_param(self) -> None:
+        bounds = ImParameterFitDescriptorBounds.from_estimation_document(
+            _flat_im_document_with_shaft_output_deduction()
+        )
+        assert bounds.im_model_param(
+            subsystem="stray_load",
+            model_type_name="CURRENT_DEPENDENT_QUADRATIC_V1",
+            param_name="k_stray_load",
+        ) == (0.0, 0.05)
+
+    def test_unknown_friction_windage_key_raises(self) -> None:
+        """friction_windage / stray_load ブロックを書いていない文書では
+        未定義キー扱いで KeyError になる。"""
+        bounds = ImParameterFitDescriptorBounds.from_estimation_document(
+            _flat_im_document()
+        )
+        with pytest.raises(KeyError, match="unknown IM friction_windage"):
+            bounds.im_model_param(
+                subsystem="friction_windage",
+                model_type_name="CONSTANT_V1",
+                param_name="k_friction_windage",
+            )
+
+    def test_unknown_stray_load_key_raises(self) -> None:
+        bounds = ImParameterFitDescriptorBounds.from_estimation_document(
+            _flat_im_document()
+        )
+        with pytest.raises(KeyError, match="unknown IM stray_load"):
+            bounds.im_model_param(
+                subsystem="stray_load",
+                model_type_name="CURRENT_DEPENDENT_QUADRATIC_V1",
+                param_name="k_stray_load",
+            )
+
+
 class TestCableBoundsErrors:
     """ケーブル bounds YAML の欠損・未知キーエラー。"""
 

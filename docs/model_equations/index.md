@@ -54,10 +54,19 @@
 | ケーブル導体 | `BASIC` | [cable_conductor.md#basic](cable_conductor.md#basic) | `build_cable_model/conductor_immittance/basic/` |
 | ケーブル導体 | `FREQUENCY_DEPENDENT_SKIN_EFFECT_V1` | [cable_conductor.md](cable_conductor.md#frequency_dependent_skin_effect_v1) | `.../conductor_immittance/frequency_dependent/` |
 | ケーブル導体 | `CURRENT_DEPENDENT_SKIN_EFFECT_V1` | [cable_conductor.md](cable_conductor.md#current_dependent_skin_effect_v1) | `.../conductor_immittance/current_dependent/` |
+| IM 摩擦・風損 | `NONE` | [im_friction_windage.md](im_friction_windage.md#none) | `simulate/power/calculate_im_shaft_output_deduction/friction_windage/` |
+| IM 摩擦・風損 | `CONSTANT_V1` | [im_friction_windage.md](im_friction_windage.md#constant_v1) | `.../friction_windage/` |
+| IM 漂遊負荷損 | `NONE` | [im_stray_load.md](im_stray_load.md#none) | `simulate/power/calculate_im_shaft_output_deduction/stray_load/` |
+| IM 漂遊負荷損 | `CURRENT_DEPENDENT_QUADRATIC_V1` | [im_stray_load.md](im_stray_load.md#current_dependent_quadratic_v1) | `.../stray_load/` |
 
 > 実装ディレクトリの基点は
 > `src/im_cable_system/engine/algorithm/execute_algorithm/build_model/`。
 > どの種別を生成するかは各 `factory_*_immittance_converter.py` が Enum キーで分岐する。
+> **例外**: IM 摩擦・風損／漂遊負荷損の 2 サブシステムは
+> **イミタンス（インピーダンス・アドミタンス）を持たない**。並列・直列合成の対象にならず、
+> 実装は `build_model/` ではなく
+> `engine/algorithm/execute_algorithm/simulate/power/calculate_im_shaft_output_deduction/` に置く
+> （電力計算段で二次負荷電力から直接減算するため）。
 
 ## 二重かご（DOUBLE_CAGE）の扱い
 
@@ -79,3 +88,5 @@
 | IM 励磁（excitation） | [im_excitation.md](im_excitation.md) | 並列アドミタンス合成。飽和（slip / 電流依存）。 |
 | IM 二次（secondary） | [im_secondary.md](im_secondary.md) | 負荷支路 $(1-s)/s$、表皮効果、漏れ飽和、二重かご。 |
 | ケーブル導体（conductor） | [cable_conductor.md](cable_conductor.md) | π型導体区間の表皮効果（周波数 / 電流依存）。 |
+| IM 摩擦・風損（friction_windage） | [im_friction_windage.md](im_friction_windage.md) | 定格入力比例の一定損失。イミタンスを持たない。 |
+| IM 漂遊負荷損（stray_load） | [im_stray_load.md](im_stray_load.md) | 二次電流比の2乗に比例。イミタンスを持たない。 |

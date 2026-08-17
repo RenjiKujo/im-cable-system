@@ -24,7 +24,7 @@ from im_cable_system.engine.shared.dto.output import OutputDto
 
 def _output_dto() -> OutputDto:
     return OutputDto(
-        name=ImCableSystemName(value="SYS/01"),
+        name=ImCableSystemName(base="SYS/01"),
         array_layout=ArrayLayoutDto(
             arrays={
                 ArrayKey.SLIP: ArraySlipDto(

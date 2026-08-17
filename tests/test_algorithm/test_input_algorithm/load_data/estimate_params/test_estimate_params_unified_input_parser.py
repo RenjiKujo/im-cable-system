@@ -50,12 +50,14 @@ def _supply_and_curve_block() -> str:
 
 
 def _candidate_axis_block_single() -> str:
-    """``single`` のみ指定の最小候補軸ブロック。"""
+    """``single`` のみ指定の最小候補軸ブロック（fw/sl は NONE 固定）。"""
     return (
         "model_candidate_axis\tcandidate_1\n"
         "im_primary\tBASIC\n"
         "im_excitation\tBASIC\n"
         "im_secondary(single)\tBASIC\n"
+        "im_friction_windage\tNONE\n"
+        "im_stray_load\tNONE\n"
         "\n"
     )
 
@@ -85,6 +87,14 @@ class TestParseUnifiedHappyPath:
         assert parsed.candidate_primary == ("BASIC",)
         assert parsed.candidate_excitation == ("BASIC",)
 
+    def test_none_only_rows_are_accepted(self, tmp_path: Path) -> None:
+        """fw/sl に ``NONE`` のみを書いた場合、必須軸チェックを通過する。"""
+        parsed = parse_unified_estimate_params_csv(
+            _full_tsv_single_only(tmp_path)
+        )
+        assert parsed.candidate_friction_windage == ("NONE",)
+        assert parsed.candidate_stray_load == ("NONE",)
+
     def test_double_only_returns_separated_axes(self, tmp_path: Path) -> None:
         path = tmp_path / "unified_double.tsv"
         path.write_text(
@@ -93,6 +103,8 @@ class TestParseUnifiedHappyPath:
             "im_excitation\tBASIC\n"
             "im_secondary(double_inner)\tBASIC\n"
             "im_secondary(double_outer)\tBASIC\n"
+            "im_friction_windage\tNONE\n"
+            "im_stray_load\tNONE\n"
             "\n" + _supply_and_curve_block(),
             encoding="utf-8",
         )
@@ -111,6 +123,8 @@ class TestParseUnifiedHappyPath:
             "im_secondary(single)\tBASIC\n"
             "im_secondary(double_inner)\tBASIC\n"
             "im_secondary(double_outer)\tBASIC\n"
+            "im_friction_windage\tNONE\n"
+            "im_stray_load\tNONE\n"
             "\n" + _supply_and_curve_block(),
             encoding="utf-8",
         )
@@ -130,6 +144,8 @@ class TestParseUnifiedRequiredAxisChecks:
             "im_primary\n"
             "im_excitation\tBASIC\n"
             "im_secondary(single)\tBASIC\n"
+            "im_friction_windage\tNONE\n"
+            "im_stray_load\tNONE\n"
             "\n" + _supply_and_curve_block(),
             encoding="utf-8",
         )
@@ -143,6 +159,8 @@ class TestParseUnifiedRequiredAxisChecks:
             "im_primary\tBASIC\n"
             "im_excitation\n"
             "im_secondary(single)\tBASIC\n"
+            "im_friction_windage\tNONE\n"
+            "im_stray_load\tNONE\n"
             "\n" + _supply_and_curve_block(),
             encoding="utf-8",
         )
@@ -155,6 +173,8 @@ class TestParseUnifiedRequiredAxisChecks:
             _minimal_meta_and_fixed() + "model_candidate_axis\tcandidate_1\n"
             "im_primary\tBASIC\n"
             "im_excitation\tBASIC\n"
+            "im_friction_windage\tNONE\n"
+            "im_stray_load\tNONE\n"
             "\n" + _supply_and_curve_block(),
             encoding="utf-8",
         )
@@ -169,6 +189,8 @@ class TestParseUnifiedRequiredAxisChecks:
             "im_primary\tBASIC\n"
             "im_excitation\tBASIC\n"
             "im_secondary(double_inner)\tBASIC\n"
+            "im_friction_windage\tNONE\n"
+            "im_stray_load\tNONE\n"
             "\n" + _supply_and_curve_block(),
             encoding="utf-8",
         )
@@ -183,10 +205,62 @@ class TestParseUnifiedRequiredAxisChecks:
             "im_primary\tBASIC\n"
             "im_excitation\tBASIC\n"
             "im_secondary(double_outer)\tBASIC\n"
+            "im_friction_windage\tNONE\n"
+            "im_stray_load\tNONE\n"
             "\n" + _supply_and_curve_block(),
             encoding="utf-8",
         )
         with pytest.raises(ValueError, match="double_inner.*double_outer"):
+            parse_unified_estimate_params_csv(path)
+
+    def test_missing_friction_windage_row_raises(self, tmp_path: Path) -> None:
+        """``im_friction_windage`` 行が無いとエラー。"""
+        path = tmp_path / "unified_no_fw.tsv"
+        path.write_text(
+            _minimal_meta_and_fixed() + "model_candidate_axis\tcandidate_1\n"
+            "im_primary\tBASIC\n"
+            "im_excitation\tBASIC\n"
+            "im_secondary(single)\tBASIC\n"
+            "im_stray_load\tNONE\n"
+            "\n" + _supply_and_curve_block(),
+            encoding="utf-8",
+        )
+        with pytest.raises(
+            ValueError, match="im_friction_windage 候補がありません"
+        ):
+            parse_unified_estimate_params_csv(path)
+
+    def test_missing_stray_load_row_raises(self, tmp_path: Path) -> None:
+        """``im_stray_load`` 行が無いとエラー。"""
+        path = tmp_path / "unified_no_sl.tsv"
+        path.write_text(
+            _minimal_meta_and_fixed() + "model_candidate_axis\tcandidate_1\n"
+            "im_primary\tBASIC\n"
+            "im_excitation\tBASIC\n"
+            "im_secondary(single)\tBASIC\n"
+            "im_friction_windage\tNONE\n"
+            "\n" + _supply_and_curve_block(),
+            encoding="utf-8",
+        )
+        with pytest.raises(ValueError, match="im_stray_load 候補がありません"):
+            parse_unified_estimate_params_csv(path)
+
+    def test_empty_friction_windage_row_raises(self, tmp_path: Path) -> None:
+        """行はあるが候補セルが全て空でも、行が無い場合と同じエラー。"""
+        path = tmp_path / "unified_empty_fw.tsv"
+        path.write_text(
+            _minimal_meta_and_fixed() + "model_candidate_axis\tcandidate_1\n"
+            "im_primary\tBASIC\n"
+            "im_excitation\tBASIC\n"
+            "im_secondary(single)\tBASIC\n"
+            "im_friction_windage\n"
+            "im_stray_load\tNONE\n"
+            "\n" + _supply_and_curve_block(),
+            encoding="utf-8",
+        )
+        with pytest.raises(
+            ValueError, match="im_friction_windage 候補がありません"
+        ):
             parse_unified_estimate_params_csv(path)
 
 
@@ -201,6 +275,8 @@ class TestParseUnifiedDuplicateLabels:
             "im_excitation\tBASIC\n"
             "im_secondary(single)\tBASIC\n"
             "im_secondary(single)\tSLIP_DEPENDENT_SKIN_EFFECT_V1\n"
+            "im_friction_windage\tNONE\n"
+            "im_stray_load\tNONE\n"
             "\n" + _supply_and_curve_block(),
             encoding="utf-8",
         )
@@ -221,6 +297,8 @@ class TestParseUnifiedUnknownLabel:
             "im_primary\tBASIC\n"
             "im_excitation\tBASIC\n"
             "im_secondary(single)\tBASIC\n"
+            "im_friction_windage\tNONE\n"
+            "im_stray_load\tNONE\n"
             "unknown_axis\tFOO\n"
             "\n" + _supply_and_curve_block(),
             encoding="utf-8",

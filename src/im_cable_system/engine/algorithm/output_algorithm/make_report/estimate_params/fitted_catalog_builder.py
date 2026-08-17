@@ -73,6 +73,8 @@ def build_fitted_catalog(
             "im_excitation": labels.im_excitation,
             "im_secondary_inner": labels.im_secondary_inner,
             "im_secondary_outer": labels.im_secondary_outer,
+            "im_friction_windage": labels.im_friction_windage,
+            "im_stray_load": labels.im_stray_load,
             "cable_conductor": labels.cable_conductor,
         },
         "fitted_parameters": [

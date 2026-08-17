@@ -121,6 +121,8 @@ class OutputDtoConverter(IOutputDtoConverter):
             secondary_models=secondary.models,
             secondary_resistances=secondary.resistances,
             secondary_inductances=secondary.inductances,
+            friction_windage_model=im_model.friction_windage_model,
+            stray_load_model=im_model.stray_load_model,
         )
         return ImDto(im_series=im_series, name=im_model.name)
 

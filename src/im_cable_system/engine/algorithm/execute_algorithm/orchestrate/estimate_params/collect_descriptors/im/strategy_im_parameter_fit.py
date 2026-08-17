@@ -19,10 +19,12 @@ from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E5
 )
 
 from .descriptor_build import (
+    append_friction_windage_model_param_descriptors,
     append_primary_and_excitation_fixed_rl_descriptors,
     append_primary_and_excitation_model_param_descriptors,
     append_secondary_branch_fixed_rl_descriptors,
     append_secondary_branch_model_param_descriptors,
+    append_stray_load_model_param_descriptors,
 )
 
 
@@ -80,6 +82,12 @@ class SingleCageImParameterFitStrategy(IImParameterFitStrategy):
             bounds,
             descriptors,
         )
+        append_friction_windage_model_param_descriptors(
+            im_series, bounds, descriptors
+        )
+        append_stray_load_model_param_descriptors(
+            im_series, bounds, descriptors
+        )
         append_secondary_branch_model_param_descriptors(
             im_series,
             ImSecondaryCageBranchType.SINGLE,
@@ -93,6 +101,7 @@ class DoubleCageImParameterFitStrategy(IImParameterFitStrategy):
     """二重かご（INNER / OUTER）の記述子収集。
 
     順序: 一次・励磁固定 R/L → INNER/OUTER 二次 R/L → 一次・励磁モデル params
+    → 摩擦・風損／漂遊負荷損モデル params（かご重数に依存しない）
     → INNER 二次モデル params → OUTER 二次モデル params。
     """
 
@@ -127,6 +136,12 @@ class DoubleCageImParameterFitStrategy(IImParameterFitStrategy):
             im_series,
             bounds,
             descriptors,
+        )
+        append_friction_windage_model_param_descriptors(
+            im_series, bounds, descriptors
+        )
+        append_stray_load_model_param_descriptors(
+            im_series, bounds, descriptors
         )
         for branch in (
             ImSecondaryCageBranchType.INNER,

@@ -63,6 +63,8 @@ class ImParameterFitDescriptorBounds:
     _primary_model_specs: dict[str, dict[str, ParameterFitSpec]]
     _excitation_model_specs: dict[str, dict[str, ParameterFitSpec]]
     _secondary_model_specs: dict[str, dict[str, ParameterFitSpec]]
+    _friction_windage_model_specs: dict[str, dict[str, ParameterFitSpec]]
+    _stray_load_model_specs: dict[str, dict[str, ParameterFitSpec]]
 
     @classmethod
     def from_estimation_document(
@@ -97,21 +99,34 @@ class ImParameterFitDescriptorBounds:
         primary_mt: dict[str, dict[str, ParameterFitSpec]] = {}
         excitation_mt: dict[str, dict[str, ParameterFitSpec]] = {}
         secondary_mt: dict[str, dict[str, ParameterFitSpec]] = {}
+        friction_windage_mt: dict[str, dict[str, ParameterFitSpec]] = {}
+        stray_load_mt: dict[str, dict[str, ParameterFitSpec]] = {}
         prim = im_node.get("primary", {})
         exc = im_node.get("excitation", {})
         sec = im_node.get("secondary", {})
+        # friction_windage / stray_load はイミタンスを持たず rl_parameters が
+        # 無いため、im_fixed には含めない（primary/excitation/secondary との
+        # ループとは別にモデル係数だけを読む）。
+        fw = im_node.get("friction_windage", {})
+        sl = im_node.get("stray_load", {})
         if isinstance(prim, dict):
             primary_mt = parse_model_parameters_block_with_init(prim)
         if isinstance(exc, dict):
             excitation_mt = parse_model_parameters_block_with_init(exc)
         if isinstance(sec, dict):
             secondary_mt = parse_model_parameters_block_with_init(sec)
+        if isinstance(fw, dict):
+            friction_windage_mt = parse_model_parameters_block_with_init(fw)
+        if isinstance(sl, dict):
+            stray_load_mt = parse_model_parameters_block_with_init(sl)
 
         return cls(
             _fixed_im_specs=_require_fixed_specs(im_fixed),
             _primary_model_specs=primary_mt,
             _excitation_model_specs=excitation_mt,
             _secondary_model_specs=secondary_mt,
+            _friction_windage_model_specs=friction_windage_mt,
+            _stray_load_model_specs=stray_load_mt,
         )
 
     def im_fixed(self, key: str) -> tuple[float, float]:
@@ -131,11 +146,17 @@ class ImParameterFitDescriptorBounds:
 
     def im_model_param(
         self,
-        subsystem: Literal["primary", "excitation", "secondary"],
+        subsystem: Literal[
+            "primary",
+            "excitation",
+            "secondary",
+            "friction_windage",
+            "stray_load",
+        ],
         model_type_name: str | Enum,
         param_name: str,
     ) -> tuple[float, float]:
-        """一次・励磁・二次のモデル係数の境界。
+        """一次・励磁・二次・摩擦風損・漂遊負荷損のモデル係数の境界。
 
         Raises:
             KeyError: YAML にモデル種別またはパラメータ名が定義されて
@@ -150,7 +171,13 @@ class ImParameterFitDescriptorBounds:
 
     def im_model_param_spec(
         self,
-        subsystem: Literal["primary", "excitation", "secondary"],
+        subsystem: Literal[
+            "primary",
+            "excitation",
+            "secondary",
+            "friction_windage",
+            "stray_load",
+        ],
         model_type_name: str | Enum,
         param_name: str,
     ) -> ParameterFitSpec:
@@ -164,8 +191,12 @@ class ImParameterFitDescriptorBounds:
             table = self._primary_model_specs
         elif subsystem == "excitation":
             table = self._excitation_model_specs
-        else:
+        elif subsystem == "secondary":
             table = self._secondary_model_specs
+        elif subsystem == "friction_windage":
+            table = self._friction_windage_model_specs
+        else:
+            table = self._stray_load_model_specs
         model_key = _model_type_key(model_type_name)
         if model_key not in table:
             raise KeyError(

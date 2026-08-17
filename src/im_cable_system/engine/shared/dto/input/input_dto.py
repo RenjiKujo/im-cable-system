@@ -56,7 +56,14 @@ class InputDto:
     Holds surface-measurable attributes for one IM connected to one cable.
 
     Attributes:
-        name: Unique identifier for the IM–cable system.
+        name: Unique identifier for the IM–cable system. ``name.get_value()``
+            is used as file name / CSV row identifier / report key;
+            ``name.get_base()`` is the display-only base name (model-
+            combination candidate indices stripped) for figure titles etc.
+            In forward runs the two coincide (no ``discriminator``); in
+            estimate_params runs ``get_value()`` is unique per candidate
+            while ``get_base()`` is the performance-curve name shared by
+            all candidate combinations.
         im: Induction motor (IM) DTO.
         cable: Cable DTO, or None if no cable is present. When None, model
             build creates a perfect conductor with perfect insulation as a

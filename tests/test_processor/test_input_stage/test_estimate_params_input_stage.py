@@ -42,7 +42,8 @@ def test_process_returns_candidate_product_input_dtos(
 
     候補数: primary=3, excitation=3, secondary_single=4,
     secondary_double_inner=4, secondary_double_outer=4,
-    cable_conductor=4（NONE + 3 モデル）。単一かご 3*3*4*4=144 件と
+    cable_conductor=4（NONE + 3 モデル）。friction_windage / stray_load は
+    各 1 候補（NONE）のみなので件数には効かない。単一かご 3*3*4*4=144 件と
     二重かご 3*3*4*4*4=576 件で合計 720 件になる。
     """
     spec = _make_job_spec(input_files_dir)

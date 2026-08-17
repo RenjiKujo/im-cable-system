@@ -19,6 +19,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImConnectionType,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImPoles,
     ImPrimaryModelDto,
     ImPrimaryModelType,
@@ -27,6 +29,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImSecondaryModelType,
     ImSeriesDto,
     ImSeriesName,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
     FloatActivePowerDto,
@@ -75,6 +79,10 @@ def _make_series_kwargs(
         "secondary_models": secondary_models,
         "secondary_resistances": secondary_resistances,
         "secondary_inductances": secondary_inductances,
+        "friction_windage_model": ImFrictionWindageModelDto(
+            name=ImFrictionWindageModelType.NONE
+        ),
+        "stray_load_model": ImStrayLoadModelDto(name=ImStrayLoadModelType.NONE),
     }
 
 
@@ -216,4 +224,43 @@ class TestImSeriesDtoDoubleCage:
             },
         )
         with pytest.raises(ValueError, match="secondary_resistances keys"):
+            ImSeriesDto(**kwargs)  # type: ignore[arg-type]
+
+
+class TestImSeriesDtoRequiredShaftOutputDeductionModels:
+    """``friction_windage_model`` / ``stray_load_model`` は必須（default なし）。
+
+    ゼロ損失は明示的な ``NONE`` モデルで表す。誰かが誤って既定値を
+    再度足しても、この 2 本が ``TypeError`` を検出する
+    （basedpyright は静的な構築点しか見ないため、実行時の防波堤として残す）。
+    """
+
+    def _single_cage_kwargs(self) -> dict[str, object]:
+        return _make_series_kwargs(
+            cage_multiplicity=ImCageMultiplicityType.SINGLE_CAGE,
+            secondary_models={
+                ImSecondaryCageBranchType.SINGLE: _basic_secondary(),
+            },
+            secondary_resistances={
+                ImSecondaryCageBranchType.SINGLE: FloatResistanceDto(
+                    value=0.3, unit="Ω"
+                ),
+            },
+            secondary_inductances={
+                ImSecondaryCageBranchType.SINGLE: FloatInductanceDto(
+                    value=0.5, unit="mH"
+                ),
+            },
+        )
+
+    def test_missing_friction_windage_model_raises_type_error(self) -> None:
+        kwargs = self._single_cage_kwargs()
+        del kwargs["friction_windage_model"]
+        with pytest.raises(TypeError, match="friction_windage_model"):
+            ImSeriesDto(**kwargs)  # type: ignore[arg-type]
+
+    def test_missing_stray_load_model_raises_type_error(self) -> None:
+        kwargs = self._single_cage_kwargs()
+        del kwargs["stray_load_model"]
+        with pytest.raises(TypeError, match="stray_load_model"):
             ImSeriesDto(**kwargs)  # type: ignore[arg-type]

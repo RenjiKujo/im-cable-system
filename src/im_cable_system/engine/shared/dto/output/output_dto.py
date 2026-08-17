@@ -50,7 +50,11 @@ class OutputDto:
         - ``[SLIP, INPUT_LINE_VOLTAGE, FREQUENCY]`` → slip 軸グリッド表示
 
     Attributes:
-        name: IM ケーブルシステムの一意識別子（ファイル名等の文脈に用いる）。
+        name: IM ケーブルシステムの一意識別子。``name.get_value()`` を
+            ファイル名・CSV 行識別子・report キーに用いる。
+            ``name.get_base()``（表示専用の基底名。候補インデックスを
+            除いた名前。forward では ``get_value()`` と同値）は図タイトル等
+            の表示にのみ用いる。
         array_layout: 配列レイアウト。slip / 供給条件(V,f) の軸と ``reference_axes``
             を保持し、横軸・スライス・モード判別の根拠となる。
         im: 入力原値の誘導電動機 DTO（銘板・モデル選択ラベル・基本 R/L の原典）。

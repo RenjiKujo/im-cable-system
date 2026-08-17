@@ -36,6 +36,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImDto,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImName,
     ImPoles,
     ImPrimaryModelDto,
@@ -45,6 +47,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImSecondaryModelType,
     ImSeriesDto,
     ImSeriesName,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
     ArrayComplexCurrentDto,
@@ -134,6 +138,10 @@ def _create_double_cage_im_series_dto(
             inner: l2_inner,
             outer: l2_outer,
         },
+        friction_windage_model=ImFrictionWindageModelDto(
+            name=ImFrictionWindageModelType.NONE
+        ),
+        stray_load_model=ImStrayLoadModelDto(name=ImStrayLoadModelType.NONE),
     )
 
 
@@ -565,7 +573,7 @@ def make_input_im_cable_system_dtos() -> InputDtos:
                 system_name_value = f"{layout_name}_{im_name}_{cable_name}"
                 systems.append(
                     InputDto(
-                        name=ImCableSystemName(value=system_name_value),
+                        name=ImCableSystemName(base=system_name_value),
                         array_layout=layout,
                         im=im_dto,
                         cable=cable_dto,

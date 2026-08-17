@@ -14,6 +14,9 @@ from matplotlib.figure import Figure
 from im_cable_system.engine.algorithm.output_algorithm.make_figure.i_figure_builder import (  # noqa: E501
     IFigureBuilder,
 )
+from im_cable_system.engine.algorithm.output_algorithm.make_figure.supply_grid import (  # noqa: E501
+    model_label_lines,
+)
 from im_cable_system.engine.algorithm.output_algorithm.make_figure.supply_grid.catalog import (  # noqa: E501
     _build_catalog_slices,
     _match_catalog,
@@ -26,7 +29,7 @@ from im_cable_system.engine.algorithm.output_algorithm.make_figure.supply_grid.p
     _PRINT_DPI,
     _SERIES_COLORS,
     _attach_figure_legend,
-    _output_name,
+    _output_display_name,
     _overlay_slice,
     _plot_slice,
     _subplot_layout,
@@ -110,9 +113,17 @@ class SupplyGridSlipAxisFigureBuilder(IFigureBuilder):
             axes_flat[index].set_visible(False)
 
         figure.suptitle(
-            f"{_output_name(output_dto)} - slip axis performance",
+            f"{_output_display_name(output_dto)} - slip axis performance",
             fontsize=11,
         )
-        figure.tight_layout(rect=(0.055, 0.16, 0.86, 0.93))
+        figure.text(
+            0.02,
+            0.02,
+            "\n".join(model_label_lines(output_dto)),
+            fontsize=7,
+            va="bottom",
+            ha="left",
+        )
+        figure.tight_layout(rect=(0.055, 0.22, 0.86, 0.93))
         _attach_figure_legend(figure)
         return figure

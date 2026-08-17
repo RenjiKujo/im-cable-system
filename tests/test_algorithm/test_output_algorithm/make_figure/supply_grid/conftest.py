@@ -16,7 +16,9 @@ import pytest
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ArrayKey,
     ArrayLayoutDto,
+    ImCageMultiplicityType,
     ImPerformanceCurveCatalogDtos,
+    ImSecondaryCageBranchType,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
     ArrayComplexCurrentDto,
@@ -33,16 +35,37 @@ from im_cable_system.engine.shared.dto.generic.physical_quantity import (
 
 
 def _output_name() -> Any:
-    """Figure タイトル用の出力名 stub を返す。"""
-    return SimpleNamespace(get_value=lambda: "test-system")
+    """Figure タイトル用の出力名 stub を返す。
+
+    ``get_value()``（識別子）と ``get_base()``（表示名）をあえて異なる文字列
+    にしている。両者を取り違えて実装が ``get_value()`` を表示に使うように
+    戻っても、この stub ならテストが検出できる。
+    """
+    return SimpleNamespace(
+        get_value=lambda: "test-system_1_1_1_0_0_1_1_0",
+        get_base=lambda: "test-system",
+    )
+
+
+def _named_model(name: str) -> Any:
+    """``get_name()`` だけを持つモデル DTO stub を返す（注記用）。"""
+    return SimpleNamespace(get_name=lambda: name)
 
 
 def _im() -> Any:
-    """出力比 Figure 用の最小 IM stub を返す。"""
+    """出力比 Figure 用の最小 IM stub を返す（モデル名注記に必要な属性込み）。"""
     return SimpleNamespace(
         im_series=SimpleNamespace(
             nameplate_power=FloatActivePowerDto(value=200.0, unit="W"),
             nameplate_current=FloatCurrentDto(value=2.0, unit="A"),
+            primary_model=_named_model("BASIC"),
+            excitation_model=_named_model("BASIC"),
+            cage_multiplicity=ImCageMultiplicityType.SINGLE_CAGE,
+            secondary_models={
+                ImSecondaryCageBranchType.SINGLE: _named_model("BASIC"),
+            },
+            friction_windage_model=_named_model("NONE"),
+            stray_load_model=_named_model("NONE"),
         ),
     )
 
@@ -160,6 +183,7 @@ def build_supply_grid_output_dto() -> Callable[..., Any]:
         return SimpleNamespace(
             name=_output_name(),
             im=_im(),
+            cable=None,
             array_layout=resolved_layout,
             result=_result(slip_count=resolved_slip_count),
             im_pc_catalogs=(

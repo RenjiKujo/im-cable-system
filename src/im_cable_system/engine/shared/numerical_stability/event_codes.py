@@ -78,3 +78,8 @@ SLIP_NEAR_ZERO_SECONDARY_SKIN_LEAKAGE_SAT_LOAD = (
 SLIP_NEAR_ZERO_SECONDARY_SKIN_LEAKAGE_SAT_TOTAL = (
     "slip_near_zero_secondary_skin_leakage_sat_total"
 )
+
+# domain: shaft_output_deduction（漂遊負荷損の銘牌電流正規化）
+NAMEPLATE_CURRENT_NEAR_ZERO_STRAY_LOAD_NORMALIZATION = (
+    "nameplate_current_near_zero_stray_load_normalization"
+)

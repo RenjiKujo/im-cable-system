@@ -34,6 +34,8 @@ def _make_parsed(fixed: dict[str, FixedCell]) -> EstimateParamsParsedTables:
         candidate_secondary_single=(),
         candidate_secondary_double_inner=(),
         candidate_secondary_double_outer=(),
+        candidate_friction_windage=(),
+        candidate_stray_load=(),
         candidate_cable_conductor=(),
         supply_block={},
         curve_header_row=[],
