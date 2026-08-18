@@ -1,0 +1,25 @@
+---
+description: コミット・push・PR・staging はユーザーが明示したときだけ。実装後は git status と diff --stat を出して止まる。
+alwaysApply: true
+---
+
+# git
+
+- コミット・push・PR・**staging** はユーザーが明示したときだけ行う。
+  それ以外は `git commit` / `git push` / `git add` しない
+  （`git add` はユーザーの未コミット変更を巻き込むため。diff を見せるだけなら不要）。
+- この方針は文章だけに頼らず、`.claude/settings.json` の `permissions` にも留めてある。
+  `git add` / `git restore` / `git checkout` / `git switch` / `git stash` / `rm` は
+  `ask`、force push（`--force` / `-f` が引数のどの位置にあっても）/
+  `git reset --hard` / `git clean` / 再帰 `rm` は `deny`。
+  片方だけ変えない（Cursor 側には同等の機構が無いため、文章の側が最後の砦になる）。
+- 実装後は `git status` と `git diff --stat` を出して止まる。
+- `git mv` / `git rm` は rename 追跡に必要なため index に載ってよい。
+- 手順（コミットメッセージの作り方・push・PR 作成など）の正本は `.cursor/skills/`
+  （`pj-commit` / `pj-commit-push` / `pj-commit-push-pr` / `pj-push-pr` 等）。
+  このファイルには「いつ許可されるか」の方針だけを書き、手順は書かない
+  （整合性チェックの締め処理だけは例外。手順ではなく必須の確認のため）。
+- スキルのうち、ユーザーの明示なしに起動してよいのは docs 同期の
+  `/pj-update-design-doc` だけ。`pj-commit` 系は必ずユーザーの明示を要する。
+  6 スキルとも `.claude/skills/` から `.cursor/skills/` へ symlink してあり、
+  **両ツールで `/` から起動できる**（以前は Claude Code に無かったため事故り得なかった）。

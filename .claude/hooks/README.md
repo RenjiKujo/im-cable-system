@@ -13,6 +13,18 @@ Cursor 側の登録は `.cursor/hooks.json`。
 スクリプト側で吸収しているため、1 本を共用できる。
 `.venv` が無い環境では何もせず終了する。
 
+Claude Code 側は cwd に依存しないよう `$CLAUDE_PROJECT_DIR` 起点で書く。
+
+**実行ビットを落とさない。** このリポジトリは `core.filemode=false` なので
+`chmod +x` が index に載らない。落ちたまま commit すると clone 側では
+両ツールとも「許可がありません」で失敗するが、Cursor は `failClosed: false`、
+Claude Code の `PostToolUse` も非ブロッキングなので**無言で整形が効かなくなる**。
+index の mode は次で直す。
+
+```bash
+git update-index --chmod=+x .cursor/hooks/ruff-format.sh
+```
+
 ## 整合性チェックを hook に載せない理由
 
 `pytest tests/test_docs/`（docs↔実装）と `basedpyright`（型）は **hook で自動化せず、

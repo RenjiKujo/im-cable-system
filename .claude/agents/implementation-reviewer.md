@@ -1,1 +1,0 @@
-../../.cursor/agents/implementation-reviewer.md
