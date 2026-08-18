@@ -157,7 +157,7 @@ class ForwardInputDtoAssembler(
             curve_loaded=loaded_data.im_performance_curve,
         )
         assembled = InputDto(
-            name=ImCableSystemName(value=loaded_data.im_cable_system_name),
+            name=ImCableSystemName(base=loaded_data.im_cable_system_name),
             array_layout=layout,
             im=im_dto,
             cable=cable_dto,

@@ -15,6 +15,7 @@ from typing import Any, cast
 from im_cable_system.engine.algorithm.input_algorithm.load_data.data_class.im_loaded_data import (  # noqa: E501
     ImBranchLoadedData,
     ImLoadedData,
+    ImLossBranchLoadedData,
     ImNameplateLoadedData,
 )
 from im_cable_system.engine.algorithm.input_algorithm.load_data.forward.yaml_utils import (  # noqa: E501
@@ -68,6 +69,26 @@ def _branch_from_yaml(
         inductance=l_val,
         inductance_unit=l_unit,
     )
+
+
+def _loss_branch_from_entry(
+    entry: Mapping[str, Any],
+    *,
+    key: str,
+    context: str,
+) -> ImLossBranchLoadedData:
+    """必須ブロック（``friction_windage`` / ``stray_load``）を読む。
+
+    ``primary`` / ``excitation`` と同格の必須枠（一次・励磁・二次と揃える）。
+    ゼロ損失は ``model.name: NONE`` として明示する。キー欠落・型不一致は
+    ``primary`` 等と同じ ``require_mapping_key`` 経由でエラーにする。
+    """
+    block = require_mapping_key(entry, key, context)
+    model_name, model_params = model_name_and_params_from_yaml(
+        require_mapping_key(block, "model", f"{context}.{key}"),
+        context=f"{context}.{key}.model",
+    )
+    return ImLossBranchLoadedData(model=model_name, model_params=model_params)
 
 
 def _nameplate_from_entry(
@@ -176,6 +197,10 @@ def _entry_to_im_loaded_data(
     poles_raw = require_scalar_key(entry, "poles", ctx)
     connection_type = str(require_scalar_key(entry, "connection_type", ctx))
     circuit_type = str(require_scalar_key(entry, "circuit_type", ctx))
+    friction_windage = _loss_branch_from_entry(
+        entry, key="friction_windage", context=ctx
+    )
+    stray_load = _loss_branch_from_entry(entry, key="stray_load", context=ctx)
 
     return ImLoadedData(
         name=series_name,
@@ -189,6 +214,8 @@ def _entry_to_im_loaded_data(
         secondary=secondary,
         secondary_inner=secondary_inner,
         secondary_outer=secondary_outer,
+        friction_windage=friction_windage,
+        stray_load=stray_load,
     )
 
 

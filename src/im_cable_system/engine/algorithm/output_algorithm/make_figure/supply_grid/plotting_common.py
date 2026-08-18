@@ -276,9 +276,11 @@ def _subplot_title(supply_slice: _SupplySlice) -> str:
     )
 
 
-def _output_name(output_dto: OutputDto) -> str:
-    """OutputDto の名前をタイトル用の文字列へ変換する。"""
-    name = output_dto.name
-    if hasattr(name, "get_value"):
-        return str(name.get_value())
-    return str(name)
+def _output_display_name(output_dto: OutputDto) -> str:
+    """OutputDto の表示名（name の基底名部分）をタイトル用の文字列へ変換する。
+
+    ``name.get_base()`` は候補一意化接尾辞（discriminator）を除いた表示専用の
+    名前（forward では ``name.get_value()`` と同値）。ファイル名・CSV 行識別子
+    には ``name.get_value()`` を使うため、ここでは触れない。
+    """
+    return output_dto.name.get_base()

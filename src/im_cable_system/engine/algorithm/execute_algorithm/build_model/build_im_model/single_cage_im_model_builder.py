@@ -142,6 +142,8 @@ class SingleCageImModelBuilder(IImModelBuilder):
             excitation_model=excitation_model,
             secondary_model=secondary_model,
             total_model=total_model,
+            friction_windage_model=im_series_dto.friction_windage_model,
+            stray_load_model=im_series_dto.stray_load_model,
         )
 
     def _validate_build_arguments(

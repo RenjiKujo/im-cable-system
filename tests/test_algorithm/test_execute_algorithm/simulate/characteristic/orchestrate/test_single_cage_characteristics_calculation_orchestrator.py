@@ -141,6 +141,8 @@ def _make_power_dto(
             ImSecondaryCageBranchType.SINGLE: p(im_output_w)
         },
         secondary_total_power=p(im_output_w),
+        friction_windage_loss_power=p(0.0),
+        stray_load_loss_power=p(0.0),
         total_loss_power=p(0.0),
         copper_loss_power=p(0.0),
         iron_loss_power=p(0.0),

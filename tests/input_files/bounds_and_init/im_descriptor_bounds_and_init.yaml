@@ -17,7 +17,7 @@
 #   無次元（``FloatParamDto`` に unit なし）のため unit キーは書かない。
 # - 名板情報（電源周波数・定格電流など）は本ファイルでは持たず、入力 TSV の
 #   名板（``frequency`` / ``input_line_current`` 等）から導出する。
-# - 索引: docs/model_equations/index.md
+# - 索引: docs/model/equations/index.md
 version: 1
 
 primary:
@@ -162,3 +162,23 @@ secondary:
         beta_secondary_leakage_x:
           bounds: { lb: 1.0e-2, ub: 1.0e+0 }
           init: { method: "midpoint" }
+
+friction_windage:
+  model_parameters:
+    NONE:
+      params: {}
+    CONSTANT_V1:
+      params:
+        k_friction_windage: # P_FW = k_fw * P_nameplate
+          bounds: { lb: 0.0, ub: 5.0e-2 }
+          init: { method: "value", value: 1.0e-2 }
+
+stray_load:
+  model_parameters:
+    NONE:
+      params: {}
+    CURRENT_DEPENDENT_QUADRATIC_V1:
+      params:
+        k_stray_load: # P_stray = k_str * P_nameplate * (|I2|/I_N)^2
+          bounds: { lb: 0.0, ub: 5.0e-2 }
+          init: { method: "value", value: 5.0e-3 }

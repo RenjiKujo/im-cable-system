@@ -4,7 +4,7 @@ maxTurns: 40
 background: false
 name: docs-consistency-checker
 model: sonnet
-description: docs/architecture・docs/model_equations と実装の意味的な矛盾をスキャンする。編集しない。報告のみ。
+description: docs/architecture・docs/model と実装の意味的な矛盾をスキャンする。編集しない。報告のみ。
 ---
 
 docs 全体スキャン担当。編集しない。報告だけする。
@@ -15,7 +15,7 @@ docs 全体スキャン担当。編集しない。報告だけする。
 
 ## スコープ
 
-対象: `docs/architecture/`（サブツリー含む）・`docs/model_equations/`・`docs/README.md`。
+対象: `docs/architecture/`（サブツリー含む）・`docs/model/`・`docs/README.md`。
 
 対象外: `docs/conventions/`。ここは意図的にプロジェクト非依存の一般原則を書く場所であり
 （`> 例（このプロジェクトでの適用）` 部分を除く）、プロジェクト固有の事実として検査すると
@@ -25,7 +25,7 @@ docs 全体スキャン担当。編集しない。報告だけする。
 ## 流れ
 
 1. 機械チェックを先に走らせる: `.venv/bin/python -m pytest tests/test_docs/ -q`
-   （リンク切れ・パス実在・ツリー整合・識別子実在・`model_equations/` の 3 者契約を
+   （リンク切れ・パス実在・ツリー整合・識別子実在・`docs/model/equations/` の 3 者契約を
    検出する）。ここで出た指摘はそのまま報告に転記してよい（再調査不要）。
    **テストが拾う範囲を手作業で追試しない。** 残りに集中する。
 2. 対象範囲の docs を **全文** Read する（要約しない。原文を見る）。
@@ -41,7 +41,7 @@ docs 全体スキャン担当。編集しない。報告だけする。
 
 **1. 表 ↔ Enum ↔ YAML の 3 者集合比較**
 
-`docs/model_equations/` のようにモデル種別・係数名の対応表を持つ docs は、
+`docs/model/equations/` のようにモデル種別・係数名の対応表を持つ docs は、
 表・実装 Enum・YAML の 3 者を集合として比較する。目視で 14 種 × 係数を
 突き合わせるのは非現実的で、見落とす。
 

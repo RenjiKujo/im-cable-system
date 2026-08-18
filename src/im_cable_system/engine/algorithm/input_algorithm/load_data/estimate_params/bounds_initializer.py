@@ -21,8 +21,10 @@ from __future__ import annotations
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ConductorModelType,
     ImExcitationModelType,
+    ImFrictionWindageModelType,
     ImPrimaryModelType,
     ImSecondaryModelType,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E501
     CableParameterFitDescriptorBounds,
@@ -99,6 +101,26 @@ def _secondary_required_param_names(
     raise ValueError(f"未対応の二次モデル型です: {model!r}")
 
 
+def _friction_windage_required_param_names(
+    model: ImFrictionWindageModelType,
+) -> list[str]:
+    if model == ImFrictionWindageModelType.NONE:
+        return []
+    if model == ImFrictionWindageModelType.CONSTANT_V1:
+        return ["k_friction_windage"]
+    raise ValueError(f"未対応の摩擦・風損モデル型です: {model!r}")
+
+
+def _stray_load_required_param_names(
+    model: ImStrayLoadModelType,
+) -> list[str]:
+    if model == ImStrayLoadModelType.NONE:
+        return []
+    if model == ImStrayLoadModelType.CURRENT_DEPENDENT_QUADRATIC_V1:
+        return ["k_stray_load"]
+    raise ValueError(f"未対応の漂遊負荷損モデル型です: {model!r}")
+
+
 def _conductor_required_param_names(
     model: ConductorModelType,
 ) -> list[str]:
@@ -159,6 +181,36 @@ def secondary_model_param_initials(
             param_name=param,
         ).resolve_initial()
         for param in _secondary_required_param_names(model)
+    }
+
+
+def friction_windage_model_param_initials(
+    model: ImFrictionWindageModelType,
+    bounds: ImParameterFitDescriptorBounds,
+) -> dict[str, float]:
+    """摩擦・風損モデル種別と境界から ``{param_name: initial}`` を返す。"""
+    return {
+        param: bounds.im_model_param_spec(
+            subsystem="friction_windage",
+            model_type_name=model.value,
+            param_name=param,
+        ).resolve_initial()
+        for param in _friction_windage_required_param_names(model)
+    }
+
+
+def stray_load_model_param_initials(
+    model: ImStrayLoadModelType,
+    bounds: ImParameterFitDescriptorBounds,
+) -> dict[str, float]:
+    """漂遊負荷損モデル種別と境界から ``{param_name: initial}`` を返す。"""
+    return {
+        param: bounds.im_model_param_spec(
+            subsystem="stray_load",
+            model_type_name=model.value,
+            param_name=param,
+        ).resolve_initial()
+        for param in _stray_load_required_param_names(model)
     }
 
 

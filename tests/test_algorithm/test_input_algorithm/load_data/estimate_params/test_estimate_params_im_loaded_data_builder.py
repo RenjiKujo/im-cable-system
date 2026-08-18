@@ -34,8 +34,10 @@ from im_cable_system.engine.shared.config import IConfig
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImCageMultiplicityType,
     ImExcitationModelType,
+    ImFrictionWindageModelType,
     ImPrimaryModelType,
     ImSecondaryModelType,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E501
     ImParameterFitDescriptorBounds,
@@ -74,6 +76,8 @@ def _make_parsed(
         candidate_secondary_single=(),
         candidate_secondary_double_inner=(),
         candidate_secondary_double_outer=(),
+        candidate_friction_windage=(),
+        candidate_stray_load=(),
         candidate_cable_conductor=(),
         supply_block={},
         curve_header_row=[],
@@ -89,6 +93,16 @@ def _basic_combo_single_cage() -> EstimateParamsModelCombo:
         secondary_inner=None,
         secondary_outer=ImSecondaryModelType.BASIC,
         cable_conductor=None,
+        friction_windage=ImFrictionWindageModelType.NONE,
+        stray_load=ImStrayLoadModelType.NONE,
+        primary_index=1,
+        excitation_index=1,
+        secondary_single_index=1,
+        secondary_double_outer_index=0,
+        secondary_double_inner_index=0,
+        cable_conductor_index=0,
+        friction_windage_index=1,
+        stray_load_index=1,
     )
 
 
@@ -99,6 +113,36 @@ def _basic_combo_double_cage() -> EstimateParamsModelCombo:
         secondary_inner=ImSecondaryModelType.BASIC,
         secondary_outer=ImSecondaryModelType.BASIC,
         cable_conductor=None,
+        friction_windage=ImFrictionWindageModelType.NONE,
+        stray_load=ImStrayLoadModelType.NONE,
+        primary_index=1,
+        excitation_index=1,
+        secondary_single_index=0,
+        secondary_double_outer_index=1,
+        secondary_double_inner_index=1,
+        cable_conductor_index=0,
+        friction_windage_index=1,
+        stray_load_index=1,
+    )
+
+
+def _shaft_output_deduction_combo_single_cage() -> EstimateParamsModelCombo:
+    return EstimateParamsModelCombo(
+        primary=ImPrimaryModelType.BASIC,
+        excitation=ImExcitationModelType.BASIC,
+        secondary_inner=None,
+        secondary_outer=ImSecondaryModelType.BASIC,
+        cable_conductor=None,
+        friction_windage=ImFrictionWindageModelType.CONSTANT_V1,
+        stray_load=ImStrayLoadModelType.CURRENT_DEPENDENT_QUADRATIC_V1,
+        primary_index=1,
+        excitation_index=1,
+        secondary_single_index=1,
+        secondary_double_outer_index=0,
+        secondary_double_inner_index=0,
+        cable_conductor_index=0,
+        friction_windage_index=1,
+        stray_load_index=1,
     )
 
 
@@ -209,6 +253,40 @@ class TestBuildImLoadedData:
         )
         assert im.secondary_inner.resistance > 0.0
         assert im.secondary_inner.inductance > 0.0
+
+    def test_builds_friction_windage_and_stray_load_branches(
+        self,
+        im_bounds: ImParameterFitDescriptorBounds,
+    ) -> None:
+        """combo に軸出力控除モデルを指定すると bounds YAML の初期値が入る。"""
+        im = build_im_loaded_data(
+            parsed=_make_parsed(),
+            combo=_shaft_output_deduction_combo_single_cage(),
+            bounds=im_bounds,
+            nameplate=_make_nameplate(),
+            im_name="im_deduction",
+        )
+        assert im.friction_windage.model == "CONSTANT_V1"
+        assert "k_friction_windage" in im.friction_windage.model_params
+        assert im.stray_load.model == "CURRENT_DEPENDENT_QUADRATIC_V1"
+        assert "k_stray_load" in im.stray_load.model_params
+
+    def test_none_combo_yields_empty_shaft_output_deduction_params(
+        self,
+        im_bounds: ImParameterFitDescriptorBounds,
+    ) -> None:
+        """既定（NONE）の combo では軸出力控除 params が空辞書のまま。"""
+        im = build_im_loaded_data(
+            parsed=_make_parsed(),
+            combo=_basic_combo_single_cage(),
+            bounds=im_bounds,
+            nameplate=_make_nameplate(),
+            im_name="im_test_none",
+        )
+        assert im.friction_windage.model == "NONE"
+        assert im.friction_windage.model_params == {}
+        assert im.stray_load.model == "NONE"
+        assert im.stray_load.model_params == {}
 
     @pytest.mark.parametrize(
         "missing_key",

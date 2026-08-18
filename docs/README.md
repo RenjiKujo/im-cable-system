@@ -24,10 +24,21 @@ pipeline → processor → algorithm → domain → shared
 
 ## ドキュメント構成
 
-### ⭐ 差別化点（本エンジン固有の価値）
+```text
+docs/
+├── architecture/   … ソフトウェアの層別設計
+├── conventions/    … 開発規約
+└── model/          … 等価回路（構成・計算の流れ・数式・当てはめ）
+```
 
-- [等価回路モデル: 数式 ↔ YAML キー ↔ 実装](./model_equations/index.md) — 等価回路の各インピーダンスモデルについて、数式（理論）・設定 YAML の係数キー・実装コードを 1 対 1 で対応づけた索引。インピーダンス可変モデルを支える中心ドキュメント。
-- [EstimateParams: メーカー性能曲線との整合性](./estimate_params_curve_fitting_consistency.md) — パフォーマンスカーブ 4 量 `(|I|, P_out, cosφ, η)` がモデルと原理的に完全一致しない理由、残差重みの設計方針、カタログ品質の切り分け。
+### 等価回路モデル
+
+入口: [model/README.md](./model/README.md)
+
+- [構成と読む順](./model/README.md)
+- [計算の流れ](./model/calculation.md)
+- [数式 ↔ YAML キー ↔ 実装](./model/equations/index.md)
+- [メーカー性能曲線との整合性](./model/curve_fitting_consistency.md)
 
 ### アーキテクチャ（このリポジトリ固有の設計）
 
@@ -55,7 +66,7 @@ pipeline → processor → algorithm → domain → shared
 
 1. 上の「全体像」と [architecture/0_component.md](./architecture/0_component.md) でレイヤー構成を把握
 2. [conventions/](./conventions/) で守るべき規約を確認（初回は README の正本マップから）
-3. 該当スコープの詳細設計（`architecture/`（`algorithm/`・`shared/` 含む）, `model_equations/`）を確認して実装
+3. [model/](./model/README.md) で等価回路を把握し、該当スコープの [architecture/](./architecture/) を確認して実装
 
 ## ドキュメント更新時の注意
 

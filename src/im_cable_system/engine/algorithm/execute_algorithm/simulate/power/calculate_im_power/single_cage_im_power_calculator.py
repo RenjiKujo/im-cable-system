@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from im_cable_system.engine.algorithm.execute_algorithm.simulate.power.calculate_im_power.apply_shaft_output_deduction import (  # noqa: E501
+    apply_shaft_output_deduction,
+)
 from im_cable_system.engine.algorithm.execute_algorithm.simulate.power.calculate_im_power.i_im_power_calculator import (  # noqa: E501
     IImPowerCalculator,
 )
@@ -38,7 +41,7 @@ class SingleCageImPowerCalculator(IImPowerCalculator):
 
     def calculate(
         self,
-        im_model: ItmImModelDto,  # noqa: ARG002
+        im_model: ItmImModelDto,
         im_voltage_current: ItmImVoltageCurrentDto,
     ) -> ItmImPowerDto:
         if (
@@ -98,11 +101,25 @@ class SingleCageImPowerCalculator(IImPowerCalculator):
             power1=primary_loss_power,
             power2=secondary_base_loss_power[branch],
         )
-        total_loss_power = add_power(
-            power1=copper_loss_power, power2=iron_loss_power
-        )
 
-        output_power = secondary_load_power[branch]
+        (
+            output_power,
+            friction_windage_loss_power,
+            stray_load_loss_power,
+        ) = apply_shaft_output_deduction(
+            im_model=im_model,
+            secondary_load_total=secondary_load_power[branch],
+            secondary_current_total=im_voltage_current.get_secondary_total_current(),  # noqa: E501
+            config=self._config,
+            logger=self._logger,
+        )
+        shaft_output_deduction_power = add_power(
+            power1=friction_windage_loss_power, power2=stray_load_loss_power
+        )
+        total_loss_power = add_power(
+            power1=add_power(power1=copper_loss_power, power2=iron_loss_power),
+            power2=shaft_output_deduction_power,
+        )
 
         return ItmImPowerDto(
             input_power=input_power,
@@ -113,6 +130,8 @@ class SingleCageImPowerCalculator(IImPowerCalculator):
             secondary_load_power=secondary_load_power,
             secondary_branch_total_power=secondary_branch_total_power,
             secondary_total_power=secondary_total_power,
+            friction_windage_loss_power=friction_windage_loss_power,
+            stray_load_loss_power=stray_load_loss_power,
             output_power=output_power,
             total_loss_power=total_loss_power,
             copper_loss_power=copper_loss_power,

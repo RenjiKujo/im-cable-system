@@ -11,11 +11,25 @@ matplotlib.use("Agg")
 
 from matplotlib.figure import Figure  # noqa: E402
 
-from im_cable_system.engine.algorithm.output_algorithm.make_figure.operating_points.figure_builder import (  # noqa: E402, E501
+from im_cable_system.engine.algorithm.output_algorithm.make_figure.operating_points.figure_builder import (  # noqa: E402, E501, PLC2701
     OperatingPointsFigureBuilder,
+    _output_display_name,
 )
 from im_cable_system.engine.shared.config import IConfig, ILogger  # noqa: E402
 from im_cable_system.engine.shared.dto.output import OutputDto  # noqa: E402
+
+
+class TestOutputDisplayName:
+    """``_output_display_name`` は ``name.get_base()``（候補一意化接尾辞を
+    除いた表示専用の基底名）を返す。``supply_grid.plotting_common`` の同名
+    private 関数とは別実装（窓口非公開のリーフ同士のため重複は許容）だが、
+    挙動は揃える。"""
+
+    def test_returns_base_from_name(self) -> None:
+        output_dto = SimpleNamespace(
+            name=SimpleNamespace(get_base=lambda: "sys-a")
+        )
+        assert _output_display_name(cast(Any, output_dto)) == "sys-a"
 
 
 class TestOperatingPointsFigureBuilder:

@@ -11,6 +11,7 @@ from im_cable_system.engine.algorithm.input_algorithm.assemble_input_dto.common.
 from im_cable_system.engine.algorithm.input_algorithm.load_data.data_class.im_loaded_data import (  # noqa: E501
     ImBranchLoadedData,
     ImLoadedData,
+    ImLossBranchLoadedData,
     ImNameplateLoadedData,
 )
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
@@ -92,6 +93,8 @@ def _im_loaded(
         secondary=secondary if secondary is not None else _basic_branch(),
         secondary_inner=secondary_inner,
         secondary_outer=secondary_outer,
+        friction_windage=ImLossBranchLoadedData(model="NONE", model_params={}),
+        stray_load=ImLossBranchLoadedData(model="NONE", model_params={}),
     )
 
 

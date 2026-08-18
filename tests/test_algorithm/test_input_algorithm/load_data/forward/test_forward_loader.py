@@ -57,6 +57,10 @@ def test_forward_loader_reads_cartesian_grid_axes(
     loaded = loader.load(_make_spec_for_cartesian_grid_axes())
     assert loaded.im_cable_system_name
     assert loaded.im is not None
+    # テスト用カタログの NONE 宣言が中間表現まで往復すること
+    # （軸出力控除 2 軸の必須化に伴う正常系の固定）。
+    assert loaded.im.friction_windage.model == "NONE"
+    assert loaded.im.stray_load.model == "NONE"
     axes = loaded.axes
     assert axes.slip.size > 0
     assert axes.frequency.size > 0

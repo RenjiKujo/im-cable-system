@@ -47,7 +47,7 @@ Domain層は、責務ごとにパッケージ（フォルダ）を分割する�
 ```
 src/im_cable_system/engine/domain/
 ├── numerics/      … 配列・数値ユーティリティ
-├── physics/       … 物理計算（electrical 配下に circuit_laws / immittance / power / voltage_current、characteristic）
+├── physics/       … 物理計算（electrical 配下に circuit_laws / immittance / power / voltage_current、直下に characteristic / shaft_output_deduction）
 ├── predicate/     … 状態・条件判定（cable / im）
 └── validation/    … 物理・制約検証（energy_conservation / im_rated_value）
 ```

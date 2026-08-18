@@ -71,6 +71,24 @@ class ImBranchLoadedData:
 
 
 @dataclass(frozen=True)
+class ImLossBranchLoadedData:
+    """軸出力控除（摩擦・風損／漂遊負荷損）1 枝分の中間表現。
+
+    ``ImBranchLoadedData`` と異なり ``resistance`` / ``inductance`` を
+    持たない（イミタンスを持たないサブシステムのため。
+    docs/model/equations/index.md 参照）。
+
+    Attributes:
+        model: モデル名（例: ``"NONE"`` / ``"CONSTANT_V1"``）。
+        model_params: モデルパラメータの ``{パラメータ名: 値}`` 辞書。
+            ``NONE`` では空辞書。
+    """
+
+    model: str
+    model_params: dict[str, float]
+
+
+@dataclass(frozen=True)
 class ImLoadedData:
     """誘導電動機 1 系列分の中間表現（``im_series`` の 1 エントリに対応）。
 
@@ -100,6 +118,11 @@ class ImLoadedData:
             ``None``。
         secondary_outer: 二重かご時の外側二次ブランチ。単一かご時は
             ``None``。
+        friction_windage: 摩擦・風損の中間表現。必須（primary / excitation /
+            secondary と同格の枠）。ゼロ損失は ``model="NONE"``、
+            ``model_params={}`` として明示する。
+        stray_load: 漂遊負荷損の中間表現。必須。規約は ``friction_windage``
+            と同じ。
     """
 
     name: str
@@ -113,3 +136,5 @@ class ImLoadedData:
     secondary: ImBranchLoadedData | None
     secondary_inner: ImBranchLoadedData | None
     secondary_outer: ImBranchLoadedData | None
+    friction_windage: ImLossBranchLoadedData
+    stray_load: ImLossBranchLoadedData

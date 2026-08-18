@@ -10,6 +10,9 @@ from dataclasses import dataclass, field
 from im_cable_system.engine.shared.dto.generic.im_cable_system.im.im_excitation_model_dto import (  # noqa: E501
     ImExcitationModelDto,
 )
+from im_cable_system.engine.shared.dto.generic.im_cable_system.im.im_friction_windage_model_dto import (  # noqa: E501
+    ImFrictionWindageModelDto,
+)
 from im_cable_system.engine.shared.dto.generic.im_cable_system.im.im_name import (
     ImName,
 )
@@ -24,6 +27,9 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system.im.im_secondary_m
 )
 from im_cable_system.engine.shared.dto.generic.im_cable_system.im.im_series_name import (
     ImSeriesName,
+)
+from im_cable_system.engine.shared.dto.generic.im_cable_system.im.im_stray_load_model_dto import (  # noqa: E501
+    ImStrayLoadModelDto,
 )
 from im_cable_system.engine.shared.dto.generic.im_cable_system.im.im_type import (  # noqa: E501
     ImCircuitType,
@@ -72,6 +78,13 @@ class ImSeriesDto:
         secondary_resistances: Secondary resistances keyed by branch.
         secondary_inductances: Secondary inductances keyed by branch.
 
+        friction_windage_model: Friction/windage loss model. Required, on the
+            same footing as ``primary_model`` / ``excitation_model``. Zero
+            loss is the explicit ``NONE`` model type (see
+            ``ImFrictionWindageModelDto``), not an omitted field.
+        stray_load_model: Stray load loss model. Required for the same
+            reason as ``friction_windage_model``.
+
     Note:
         Secondary R/L and models are always stored in dicts keyed by
         :class:`ImSecondaryCageBranchType`. For a single cage only ``SINGLE``
@@ -107,6 +120,11 @@ class ImSeriesDto:
     secondary_models: dict[ImSecondaryCageBranchType, ImSecondaryModelDto]
     secondary_resistances: dict[ImSecondaryCageBranchType, FloatResistanceDto]
     secondary_inductances: dict[ImSecondaryCageBranchType, FloatInductanceDto]
+
+    # Shaft output deduction (independent axes; required on every entry. Zero
+    # loss is the explicit NONE model type, not an omitted field)
+    friction_windage_model: ImFrictionWindageModelDto
+    stray_load_model: ImStrayLoadModelDto
 
     def __post_init__(self) -> None:
         """Verify secondary dict keys match cage_multiplicity.

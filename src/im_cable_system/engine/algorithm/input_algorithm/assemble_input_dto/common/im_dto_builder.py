@@ -11,6 +11,7 @@ from im_cable_system.engine.algorithm.input_algorithm.assemble_input_dto.common.
 from im_cable_system.engine.algorithm.input_algorithm.load_data.data_class.im_loaded_data import (  # noqa: E501
     ImBranchLoadedData,
     ImLoadedData,
+    ImLossBranchLoadedData,
 )
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImCageMultiplicityType,
@@ -19,6 +20,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImDto,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImPoles,
     ImPrimaryModelDto,
     ImPrimaryModelType,
@@ -27,6 +30,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImSecondaryModelType,
     ImSeriesDto,
     ImSeriesName,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
     FloatActivePowerDto,
@@ -216,6 +221,53 @@ def _secondary_model_dto(
         ) from exc
 
 
+def _friction_windage_model_dto(
+    branch: ImLossBranchLoadedData,
+    *,
+    im_name: str,
+) -> ImFrictionWindageModelDto:
+    model_type = _resolve_im_model_type(
+        ImFrictionWindageModelType,
+        branch.model,
+        im_name=im_name,
+        branch_label="friction_windage",
+        role="摩擦・風損",
+    )
+    try:
+        return ImFrictionWindageModelDto(
+            name=model_type,
+            params=float_param_dtos_from_dict(branch.model_params),
+        )
+    except ValueError as exc:
+        raise ValueError(
+            f"IM シリーズ {im_name!r} の friction_windage モデル係数が"
+            f"不正です: {exc}"
+        ) from exc
+
+
+def _stray_load_model_dto(
+    branch: ImLossBranchLoadedData,
+    *,
+    im_name: str,
+) -> ImStrayLoadModelDto:
+    model_type = _resolve_im_model_type(
+        ImStrayLoadModelType,
+        branch.model,
+        im_name=im_name,
+        branch_label="stray_load",
+        role="漂遊負荷損",
+    )
+    try:
+        return ImStrayLoadModelDto(
+            name=model_type,
+            params=float_param_dtos_from_dict(branch.model_params),
+        )
+    except ValueError as exc:
+        raise ValueError(
+            f"IM シリーズ {im_name!r} の stray_load モデル係数が不正です: {exc}"
+        ) from exc
+
+
 def build_im_series_dto(im_loaded: ImLoadedData) -> ImSeriesDto:
     """IM 中間表現から :class:`ImSeriesDto` を構築する。
 
@@ -237,6 +289,12 @@ def build_im_series_dto(im_loaded: ImLoadedData) -> ImSeriesDto:
     primary_model = _primary_model_dto(im_loaded.primary, im_name=im_name)
     excitation_model = _excitation_model_dto(
         im_loaded.excitation, im_name=im_name
+    )
+    friction_windage_model = _friction_windage_model_dto(
+        im_loaded.friction_windage, im_name=im_name
+    )
+    stray_load_model = _stray_load_model_dto(
+        im_loaded.stray_load, im_name=im_name
     )
 
     secondary_models: dict[ImSecondaryCageBranchType, ImSecondaryModelDto] = {}
@@ -345,6 +403,8 @@ def build_im_series_dto(im_loaded: ImLoadedData) -> ImSeriesDto:
         secondary_models=secondary_models,
         secondary_resistances=secondary_resistances,
         secondary_inductances=secondary_inductances,
+        friction_windage_model=friction_windage_model,
+        stray_load_model=stray_load_model,
     )
 
 

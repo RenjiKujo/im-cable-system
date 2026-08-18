@@ -14,6 +14,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImDto,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImName,
     ImPerformanceCurveCatalogDtos,
     ImPoles,
@@ -24,6 +26,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImSecondaryModelType,
     ImSeriesDto,
     ImSeriesName,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
     ArrayComplexCurrentDto,
@@ -77,6 +81,10 @@ def _make_im_dto(name: str = "M1") -> ImDto:
         secondary_inductances={
             branch: FloatInductanceDto(value=2.0, unit="mH"),
         },
+        friction_windage_model=ImFrictionWindageModelDto(
+            name=ImFrictionWindageModelType.NONE
+        ),
+        stray_load_model=ImStrayLoadModelDto(name=ImStrayLoadModelType.NONE),
     )
     return ImDto(name=ImName(value=name), im_series=series)
 
@@ -138,7 +146,7 @@ def _make_result() -> OutputSimulationResultDto:
 class TestOutputDto:
     def test_minimal_construction(self) -> None:
         dto = OutputDto(
-            name=ImCableSystemName(value="SYS"),
+            name=ImCableSystemName(base="SYS"),
             array_layout=_make_slip_grid_layout(),
             im=_make_im_dto(),
             cable=None,
@@ -151,7 +159,7 @@ class TestOutputDto:
 
     def test_defaults_optional_fields(self) -> None:
         dto = OutputDto(
-            name=ImCableSystemName(value="SYS"),
+            name=ImCableSystemName(base="SYS"),
             array_layout=_make_slip_grid_layout(),
             im=_make_im_dto(),
             cable=None,
@@ -166,7 +174,7 @@ class TestOutputDto:
             event_counts=(("clamp_zero", 2),),
         )
         dto = OutputDto(
-            name=ImCableSystemName(value="SYS"),
+            name=ImCableSystemName(base="SYS"),
             array_layout=_make_slip_grid_layout(),
             im=_make_im_dto(),
             cable=None,

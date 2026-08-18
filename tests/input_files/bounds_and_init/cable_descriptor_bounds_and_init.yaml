@@ -18,7 +18,7 @@
 #   ケーブル固有の定格電流ではなく、電流比を O(1) に保つための 100 A
 #   正規化定数である。CURRENT_DEPENDENT_SKIN_EFFECT_V1 の beta bounds は
 #   この 100 A 正規化を前提にしている。
-# - 索引: docs/model_equations/index.md
+# - 索引: docs/model/equations/index.md
 version: 1
 
 conductor:

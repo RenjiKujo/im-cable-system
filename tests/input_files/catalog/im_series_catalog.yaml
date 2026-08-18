@@ -7,6 +7,8 @@
 # - See cable_series_catalog.yaml for cable definitions.
 # - Double-cage entries use cage_multiplicity: DOUBLE_CAGE with secondary_inner /
 #   secondary_outer.
+# - friction_windage / stray_load are required on every entry. Zero loss is the
+#   explicit model type NONE, not an omitted key.
 
 version: 1
 
@@ -35,6 +37,10 @@ im_series:
       model: { name: "BASIC", params: [] }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # Basic02: DELTA, L-type. Same equivalent R/L and nameplate as Basic01.
   - name: "Basic02"
@@ -58,6 +64,10 @@ im_series:
       model: { name: "BASIC", params: [] }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # Basic03: DELTA, T-type. Same equivalent R/L as Basic01. All branches BASIC.
   - name: "Basic03"
@@ -81,6 +91,10 @@ im_series:
       model: { name: "BASIC", params: [] }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # Basic04: DELTA, T-type, 2 poles. Same equivalent R/L as Basic01. All branches BASIC.
   - name: "Basic04"
@@ -104,6 +118,10 @@ im_series:
       model: { name: "BASIC", params: [] }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # Single-cage, nonlinear: same equivalent R/L as Basic01. Tiny α/β (impedance vs
   # BASIC is typically under 0.1% near rated). For wiring/circuit/model combos.
@@ -146,6 +164,10 @@ im_series:
           - { name: "beta_secondary_x", value: 0.1 }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # CurrentDependent01: DELTA, L-type. All branches current-dependent (secondary: skin effect).
   - name: "CurrentDependent01"
@@ -184,6 +206,10 @@ im_series:
           - { name: "beta_secondary_x", value: 0.1 }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # CurrentDependent02: STAR, T-type. Primary/excitation current-dependent; secondary leakage saturation.
   - name: "CurrentDependent02"
@@ -220,6 +246,10 @@ im_series:
           - { name: "beta_secondary_leakage_x", value: 0.1 }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # CurrentDependent03: DELTA, T-type. Primary/excitation current-dependent; secondary skin + leakage.
   - name: "CurrentDependent03"
@@ -260,6 +290,10 @@ im_series:
           - { name: "beta_secondary_leakage_x", value: 0.1 }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # SlipAndCurrentDependent01: STAR, L-type. Primary current-dependent; excitation/secondary slip-dependent.
   - name: "SlipAndCurrentDependent01"
@@ -298,6 +332,10 @@ im_series:
           - { name: "beta_secondary_x", value: 0.1 }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # SlipAndCurrentDependent02: DELTA, L-type. Primary slip-dependent; excitation/secondary current-dependent.
   - name: "SlipAndCurrentDependent02"
@@ -337,6 +375,10 @@ im_series:
           - { name: "beta_secondary_x", value: 0.1 }
       resistance: { value: 0.3398, unit: "Ω" }
       inductance: { value: 0.001785650652, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # Double-cage (CatalogImSeriesNameV1). Primary/excitation R/L match Basic01.
   # Inner/outer cage R/L differ. Nonlinear α/β are tiny, as in single-cage nonlinear series.
@@ -368,6 +410,10 @@ im_series:
       model: { name: "BASIC", params: [] }
       resistance: { value: 0.42, unit: "Ω" }
       inductance: { value: 0.00215, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # DoubleCageSlipDependent01: DELTA, T-type. Inner/outer slip-dependent (skin effect).
   - name: "DoubleCageSlipDependent01"
@@ -418,6 +464,10 @@ im_series:
           - { name: "beta_secondary_x", value: 0.1 }
       resistance: { value: 0.42, unit: "Ω" }
       inductance: { value: 0.00215, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }
 
   # DoubleCageCurrentDependent01: DELTA, L-type. Inner/outer current-dependent (skin effect).
   - name: "DoubleCageCurrentDependent01"
@@ -467,3 +517,7 @@ im_series:
           - { name: "beta_secondary_x", value: 0.1 }
       resistance: { value: 0.42, unit: "Ω" }
       inductance: { value: 0.00215, unit: "H" }
+    friction_windage:
+      model: { name: "NONE", params: [] }
+    stray_load:
+      model: { name: "NONE", params: [] }

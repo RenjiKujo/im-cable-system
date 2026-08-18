@@ -33,11 +33,15 @@ from im_cable_system.engine.shared.job_spec.estimate_params import (
 )
 
 # brief 統合 TSV が展開する候補モデル名（少数・全件 fit しても軽量）。
+# 8 インデックス:
+# {perf}_{p}_{e}_{ss}_{sdo}_{sdi}_{fw}_{sl}_{c}。
+# brief TSV は im_friction_windage / im_stray_load に NONE の 1 候補のみを
+# 書いているため、両軸とも常に列番号 1（8 インデックス化: rev.2）。
 _BRIEF_MODEL_NAMES: tuple[str, ...] = (
-    "CurrentDependent03_1_1_1_0_0_0",
-    "CurrentDependent03_1_1_2_0_0_0",
-    "CurrentDependent03_1_2_1_0_0_0",
-    "CurrentDependent03_1_2_2_0_0_0",
+    "CurrentDependent03_1_1_1_0_0_1_1_0",
+    "CurrentDependent03_1_1_2_0_0_1_1_0",
+    "CurrentDependent03_1_2_1_0_0_1_1_0",
+    "CurrentDependent03_1_2_2_0_0_1_1_0",
 )
 
 
@@ -74,7 +78,7 @@ class _ExpectedFitRegression:
 # brief 各モデルの実測 fit summary（決定的）に 1〜2 桁のマージンを足した上限。
 # 構造（n_residual_elements=164 / n_valid_curve_points=41）は全モデル共通。
 _BRIEF_EXPECTED_REGRESSIONS: dict[str, _ExpectedFitRegression] = {
-    "CurrentDependent03_1_1_1_0_0_0": _ExpectedFitRegression(
+    "CurrentDependent03_1_1_1_0_0_1_1_0": _ExpectedFitRegression(
         max_overall_rmse=1.0e-3,
         max_cost=1.0e-4,
         max_current_rmse=1.0e-2,
@@ -84,7 +88,7 @@ _BRIEF_EXPECTED_REGRESSIONS: dict[str, _ExpectedFitRegression] = {
         n_residual_elements=164,
         n_valid_curve_points=41,
     ),
-    "CurrentDependent03_1_1_2_0_0_0": _ExpectedFitRegression(
+    "CurrentDependent03_1_1_2_0_0_1_1_0": _ExpectedFitRegression(
         max_overall_rmse=1.0e-4,
         max_cost=1.0e-6,
         max_current_rmse=1.0e-3,
@@ -94,7 +98,7 @@ _BRIEF_EXPECTED_REGRESSIONS: dict[str, _ExpectedFitRegression] = {
         n_residual_elements=164,
         n_valid_curve_points=41,
     ),
-    "CurrentDependent03_1_2_1_0_0_0": _ExpectedFitRegression(
+    "CurrentDependent03_1_2_1_0_0_1_1_0": _ExpectedFitRegression(
         max_overall_rmse=1.0e-3,
         max_cost=1.0e-4,
         max_current_rmse=1.0e-2,
@@ -104,7 +108,7 @@ _BRIEF_EXPECTED_REGRESSIONS: dict[str, _ExpectedFitRegression] = {
         n_residual_elements=164,
         n_valid_curve_points=41,
     ),
-    "CurrentDependent03_1_2_2_0_0_0": _ExpectedFitRegression(
+    "CurrentDependent03_1_2_2_0_0_1_1_0": _ExpectedFitRegression(
         max_overall_rmse=1.0e-4,
         max_cost=1.0e-6,
         max_current_rmse=1.0e-3,

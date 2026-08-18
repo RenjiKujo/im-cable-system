@@ -46,6 +46,8 @@ ArrayLayout の電流キーなど、Itm から次回入力へ戻す契約は、�
 - カタログ値とシミュレーション値が同じ参照面・同じ軸で比較されること。
 - 残差重みがチャネルごとに適用されること。
 - 推定対象パラメータの descriptor が DTO の正しい位置へ適用されること。
+  摩擦・風損／漂遊負荷損の係数（`im.friction_windage_model.params.*` /
+  `im.stray_load_model.params.*`）も同じ descriptor 適用経路で検証する。
 - カタログ 4 量の自己無矛盾性に依存しすぎない設計になっていること。
 
-カタログ性能カーブとの構造的な不整合は [`estimate_params_curve_fitting_consistency.md`](./estimate_params_curve_fitting_consistency.md) を参照。
+カタログ性能カーブとの構造的な不整合は [`curve_fitting_consistency.md`](../../../model/curve_fitting_consistency.md) を参照。

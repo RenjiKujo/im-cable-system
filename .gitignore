@@ -84,6 +84,11 @@ site/
 !tests/input_files/
 !tests/input_files/**
 
+# ローカル作業専用の推定入力・緩めた境界・設定・出力。版管理しない。
+# （上の再包含より後に置く。ディレクトリごと無視する）
+tests/input_files/estimate_params/local_untracked/
+tests/input_files/estimate_params/local_untracked/**
+
 # examples/input/ 配下は README Quick Start 用の小さなデモ入力を版管理対象にする。
 !examples/
 !examples/input/

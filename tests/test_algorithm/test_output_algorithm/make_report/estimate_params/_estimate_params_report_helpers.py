@@ -14,6 +14,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImDto,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImName,
     ImPoles,
     ImPrimaryModelDto,
@@ -23,6 +25,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImSecondaryModelType,
     ImSeriesDto,
     ImSeriesName,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
     ArrayComplexCurrentDto,
@@ -56,6 +60,8 @@ def minimal_fit_summary() -> EstimateParamsFitSummaryDto:
             im_excitation="BASIC",
             im_secondary_inner=None,
             im_secondary_outer="BASIC",
+            im_friction_windage="NONE",
+            im_stray_load="NONE",
             cable_conductor=None,
         ),
         optimizer_settings=OptimizerSettingsDto(
@@ -156,6 +162,12 @@ def im_dto_stub() -> ImDto:
             },
             secondary_resistances={_SINGLE: secondary_resistance},
             secondary_inductances={_SINGLE: secondary_inductance},
+            friction_windage_model=ImFrictionWindageModelDto(
+                name=ImFrictionWindageModelType.NONE
+            ),
+            stray_load_model=ImStrayLoadModelDto(
+                name=ImStrayLoadModelType.NONE
+            ),
         ),
     )
 

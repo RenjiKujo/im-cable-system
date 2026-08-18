@@ -16,10 +16,12 @@ from im_cable_system.engine.algorithm.execute_algorithm.orchestrate.estimate_par
 )
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImExcitationModelDto,
+    ImFrictionWindageModelDto,
     ImPrimaryModelDto,
     ImSecondaryCageBranchType,
     ImSecondaryModelDto,
     ImSeriesDto,
+    ImStrayLoadModelDto,
 )
 from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E501
     ImParameterFitDescriptorBounds,
@@ -27,7 +29,11 @@ from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E5
 
 
 def get_model_param_names(
-    model_dto: ImPrimaryModelDto | ImExcitationModelDto | ImSecondaryModelDto,
+    model_dto: ImPrimaryModelDto
+    | ImExcitationModelDto
+    | ImSecondaryModelDto
+    | ImFrictionWindageModelDto
+    | ImStrayLoadModelDto,
 ) -> list[str]:
     """モデル DTO の get_required_parameter_names を共通で呼ぶ。"""
     if hasattr(model_dto, "get_required_parameter_names"):
@@ -126,6 +132,68 @@ def append_model_param_descriptors(
         descriptors.append(
             FittableParamDescriptor(
                 path=("im", model_attr, "params", name),
+                current_value=param.get_value(),
+                lb=plb,
+                ub=pub,
+                unit=None,
+            )
+        )
+
+
+def append_friction_windage_model_param_descriptors(
+    im_series_dto: ImSeriesDto,
+    bounds: ImParameterFitDescriptorBounds,
+    descriptors: list[FittableParamDescriptor],
+) -> None:
+    """摩擦・風損モデルの params 記述子を descriptors に追加する。
+
+    ``NONE``（params 無し）のときは何も追加しない（既存の数値挙動は
+    変わらない）。
+    """
+    model_dto: ImFrictionWindageModelDto = im_series_dto.friction_windage_model
+    param_names = get_model_param_names(model_dto)
+    if not param_names or model_dto.params is None:
+        return
+    model_name = model_dto.name
+    for name in param_names:
+        param = model_dto.params.get_by_name(name)
+        if param is None:
+            continue
+        plb, pub = bounds.im_model_param("friction_windage", model_name, name)
+        descriptors.append(
+            FittableParamDescriptor(
+                path=("im", "friction_windage_model", "params", name),
+                current_value=param.get_value(),
+                lb=plb,
+                ub=pub,
+                unit=None,
+            )
+        )
+
+
+def append_stray_load_model_param_descriptors(
+    im_series_dto: ImSeriesDto,
+    bounds: ImParameterFitDescriptorBounds,
+    descriptors: list[FittableParamDescriptor],
+) -> None:
+    """漂遊負荷損モデルの params 記述子を descriptors に追加する。
+
+    理由・挙動は :func:`append_friction_windage_model_param_descriptors`
+    と同じ。
+    """
+    model_dto: ImStrayLoadModelDto = im_series_dto.stray_load_model
+    param_names = get_model_param_names(model_dto)
+    if not param_names or model_dto.params is None:
+        return
+    model_name = model_dto.name
+    for name in param_names:
+        param = model_dto.params.get_by_name(name)
+        if param is None:
+            continue
+        plb, pub = bounds.im_model_param("stray_load", model_name, name)
+        descriptors.append(
+            FittableParamDescriptor(
+                path=("im", "stray_load_model", "params", name),
                 current_value=param.get_value(),
                 lb=plb,
                 ub=pub,

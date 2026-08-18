@@ -34,6 +34,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImConnectionType,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImName,
     ImPoles,
     ImPrimaryModelDto,
@@ -42,6 +44,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImSecondaryModelDto,
     ImSecondaryModelType,
     ImSeriesName,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
     PieCableConductorKey,
     PieCableGroundKey,
 )
@@ -144,6 +148,8 @@ def _build_im_power(
         secondary_load_power={_SINGLE: branch_power},
         secondary_branch_total_power={_SINGLE: branch_power},
         secondary_total_power=_power(1.0 + 0.0j),
+        friction_windage_loss_power=_power(0.0 + 0.0j),
+        stray_load_loss_power=_power(0.0 + 0.0j),
         output_power=_power(output_power),
         total_loss_power=_power(total_loss_power),
         copper_loss_power=_power(1.0 + 0.0j),
@@ -274,6 +280,10 @@ def _build_im_model(
         excitation_model=excitation_model,
         secondary_model=secondary_model,
         total_model=total_model,
+        friction_windage_model=ImFrictionWindageModelDto(
+            name=ImFrictionWindageModelType.NONE
+        ),
+        stray_load_model=ImStrayLoadModelDto(name=ImStrayLoadModelType.NONE),
     )
 
 
@@ -411,7 +421,7 @@ def build_valid_itm_dto(
     )
 
     return ItmDto(
-        name=ImCableSystemName(value="test_system"),
+        name=ImCableSystemName(base="test_system"),
         model=model,
         simulation_result=simulation_result,
     )

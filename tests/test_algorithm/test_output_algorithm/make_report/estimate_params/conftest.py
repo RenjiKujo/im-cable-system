@@ -59,7 +59,7 @@ def build_estimate_params_output_dto() -> Callable[..., OutputDto]:
             reference_axes=axes,
         )
         return OutputDto(
-            name=ImCableSystemName(value="SYS01"),
+            name=ImCableSystemName(base="SYS01"),
             array_layout=layout,
             im=im_dto_stub(),
             cable=None,

@@ -242,6 +242,43 @@ def apply_im_path(  # noqa: PLR0911, PLR0912, PLR0915
         new_excitation_model = replace(excitation_model, params=new_params)
         return replace(im, excitation_model=new_excitation_model)
 
+    if (
+        len(path) == 4
+        and path[1] in ("friction_windage_model", "stray_load_model")
+        and path[2] == "params"
+    ):
+        param_name = path[3]
+        if path[1] == "friction_windage_model":
+            friction_windage_model = im.friction_windage_model
+            if friction_windage_model.params is None:
+                raise ValueError(
+                    "friction_windage_model.params が None のため"
+                    f"反映できません: path={path}"
+                )
+            new_params = replace_param_in_dtos(
+                friction_windage_model.params,
+                param_name,
+                value,
+            )
+            new_friction_windage_model = replace(
+                friction_windage_model, params=new_params
+            )
+            return replace(
+                im, friction_windage_model=new_friction_windage_model
+            )
+        stray_load_model = im.stray_load_model
+        if stray_load_model.params is None:
+            raise ValueError(
+                f"stray_load_model.params が None のため反映できません: path={path}"
+            )
+        new_params = replace_param_in_dtos(
+            stray_load_model.params,
+            param_name,
+            value,
+        )
+        new_stray_load_model = replace(stray_load_model, params=new_params)
+        return replace(im, stray_load_model=new_stray_load_model)
+
     raise ValueError(f"未対応の IM 記述子 path です: {path}")
 
 

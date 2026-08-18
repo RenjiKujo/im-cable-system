@@ -24,6 +24,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImDto,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImName,
     ImPoles,
     ImPrimaryModelDto,
@@ -33,6 +35,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImSecondaryModelType,
     ImSeriesDto,
     ImSeriesName,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.dto.generic.physical_quantity import (
     FloatActivePowerDto,
@@ -162,6 +166,10 @@ def _make_im_series(
         secondary_models=secondary_models,
         secondary_resistances=secondary_resistances,
         secondary_inductances=secondary_inductances,
+        friction_windage_model=ImFrictionWindageModelDto(
+            name=ImFrictionWindageModelType.NONE
+        ),
+        stray_load_model=ImStrayLoadModelDto(name=ImStrayLoadModelType.NONE),
     )
 
 

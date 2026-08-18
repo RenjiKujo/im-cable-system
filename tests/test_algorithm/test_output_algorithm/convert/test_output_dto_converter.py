@@ -42,6 +42,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImConnectionType,
     ImExcitationModelDto,
     ImExcitationModelType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImName,
     ImPoles,
     ImPrimaryModelDto,
@@ -50,6 +52,8 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImSecondaryModelDto,
     ImSecondaryModelType,
     ImSeriesName,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
     PieCableConductorKey,
     PieCableGroundKey,
 )
@@ -213,6 +217,10 @@ def _build_im_model() -> ItmImModelDto:
         excitation_model=excitation_model,
         secondary_model=secondary_model,
         total_model=total_model,
+        friction_windage_model=ImFrictionWindageModelDto(
+            name=ImFrictionWindageModelType.NONE
+        ),
+        stray_load_model=ImStrayLoadModelDto(name=ImStrayLoadModelType.NONE),
     )
 
 
@@ -302,6 +310,8 @@ def _build_power() -> ItmPowerDto:
         secondary_load_power={_SINGLE: branch_power},
         secondary_branch_total_power={_SINGLE: branch_power},
         secondary_total_power=_power(1.0 + 0.0j),
+        friction_windage_loss_power=_power(0.0 + 0.0j),
+        stray_load_loss_power=_power(0.0 + 0.0j),
         output_power=_power(_OUTPUT_POWER),
         total_loss_power=_power(2.0 + 0.5j),
         copper_loss_power=_power(1.0 + 0.0j),
@@ -410,6 +420,7 @@ def _build_itm(
     *,
     cable_model: ItmCableModelDto | None = None,
     simulation: ItmSimulationDto | None = None,
+    discriminator: str | None = None,
 ) -> ItmDto:
     model = ItmModelDto(
         array_layout=_build_array_layout(),
@@ -423,7 +434,7 @@ def _build_itm(
         ),
     )
     return ItmDto(
-        name=ImCableSystemName(value="test_system"),
+        name=ImCableSystemName(base="test_system", discriminator=discriminator),
         model=model,
         simulation_result=(
             simulation if simulation is not None else _build_simulation()
@@ -519,3 +530,12 @@ class TestPassThrough:
         assert output_dto.array_layout.reference_axes == [ArrayKey.SLIP]
         assert output_dto.numerical_stability_report is None
         assert output_dto.estimate_params_fit_summary is None
+
+    def test_name_is_carried_through_from_itm_dto(self) -> None:
+        """``name``（``base`` / ``discriminator`` とも）は ``ItmDto.name`` をそのまま引き継ぐ。"""
+        output_dto = _converter().convert(
+            _build_itm(discriminator="1_1_1_0_0_1_1_0")
+        )
+        assert output_dto.name.get_base() == "test_system"
+        assert output_dto.name.get_value() == "test_system_1_1_1_0_0_1_1_0"
+        assert output_dto.name.get_value() != output_dto.name.get_base()

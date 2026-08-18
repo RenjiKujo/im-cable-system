@@ -37,16 +37,20 @@ from im_cable_system.engine.algorithm.output_algorithm.make_figure.operating_poi
     _operating_point_count,
     _OperatingPointSeries,
 )
+
+# NOTE: model_label_lines は supply_grid 配下にあるが、表示チャート種別に
+#     依存しない共有ユーティリティ（データ源は OutputDto.im / OutputDto.cable
+#     のみ）として supply_grid の公開窓口が例外的に公開している。
+from im_cable_system.engine.algorithm.output_algorithm.make_figure.supply_grid import (  # noqa: E501
+    model_label_lines,
+)
 from im_cable_system.engine.shared.config import IConfig, ILogger
 from im_cable_system.engine.shared.dto.output import OutputDto
 
 
-def _output_name(output_dto: OutputDto) -> str:
-    """OutputDto の名前をタイトル用の文字列へ変換する。"""
-    name = output_dto.name
-    if hasattr(name, "get_value"):
-        return str(name.get_value())
-    return str(name)
+def _output_display_name(output_dto: OutputDto) -> str:
+    """OutputDto の表示名（name の基底名部分）をタイトル用の文字列へ変換する。"""
+    return output_dto.name.get_base()
 
 
 def _draw_dimensionless_base(
@@ -193,17 +197,26 @@ class OperatingPointsFigureBuilder(IFigureBuilder):
         _set_integer_xaxis(ax_base, num_points=num_points)
 
         figure.suptitle(
-            f"{_output_name(output_dto)} - operating point performance",
+            f"{_output_display_name(output_dto)} - operating point performance",
             fontsize=11,
+        )
+        figure.text(
+            0.02,
+            0.02,
+            "\n".join(model_label_lines(output_dto)),
+            fontsize=7,
+            va="bottom",
+            ha="left",
         )
         # NOTE: 縦軸を多数 outward に並べるため tight_layout は使わない
         #     （外側スパインを内側へ押し込み、プロット領域が潰れるため）。
         #     プロット枠を中央寄りに固定し、左右に追加軸用の余白を確保する。
+        #     bottom はモデル名注記（最大 7 行程度）の分だけ広げてある。
         figure.subplots_adjust(
             left=0.30,
             right=0.76,
             top=0.90,
-            bottom=0.15,
+            bottom=0.20,
         )
         _attach_figure_legend(figure)
         return figure

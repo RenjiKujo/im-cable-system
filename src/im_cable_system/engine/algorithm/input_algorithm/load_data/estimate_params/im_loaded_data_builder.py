@@ -23,13 +23,16 @@ from typing import cast
 from im_cable_system.engine.algorithm.input_algorithm.load_data.data_class.im_loaded_data import (  # noqa: E501
     ImBranchLoadedData,
     ImLoadedData,
+    ImLossBranchLoadedData,
     ImNameplateLoadedData,
 )
 from im_cable_system.engine.algorithm.input_algorithm.load_data.estimate_params.bounds_initializer import (  # noqa: E501
     excitation_model_param_initials,
+    friction_windage_model_param_initials,
     im_fixed_initial,
     primary_model_param_initials,
     secondary_model_param_initials,
+    stray_load_model_param_initials,
 )
 from im_cable_system.engine.algorithm.input_algorithm.load_data.estimate_params.cartesian_product import (  # noqa: E501
     EstimateParamsModelCombo,
@@ -186,6 +189,28 @@ def _build_secondary_branch_single_cage(
     )
 
 
+def _build_friction_windage(
+    combo: EstimateParamsModelCombo,
+    bounds: ImParameterFitDescriptorBounds,
+) -> ImLossBranchLoadedData:
+    return ImLossBranchLoadedData(
+        model=combo.friction_windage.value,
+        model_params=friction_windage_model_param_initials(
+            combo.friction_windage, bounds
+        ),
+    )
+
+
+def _build_stray_load(
+    combo: EstimateParamsModelCombo,
+    bounds: ImParameterFitDescriptorBounds,
+) -> ImLossBranchLoadedData:
+    return ImLossBranchLoadedData(
+        model=combo.stray_load.value,
+        model_params=stray_load_model_param_initials(combo.stray_load, bounds),
+    )
+
+
 def build_im_loaded_data(
     *,
     parsed: EstimateParamsParsedTables,
@@ -222,6 +247,8 @@ def build_im_loaded_data(
 
     primary = _build_primary_branch(combo, bounds)
     excitation = _build_excitation_branch(combo, bounds)
+    friction_windage = _build_friction_windage(combo, bounds)
+    stray_load = _build_stray_load(combo, bounds)
 
     secondary_total_r = im_fixed_initial("secondary_resistance", bounds)
     secondary_total_l = im_fixed_initial("secondary_inductance", bounds)
@@ -245,6 +272,8 @@ def build_im_loaded_data(
             secondary=None,
             secondary_inner=inner,
             secondary_outer=outer,
+            friction_windage=friction_windage,
+            stray_load=stray_load,
         )
 
     secondary = _build_secondary_branch_single_cage(
@@ -265,4 +294,6 @@ def build_im_loaded_data(
         secondary=secondary,
         secondary_inner=None,
         secondary_outer=None,
+        friction_windage=friction_windage,
+        stray_load=stray_load,
     )

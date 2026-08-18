@@ -3,7 +3,14 @@
 # - 全エントリは「推定対象（fittable）」の bounds と init のみ。
 #   - ``<subsystem>.rl_parameters``    … R/L の探索境界。
 #   - ``<subsystem>.model_parameters`` … モデル係数（種別ごと）の探索境界。
-#   - subsystem: ``primary`` / ``excitation`` / ``secondary``。
+#   - subsystem: ``primary`` / ``excitation`` / ``secondary`` /
+#     ``friction_windage`` / ``stray_load``。
+#   - ``friction_windage`` / ``stray_load`` は ``rl_parameters`` を持たない
+#     （イミタンスを持たないサブシステムのため。docs/model/equations/index.md 参照）。
+# - ``friction_windage`` / ``stray_load`` の各係数は ``lb: 0.0`` にする。
+#   0 を含まないと「考慮するが実質ゼロ」に到達できない。実測値に釘付けしたい
+#   場合は ``lb == ub`` にする（固定次元として扱われ、report に
+#   ``bound_status: "fixed"`` と出る）。
 # - ``init`` は初期値の決め方を指定する。次の 4 種をサポート:
 #     init: { method: "midpoint" }                  # (lb + ub) / 2
 #     init: { method: "lb" }                        # lb をそのまま採用
@@ -21,7 +28,7 @@
 #   無次元（``FloatParamDto`` に unit なし）のため unit キーは書かない。
 # - 名板情報（電源周波数・定格電流など）は本ファイルでは持たず、入力 TSV の
 #   名板（``frequency`` / ``input_line_current`` 等）から導出する。
-# - 索引: docs/model_equations/index.md
+# - 索引: docs/model/equations/index.md
 version: 1
 
 primary:
@@ -162,3 +169,23 @@ secondary:
         beta_secondary_leakage_x:
           bounds: { lb: 1.0e-2, ub: 1.0e+0 }
           init: { method: "midpoint" }
+
+friction_windage:
+  model_parameters:
+    NONE:
+      params: {}
+    CONSTANT_V1:
+      params:
+        k_friction_windage: # P_FW = k_fw * P_nameplate
+          bounds: { lb: 0.0, ub: 5.0e-2 }
+          init: { method: "value", value: 1.0e-2 }
+
+stray_load:
+  model_parameters:
+    NONE:
+      params: {}
+    CURRENT_DEPENDENT_QUADRATIC_V1:
+      params:
+        k_stray_load: # P_stray = k_str * P_nameplate * (|I2|/I_N)^2
+          bounds: { lb: 0.0, ub: 5.0e-2 }
+          init: { method: "value", value: 5.0e-3 }

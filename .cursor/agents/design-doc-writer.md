@@ -16,7 +16,7 @@ description: コード構造を読んで docs/ の設計文書を作成・更新
 - `docs/conventions/README.md`（正本マップ）
 - `docs/conventions/2_design_principles.md`
 - `docs/conventions/3_layering_and_imports.md`
-- 対象に応じて `docs/architecture/`・`docs/model_equations/`・`docs/conventions/`
+- 対象に応じて `docs/architecture/`・`docs/model/`・`docs/conventions/`
 
 ## プロジェクト原則
 
@@ -38,10 +38,10 @@ description: コード構造を読んで docs/ の設計文書を作成・更新
 
 本エージェントは Bash を持たないため自己検証できない。**呼び出し側（親）へ、
 `.venv/bin/python -m pytest tests/test_docs/ -q` の実行を依頼する**旨を
-報告に必ず書く（リンク切れ・パス実在・ツリー整合・識別子実在・`model_equations/` の
+報告に必ず書く（リンク切れ・パス実在・ツリー整合・識別子実在・`docs/model/equations/` の
 3 者契約を機械検出する）。
 
-docs の変更に伴ってテストの更新が必要になる場合（`model_equations/` の
+docs の変更に伴ってテストの更新が必要になる場合（`docs/model/equations/` の
 モデル種別・係数の追加改名など）は、**その旨も報告に明記する**。
 
 ## 禁止

@@ -67,6 +67,9 @@ MPLBACKEND=Agg .venv/bin/python runner/run_forward_by_cartesian_grid.py \
 （`SlipAndCurrentDependent03` 相当の正解構造のみ、1 組み合わせ）に絞ってあり、
 Quick Start の計算時間を短縮しています。構造同定デモは ``candidate_2`` 以降に
 候補を追加すると直積展開されます（パイプライン通しテスト参照）。
+``im_friction_windage`` / ``im_stray_load``（摩擦・風損／漂遊負荷損）の 2 軸も
+同様に候補を追加できます（必須軸。ゼロ損失は ``NONE`` を明示的に書きます）。
+``NONE`` のみなら組み合わせは増えず、両軸に候補を書くと最大 4 倍になります。
 
 ```bash
 MPLBACKEND=Agg .venv/bin/python runner/run_estimate_params.py \
@@ -209,6 +212,10 @@ from im_cable_system.estimate_params import (
 
 ## Development
 
+エディタ用の設定（`.cursor/`、`.claude/`、`.vscode/`）は
+Cursor + Claude Code を Linux で使う場合の作業手順であり、貢献の必須条件ではない。
+PR が満たすべきなのは CI（下記）だけ。流用するなら参考にしてよい。
+
 ### CI / テスト
 
 PR と `main` への push で、lint（ruff）・型（pyright）・テスト（pytest）を
@@ -233,8 +240,7 @@ slow を含む全テストは `pytest -q` で実行できます。
 
 設計意図・前提条件は `docs/` にまとめています（コードから読めない「なぜ」を中心に記述）。
 
-- **等価回路モデルの数式 ↔ YAML キー ↔ 実装の対応**: [docs/model_equations/index.md](docs/model_equations/index.md) — 本プロジェクトの差別化点。等価回路の各インピーダンスモデルの数式と、設定 YAML の係数キー、実装コードを 1 対 1 で対応づけた索引。
-- **メーカー曲線が完全には合わない理由（EstimateParams）**: [docs/estimate_params_curve_fitting_consistency.md](docs/estimate_params_curve_fitting_consistency.md) — 4 量の過剰決定・カタログ側の非整合・残差重みの推奨段取り。
+- **等価回路モデル**: [docs/model/README.md](docs/model/README.md) — 回路の構成、計算の流れ、数式 ↔ YAML ↔ 実装、カタログ曲線への当てはめ。
 - 入口・俯瞰・目次: [docs/README.md](docs/README.md)
 - アーキテクチャ（層別設計）: [docs/architecture/](docs/architecture/)
 - Algorithm 層（input / execute / output）の設計: [docs/architecture/3_algorithm.md](docs/architecture/3_algorithm.md)（詳細: [docs/architecture/algorithm/](docs/architecture/algorithm/)）

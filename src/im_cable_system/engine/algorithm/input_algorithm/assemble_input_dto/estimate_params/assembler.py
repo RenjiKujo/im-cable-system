@@ -202,7 +202,10 @@ class EstimateParamsAssembler(
             curve_loaded=absolute_pc,
         )
         assembled = InputDto(
-            name=ImCableSystemName(value=loaded_data.im_cable_system_name),
+            name=ImCableSystemName(
+                base=loaded_data.im_performance_curve.name,
+                discriminator=loaded_data.name_discriminator,
+            ),
             array_layout=layout,
             im=im_dto,
             cable=cable_dto,

@@ -22,7 +22,11 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     FloatParamDto,
     FloatParamDtos,
     ImCageMultiplicityType,
+    ImFrictionWindageModelDto,
+    ImFrictionWindageModelType,
     ImSeriesDto,
+    ImStrayLoadModelDto,
+    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.dto.input import (
     InputDto,
@@ -240,3 +244,100 @@ class TestFittableDescriptorsOrchestratorOrdering:
         # im_descriptor_bounds_and_init.yaml（primary.rl_parameters）
         assert lb == pytest.approx(1.0e-2)
         assert ub == pytest.approx(1.0)
+
+
+class TestShaftOutputDeductionDescriptorCount:
+    """摩擦・風損／漂遊負荷損の有無 4 パターンで記述子が 0/1/1/2 個増える。"""
+
+    @pytest.mark.parametrize(
+        ("friction_windage_model", "stray_load_model", "expected_extra"),
+        [
+            (
+                ImFrictionWindageModelDto(name=ImFrictionWindageModelType.NONE),
+                ImStrayLoadModelDto(name=ImStrayLoadModelType.NONE),
+                0,
+            ),
+            (
+                ImFrictionWindageModelDto(
+                    name=ImFrictionWindageModelType.CONSTANT_V1,
+                    params=FloatParamDtos(
+                        objects=[
+                            FloatParamDto(name="k_friction_windage", value=0.01)
+                        ]
+                    ),
+                ),
+                ImStrayLoadModelDto(name=ImStrayLoadModelType.NONE),
+                1,
+            ),
+            (
+                ImFrictionWindageModelDto(name=ImFrictionWindageModelType.NONE),
+                ImStrayLoadModelDto(
+                    name=ImStrayLoadModelType.CURRENT_DEPENDENT_QUADRATIC_V1,
+                    params=FloatParamDtos(
+                        objects=[
+                            FloatParamDto(name="k_stray_load", value=0.005)
+                        ]
+                    ),
+                ),
+                1,
+            ),
+            (
+                ImFrictionWindageModelDto(
+                    name=ImFrictionWindageModelType.CONSTANT_V1,
+                    params=FloatParamDtos(
+                        objects=[
+                            FloatParamDto(name="k_friction_windage", value=0.01)
+                        ]
+                    ),
+                ),
+                ImStrayLoadModelDto(
+                    name=ImStrayLoadModelType.CURRENT_DEPENDENT_QUADRATIC_V1,
+                    params=FloatParamDtos(
+                        objects=[
+                            FloatParamDto(name="k_stray_load", value=0.005)
+                        ]
+                    ),
+                ),
+                2,
+            ),
+        ],
+        ids=[
+            "none_none",
+            "constant_none",
+            "none_quadratic",
+            "constant_quadratic",
+        ],
+    )
+    def test_descriptor_count_matches_pattern(
+        self,
+        input_im_cable_system_dtos: InputDtos,
+        config: IConfig,
+        friction_windage_model: ImFrictionWindageModelDto,
+        stray_load_model: ImStrayLoadModelDto,
+        expected_extra: int,
+    ) -> None:
+        baseline_series = _input_with_cage(
+            input_im_cable_system_dtos,
+            ImCageMultiplicityType.SINGLE_CAGE,
+        ).im.im_series
+        assert baseline_series is not None
+        im_bounds = _load_im_bounds(config)
+
+        baseline_strategy = ImParameterFitStrategyFactory.create(
+            baseline_series
+        )
+        baseline_count = len(
+            baseline_strategy.collect_im_descriptors(baseline_series, im_bounds)
+        )
+
+        variant_series = replace(
+            baseline_series,
+            friction_windage_model=friction_windage_model,
+            stray_load_model=stray_load_model,
+        )
+        variant_strategy = ImParameterFitStrategyFactory.create(variant_series)
+        variant_count = len(
+            variant_strategy.collect_im_descriptors(variant_series, im_bounds)
+        )
+
+        assert variant_count - baseline_count == expected_extra
