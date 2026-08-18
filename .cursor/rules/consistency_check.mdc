@@ -1,14 +1,54 @@
 ---
-description: docs/ か src/ を編集したら、機械チェックを回して報告し、レビューエージェントの起動を諮る。
+description: src/・docs/・tests/・開発設定（.cursor/・.claude/・CLAUDE.md）を編集する前後の必須手順。着手前に読む設計文書、編集完了後の機械チェックとレビューエージェント諮問、ルール import の両ツール同期、テストと契約の双方向更新。
 alwaysApply: true
 ---
 
-# 整合性チェック
+# src/・docs/・tests/・開発設定を触るときのルール
 
-`docs/` または `src/` を編集したターンは、応答の最後に必ず次を行う。
-編集していないターンでは不要。
+`docs/`・`src/`・`tests/` のいずれかを編集するときは、着手前に 0. を行う。1. と 2. は
+**編集ターンごとではなく、依頼された編集が終わったあとだけ**で行う。
+編集しないターンでは不要。複数ディレクトリを触ったときは該当行をすべて行う。
 
-## 1. 機械チェックを回して結果を報告する
+開発設定（`.cursor/rules/`・`.cursor/agents/`・`.cursor/skills/`・`.claude/`・
+`CLAUDE.md`）を編集したときは 0. と 2. は不要で、1. だけ行う（編集が終わったあと）。
+設定自身が docs のパスを名指しし、どのルールがどちらのツールで効くかを決めるため、
+機械チェックの対象になる。
+
+## 0. 触る前に読む
+
+実装・設計変更の前に該当を Read する。ここに要約しない。
+
+**全部を毎回読まない。** 下表の「いつ」に当たるときだけ読む。セッション中に一度読んだ
+文書は、その文書自体が変わらない限り読み直さない。起点は常に正本マップ。
+
+`src/` または `docs/` を触るとき:
+
+| 文書 | いつ読むか |
+|---|---|
+| `docs/conventions/README.md`（正本マップ） | セッションで最初に触るとき。ここから必要な規約へ辿る |
+| `docs/README.md`（俯瞰・目次） | 全体像を把握していないとき |
+| `docs/architecture/0_component.md` | 層・ディレクトリをまたぐとき。ファイルを新設・移動するとき |
+| `docs/conventions/3_layering_and_imports.md` | import・公開窓口を触るとき |
+| `docs/conventions/2_design_principles.md` | クラス・IF を新設するとき。責務を移すとき |
+| `docs/conventions/4_numerical_robustness.md` | 除算・比較・NaN/inf・収束判定を触るとき |
+| `docs/conventions/1_code_style.md` | 命名・docstring・型ヒントの人手ルールで迷ったとき |
+| 対象範囲の `docs/architecture/` | その層の設計判断に踏み込むとき |
+
+迷ったら読む側に倒す。ただし**読んでいないものを読んだことにしない。**
+節 2 のレビューエージェントは新鮮なコンテキストで docs 適合を見るため、
+親がすべてを抱えていることは前提にしていない。抱え込みではなく、この読み分けが正。
+
+整形・lint・型の機械項目は `ruff.toml` と `pyproject.toml` の pyright に従う。
+機械強制とドキュメントの役割分担は `docs/conventions/README.md` の正本マップが正本。
+機械強制できる値を docs へ再掲しない。
+
+`tests/` だけのときは次に絞る。
+
+- `docs/conventions/5_testing.md`
+- そのテストが固定している層の architecture
+- 人手の表記: `docs/conventions/1_code_style.md`
+
+## 1. 機械チェックを回して結果を報告する（編集が終わったあとだけ）
 
 venv は `.cursor/rules/virtual_env.mdc` に従う。編集した対象で選ぶ。
 
@@ -16,25 +56,59 @@ venv は `.cursor/rules/virtual_env.mdc` に従う。編集した対象で選ぶ
 |---|---|---|
 | `docs/` | `.venv/bin/python -m pytest tests/test_docs/ -q` | 約 3 秒 |
 | `src/` | 上記に加えて `.venv/bin/basedpyright` | 約 30 秒 |
+| `tests/` | `.venv/bin/basedpyright` と該当テスト。`tests/test_docs/` を含む変更なら `pytest tests/test_docs/ -q` も回す | basedpyright 約 30 秒 |
+| 開発設定（`.cursor/`・`.claude/`・`CLAUDE.md`） | `.venv/bin/python -m pytest tests/test_docs/ -q` | 約 3 秒 |
+
+`tests/test_docs/` は `docs/` に加え、`README.md`・`CLAUDE.md`・`.cursor/` のリンクと、
+`alwaysApply: true` と `CLAUDE.md` の `@` import の一致（`TestRuleImportCoverage`）も見る。
+`alwaysApply` の追加・削除・改名は `CLAUDE.md` の `@` も直す（Claude Code は `@` しか読まない）。
 
 成功・失敗どちらでも各 1 行で報告する。`docs/` だけの編集なら `basedpyright` は
 省いてよい（対象の `src/` と `tests/` が変わらないため型は壊れない）。
 
-## 2. レビューエージェントの起動を諮る
+機械チェックが落ちても、docs / 実装 / テストのどれが正かを判断する前に自動修正しない。
 
-正本は `.cursor/agents/`。編集対象で選び、**自分の推奨（今回はやるべき／やらなくてよい）
+## 2. レビューエージェントの起動を諮る（編集が終わったあとだけ）
+
+定義の正本は `.cursor/agents/`（`.claude/agents/` は symlink）。**2 体だけ**で、編集対象で
+選ぶ。どちらも報告のみで、直さない。
+
+モデルは各 frontmatter の `model:` が正本。`tools` / `model` は Claude Code が解釈する。
+`maxTurns` / `background` は Cursor 向けに残しているが、Cursor 公式の
+`create-subagent` が文書化している frontmatter は `name` / `description` だけで、
+これらが解釈される保証は取れていない。**tool 制限を安全機構として当てにしない。**
+
+**編集ターンごとには諮らない。** 依頼された編集が終わったあとだけ諮る。
+途中の未完成差分に当てるとノイズになり、毎ターン尋ねると「不要」が反射になる。
+作業途中では、締めに**未諮問の変更が溜まっている旨を 1 行**書くだけにする
+（例: `未レビューの変更: src/ 3 ファイル, tests/ 1 ファイル`）。
+
+諮るときは編集対象で選び、**自分の推奨（今回はやるべき／やらなくてよい）
 と理由を必ず添えて**ユーザーに尋ねる。実行はユーザーの承認による。
+環境によっては起動できないので、その場合は提案にとどめ、起動できなかった事実を報告に書く。
 
-| 編集対象 | エージェント |
-|---|---|
-| `src/` | `implementation-reviewer` |
-| `docs/` | `docs-consistency-checker` |
+| 編集対象 | エージェント | 見る向き |
+|---|---|---|
+| `src/` | `pj-review-code` | 差分 → docs |
+| `tests/` | `pj-review-code` | 差分 → docs |
+| `docs/` | `pj-review-docs` | docs → 実装 |
 
 **機械チェックが成功していても尋ねる。** 機械チェックは名前・パス・型しか見ておらず、
 設計判断の陳腐化・正本と再掲のドリフト・層／公開窓口／DTO 契約への適合は素通りする。
-「機械が通った＝整合している」ではない。とくに `src/` はこの穴が大きい。
+「機械が通った＝整合している」ではない。とくに `src/` と `tests/` はこの穴が大きい。
 
-## 直さない
+レビューを実行したら、報告の**要修正**をそのまま流さない。直すか、直さない理由を
+書き残すかのどちらかを、コミット前に済ませる（`pj-commit` の手順 1 で確認する）。
 
-機械チェックが落ちても自動修正しない。「docs とコードのどちらが正しいか」の判断が
-要るため（`docs/README.md` の「自動修正はしない」）。落ちたまま報告を終えない。
+## テスト
+
+テストは契約の固定（`docs/conventions/5_testing.md`）。docs・実装・テストは同じ契約を指す。
+
+- 実装・docs を変えたら、対応するテストも同じ変更で更新する。
+- テストを変えたら、docs の契約（公開窓口・Factory 分岐・数値ガード等）と食い違っていないか見る。
+  テスト側だけを緩めて通さない。
+- テストを消して通さない。落ちたまま報告を終えない。
+- `docs/model/equations/` は `TestModelEquationsCoverage` がテスト自身の更新漏れも検出する。
+
+CI で確認するテストは `tests/` に一本化する。`tests/test_docs/` の外に整合性
+チェック用のスクリプトを置かない（二重管理はそれ自体が drift 源になる）。

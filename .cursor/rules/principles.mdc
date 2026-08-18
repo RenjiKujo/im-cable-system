@@ -1,0 +1,19 @@
+---
+description: リポジトリ概要と、層の一方向依存・正本宣言・読んだ範囲だけ評価する原則。
+alwaysApply: true
+---
+
+# im-cable-system
+
+誘導電動機（IM）＋ケーブル系の等価回路シミュレーション／パラメータ推定エンジン。
+
+- 実装の層は **`pipeline → processor → algorithm → domain → shared` の一方向
+依存**。
+  逆流・層飛ばしをしない。境界を越える import は公開窓口を通す。
+  層の責務と置き場所の正本は `docs/architecture/0_component.md`、
+  依存と import の規約は `docs/conventions/3_layering_and_imports.md`。
+  `apps/`・`runner/`・`scripts/` はこの 5 層の外側（engine のクライアント）。
+- 記述が食い違ったら、**正本宣言のある側を正**とする。正本が不明なものは推測で直さず確認する。
+  各 architecture 文書は冒頭の「この文書が正本である範囲」ブロックを見てから読む。
+- **読んだ範囲だけを評価する。** 部分的にしか読んでいないファイル・ディレクトリを
+  「問題なし」「健全」と報告しない。未読・部分読みなら「未確認」と明示する。

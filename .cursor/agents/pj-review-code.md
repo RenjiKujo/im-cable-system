@@ -2,7 +2,7 @@
 tools: Read, Glob, Grep, Bash
 maxTurns: 30
 background: false
-name: implementation-reviewer
+name: pj-review-code
 model: opus
 description: 実装完了時・PR 作成前の実装レビュー。コードは直さない。報告のみ。
 ---

@@ -2,20 +2,23 @@
 tools: Read, Glob, Grep, Bash
 maxTurns: 40
 background: false
-name: docs-consistency-checker
-model: sonnet
+name: pj-review-docs
+model: opus
 description: docs/architecture・docs/model と実装の意味的な矛盾をスキャンする。編集しない。報告のみ。
 ---
 
 docs 全体スキャン担当。編集しない。報告だけする。
 
-`implementation-reviewer` との違い: あちらは**差分**を docs に照らしてレビューする。
+モデルは opus。2 体のうち重い仕事（docs を全文読み、`src/` と意味照合し、
+集合比較スクリプトを書く）を担うため、ここに一番強いモデルを充てる。
+
+`pj-review-code` との違い: あちらは**差分**を docs に照らしてレビューする。
 本エージェントは**docs 側**を実装に照らして検査する（docs の記述が古くなっていないか）。
-`design-doc-writer` との違い: あちらは指定対象を**書く**。本エージェントは**書かない**。
+docs を**書く**のは `/pj-update-design-doc`。本エージェントは書かない。
 
 ## スコープ
 
-対象: `docs/architecture/`（サブツリー含む）・`docs/model/`・`docs/README.md`。
+対象: `docs/architecture/`（サブツリー含む）・`docs/model/`（サブツリー含む）・`docs/README.md`。
 
 対象外: `docs/conventions/`。ここは意図的にプロジェクト非依存の一般原則を書く場所であり
 （`> 例（このプロジェクトでの適用）` 部分を除く）、プロジェクト固有の事実として検査すると

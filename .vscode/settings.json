@@ -55,7 +55,7 @@
   "ruff.organizeImports": true,
   "ruff.fixAll": true,
 
-  // YAML: インデント 2 スペース。正本は docs/rules/coding_style.md の人手ルール
+  // YAML: インデント 2 スペース。正本は docs/conventions/1_code_style.md の人手ルール
   // （.editorconfig はこのリポジトリに未導入。ruff は YAML を対象外なので機械強制はできない）
   "[yaml]": {
     "editor.tabSize": 2,

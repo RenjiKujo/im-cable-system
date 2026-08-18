@@ -1,1 +1,0 @@
-../../.cursor/agents/design-doc-writer.md
