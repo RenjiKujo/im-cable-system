@@ -1,5 +1,9 @@
 # シミュレーションロジック設計 - Processorコンポーネントと処理フロー
 
+> **この文書が正本である範囲**: Processor 層の役割・各ステージの引数/戻り値契約・`IStage` の構造・`IDataProcessingStrategy` への実行方式委譲・パッケージ構成。
+>
+> **正本ではない（参照先）**: 層構造と依存方向は [`0_component.md`](./0_component.md)、Algorithm 側の契約は [`3_algorithm.md`](./3_algorithm.md)、import 規約は [`conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md)。
+
 ## 概要
 
 本ドキュメントは、本シミュレーションエンジンにおけるProcessorコンポーネント（`src/im_cable_system/engine/processor/`）の構成と設計方針、および処理フローを定義する。
@@ -18,6 +22,7 @@ Processor層の主な責務は以下の通りとする。
 - **結果の集約**: Algorithm 層から返された結果を集約して出力 Dtos を構築する
 - **オーケストレーターの呼び出し**: 各要素（単一 Dto）ごとに Algorithm 層のオーケストレーターを 1 回呼び出す
 - **処理順序の委譲**: モデル構築・シミュレーション実行・検証などの詳細な処理順序は Algorithm 層に閉じる
+- **Dtos のダンプ**: 設定が有効なときだけ、各ステージの入出力 Dtos をダンプする（`dump_*_dtos_if_enabled`）
 
 ステージ内の具体的な処理（モデル構築・シミュレーション実行・検証など）の実装は **Algorithm層の責務** であり、Algorithm層は引数・戻り値に **単一 Dto** を想定する。Processor層は Algorithm 層のオーケストレーターを呼び出し、Dtos の走査と結果の集約に専念する。詳細は `3_algorithm.md` を参照する。
 
@@ -48,13 +53,14 @@ Processor層の各ステージインターフェイスでは、**引数・戻り
 - ExecuteStage: `process(InputDtos) -> ItmDtos`
 - OutputStage: `process(ItmDtos) -> OutputDtos`
 
-パイプラインは `create` 時に各ステージの `IStage.create` で Input / Execute / Output を組み立て、コンストラクタへ注入する。`run` は注入済みステージを順に実行するだけとする。
+ステージの組み立てと実行順（パイプラインの `create` / `run`）は [`5_pipeline.md`](./5_pipeline.md) を正本とする。
 
 パイプラインからは **IStage のみ**が見える。各ステージ（Input/Execute/Output）はすべて `IStage` を実装し、
-公開メソッドは `create` と `process(dtos)` のみとする。**現時点でステージ種別ごとの名目型（`IInputStage`, `IOutputStage` など）は未実装**であり、
-各モードの具体クラス（例: `ForwardByCartesianGridInputStage`）が `IStage` を直接実装する。将来そうした名目型を
-追加する場合も `IStage` を継承する設計とし、パイプラインは型としては `IStage` のみを参照する。
-具体的なステージ実装の生成と実行は、Processor層のファクトリとパイプラインが制御する。
+公開メソッドは `create` と `process(dtos)` のみとする。ステージ種別ごとの名目型は設けず、
+各モードの具体クラス（例: `ForwardByCartesianGridInputStage`）が `IStage` を直接実装する。
+入力・出力の区別は型パラメータ（`IStage[InputDtos, ItmDtos]` など）で表し、パイプラインは
+型としては `IStage` のみを参照する。具体的なステージ実装の生成と実行は、Processor層の
+ファクトリとパイプラインが制御する。
 
 ## 各ステージの役割
 
@@ -65,7 +71,7 @@ Processor層の各ステージインターフェイスでは、**引数・戻り
 #### InputStage と IStage
 
 InputStage の契約は `IStage[JobSpecT, InputDtos]` で表現する。`JobSpecT` は実行モードで異なり、**forward 系（CartesianGrid / OperatingPoints）は `ForwardJobSpecs`（複数）、EstimateParams は `EstimateParamsJobSpec`（単数）**を使う。EstimateParams は 1 つの統合ジョブ仕様から候補直積で複数 `InputDto` を生成するため、入力側は単数のままでよい（出力側の `InputDtos` は全モード共通）。引数・戻り値は Dtos（InputStage の入力のみ上記の例外）。
-load / validate などは実装の内部（private）で `process(dtos)` から呼び、インターフェースには公開しない。
+公開メソッドは `create` と `process(dtos)` のみとする。load / validate に相当する処理は Algorithm 層の入力オーケストレーターに閉じ、Processor 層には持たない。
 
 #### 処理フロー
 
@@ -122,7 +128,7 @@ ItmDtosを受取り、各要素（単一 ItmDto）ごとに Algorithm 層の出�
 #### OutputStage と IStage
 
 OutputStage の契約は `IStage[ItmDtos, OutputDtos]` で表現する。引数・戻り値は Dtos。
-convert などは実装の内部（private）で `process(dtos)` から呼び、インターフェースには公開しない。
+公開メソッドは `create` と `process(dtos)` のみとする。convert に相当する処理は Algorithm 層の出力オーケストレーターに閉じ、Processor 層には持たない。
 `process(dtos)` で入力 Dtos を受け取り OutputDtos を返す。内部では、Dtos を走査し、各要素（単一 ItmDto）ごとに Algorithm 層の出力オーケストレーターを呼び出し、結果を集約して OutputDtos を構築する。
 
 #### 処理フロー
@@ -153,11 +159,20 @@ convert などは実装の内部（private）で `process(dtos)` から呼び、
 src/im_cable_system/engine/processor/
 ├── i_stage.py
 ├── input_stage/
+│   └── dump_input_dto/
 ├── execute_stage/
+│   ├── dump_itm_dto/
+│   └── strategy/
 └── output_stage/
+    └── dump_output_dto/
 ```
 
 **インポート**: [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。
+
+Processor ルートには `__init__.py` を置かず、公開窓口は `input_stage` / `execute_stage` /
+`output_stage` の 3 サブパッケージ側に置く。`IStage` だけは `processor.i_stage` から
+直 import する（pipeline 3 本がこの構成を採用している）。理由と import の書き方は
+[`i_stage.py`](../../src/im_cable_system/engine/processor/i_stage.py) の docstring を参照する。
 
 ## 依存関係
 

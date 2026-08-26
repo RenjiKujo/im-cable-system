@@ -1,5 +1,9 @@
 # シミュレーションロジック設計 - Pipelineコンポーネント
 
+> **この文書が正本である範囲**: Pipeline 層の責務・`IPipeline` の契約（`create` / `run`）・実行モードごとに具体パイプラインを分ける方針。
+>
+> **正本ではない（参照先）**: 層構造は [`0_component.md`](./0_component.md)、ステージ契約は [`4_processor.md`](./4_processor.md)、Dtos の構造は [`shared/dto_principle.md`](./shared/dto_principle.md)。
+
 ## 概要
 
 本ドキュメントは、本シミュレーションエンジンにおけるPipelineコンポーネント（`src/im_cable_system/engine/pipeline/`）の構成と設計方針を定義する。
@@ -63,6 +67,7 @@ Pipelineコンポーネントは以下のコンポーネントに依存する（
 ```text
 src/im_cable_system/engine/pipeline/
 ├── __init__.py              … 公開パイプラインクラス（__all__）
+├── i_pipeline.py            … IPipeline 契約
 └── *_pipeline.py            … 各ジョブ用実装
 ```
 

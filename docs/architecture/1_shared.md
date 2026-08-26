@@ -10,7 +10,8 @@
 
 ## Sharedコンポーネントの役割
 
-全コンポーネントで共通利用されるデータ構造・ユーティリティ・定数・設定等を提供する。
+全コンポーネントで共通利用されるデータ構造（DTO）・設定・ジョブ仕様・推定仕様・
+数値安定化イベント集計・ログ／横断デコレータ等を提供する。
 
 ## 設計方針
 
@@ -24,17 +25,31 @@ InputDto、ItmDto、OutputDtoなどのSimulationエンジン用DTOを提供す�
 
 詳細は「DTO設計方針」セクションを参照してください。
 
-### ユーティリティ
+### 設定・ログ・横断デコレータ
 
-ログ出力、エラーハンドリング、データ変換（DTO以外の一般的なユーティリティ）を提供する。
+シミュレーション実行に必要な設定（`IConfig` / `Config`）、ロガー（`ILogger` /
+`Logger`）、および横断デコレータ（`@timer`）を提供する。詳細は
+[`shared/config_and_logger.md`](./shared/config_and_logger.md) を参照する。
 
-### 設定
+### ジョブ仕様（`job_spec/`）
 
-シミュレーション実行に必要な設定（IConfig、ILoggerなど）を提供する。
+実行モード別のジョブ仕様を提供する（`ForwardJobSpec` / `ForwardJobSpecs` /
+`EstimateParamsJobSpec`）。
 
-### 定数定義
+### 推定仕様（`estimate_params_fit_spec/`）
 
-シミュレーションパラメータ、物理定数、検証基準などの定数を定義する。
+パラメータ推定の探索境界・初期値仕様を提供する（`ParameterFitSpec` / `InitMethod` /
+`ImParameterFitDescriptorBounds` / `CableParameterFitDescriptorBounds` /
+`ImSubsystemName` / `ImPrimaryModelName` / `ImExcitationModelName` /
+`ImSecondaryModelName` / `ImFrictionWindageModelName` / `ImStrayLoadModelName` /
+`CableConductorModelName`）。
+Input（初期値決定）と Execute（探索境界決定）の**両ステージから参照される横断責務**
+である。
+
+### 数値安定化イベント集計（`numerical_stability/`）
+
+シミュレーション中の数値安定化イベントを集計する（`NumericalStabilityAccumulator`
+ほか）。
 
 ## DTO設計方針（層レベル）
 
@@ -62,8 +77,8 @@ Simulationエンジン用 DTO（`input/` / `itm/` / `output/`）は、汎用 DTO
 src/im_cable_system/engine/shared/dto/
 ├── generic/    … 汎用 DTO（physical_quantity / entity / interfaces / im_cable_system など）
 ├── input/      … 入力 DTO の公開窓口
-├── itm/        … 中間 DTO の公開窓口
-└── output/     … 出力 DTO の公開窓口（figure 等のサブパッケージを含む）
+├── itm/        … 中間 DTO の公開窓口（model / simulation_result のサブパッケージを含む）
+└── output/     … 出力 DTO の公開窓口（図表専用 DTO は持たない）
 ```
 
 **インポート**: 層間・DTO の import 窓口は [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。
