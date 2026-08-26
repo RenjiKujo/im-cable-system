@@ -46,6 +46,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
             "（未指定なら config の参照を使用）。"
         ),
     )
+    parser.add_argument(
+        "--dump-base-dir",
+        type=Path,
+        default=None,
+        help="dump 出力先（絶対パス。未指定なら config の dump.base_dir を使用）。",
+    )
     return parser.parse_args(argv)
 
 
@@ -53,12 +59,14 @@ def _build_runtime(args: argparse.Namespace) -> tuple[IConfig, ILogger]:
     """Config と Logger を生成する。
 
     ``--im-bounds`` / ``--cable-bounds`` が指定された場合は、config の
-    相対参照より優先してそのパスを用いる。
+    相対参照より優先してそのパスを用いる。``--dump-base-dir`` も同様に
+    config の ``dump.base_dir`` より優先する。
     """
     config = Config.create(
         config_file_path=args.config,
         im_bounds_and_init_file_path=args.im_bounds,
         cable_bounds_and_init_file_path=args.cable_bounds,
+        dump_base_dir=args.dump_base_dir,
     )
     logger = Logger.create(config)
     return config, logger
