@@ -32,6 +32,17 @@ dev = [
   "pandas-stubs>=2.0.0",
   "types-PyYAML>=6.0.0",
 ]
+# apps/web（ジョブ投入型 Web 面）用。既定インストールには入れない
+# （`pip install im-cable-system` に FastAPI 等を含めないため）。
+# 詳細は docs/apps/web/0_overview.md。
+web = [
+  "fastapi>=0.110.0",
+  "uvicorn[standard]>=0.29.0",
+  "python-multipart>=0.0.9",
+  "sqlalchemy>=2.0.0",
+  "streamlit>=1.49",
+  "httpx>=0.27.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -49,7 +60,7 @@ include = ["im_cable_system*"]
 # 型チェックが前提とする最低バージョン。requires-python と役割を揃える値
 # （開発・CI実行バージョンとは別軸。詳細は上の requires-python のコメント参照）。
 pythonVersion = "3.10"
-include = ["src/im_cable_system", "tests"]
+include = ["src/im_cable_system", "tests", "apps"]
 extraPaths = ["src", "."]
 # "strict" ではなく "basic" を採用。numpy/pandas など動的型付けが強いライブラリを多用するため、
 # "strict" は誤検知が増えやすい想定（将来 "strict" 化を検討する余地はある）。
@@ -67,7 +78,8 @@ reportOptionalMemberAccess = "none"
 # （docs/conventions/5_testing.md には値を再掲せず、ここへのポインタのみを書く）。
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]  # editable install していない状態でも `pytest` 単体実行で解決できるようにする
+pythonpath = ["src", "."]  # editable install していない状態でも `pytest` 単体実行で解決できるようにする。
+                            # "." は apps/（src レイアウト外）を import 可能にするため。
 markers = [
   "integration: 統合テスト（外部I/Oや長い経路を含む）",
   "slow: 実行に時間がかかるテスト",

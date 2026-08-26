@@ -94,6 +94,10 @@ tests/input_files/estimate_params/local_untracked/**
 !examples/input/
 !examples/input/**
 
+# apps/web のローカル実行データ（sqlite・ジョブディレクトリ・成果物）。まるごと無視する。
+local_jobs/
+local_jobs/**
+
 # Graph / plot exports（シミュレーション・テストの図など）
 *.png
 *.pdf

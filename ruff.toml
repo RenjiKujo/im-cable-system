@@ -69,7 +69,7 @@ ignore = [
 "src/im_cable_system/engine/shared/config/schema/*.py" = ["ANN401"]
 
 [lint.isort]
-known-first-party = ["im_cable_system"]
+known-first-party = ["im_cable_system", "apps"]
 section-order = [
     "future",
     "standard-library",
