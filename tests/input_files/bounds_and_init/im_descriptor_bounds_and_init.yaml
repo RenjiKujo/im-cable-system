@@ -3,7 +3,13 @@
 # - 全エントリは「推定対象（fittable）」の bounds と init のみ。
 #   - ``<subsystem>.rl_parameters``    … R/L の探索境界。
 #   - ``<subsystem>.model_parameters`` … モデル係数（種別ごと）の探索境界。
-#   - subsystem: ``primary`` / ``excitation`` / ``secondary``。
+#     Enum の全モデル種別を列挙する。係数を取らない種別（BASIC / NONE 等）も
+#     ``params: {}`` と必ず書く。種別キーの欠落は load 時に KeyError、
+#     ``params`` の省略・null は load 時に ValueError になる。
+#   - subsystem: ``primary`` / ``excitation`` / ``secondary`` /
+#     ``friction_windage`` / ``stray_load``。
+#   - ``friction_windage`` / ``stray_load`` は ``rl_parameters`` を持たない
+#     （イミタンスを持たないサブシステムのため。docs/model/equations/index.md 参照）。
 # - ``init`` は初期値の決め方を指定する。次の 4 種をサポート:
 #     init: { method: "midpoint" }                  # (lb + ub) / 2
 #     init: { method: "lb" }                        # lb をそのまま採用
