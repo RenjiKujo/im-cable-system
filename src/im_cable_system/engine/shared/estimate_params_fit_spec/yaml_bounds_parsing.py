@@ -166,6 +166,28 @@ def parse_fixed_parameters_block_with_init(
     return out
 
 
+def _require_params_mapping(
+    model_name: object,
+    model_entry: object,
+) -> dict[str, Any]:
+    """モデル種別エントリから ``params`` マッピングを取り出す。
+
+    係数を取らない種別（``BASIC`` / ``NONE`` 等）も ``params: {}`` を必ず
+    書く規約のため、省略・null・非マッピングはすべて設定誤りとして扱う。
+
+    Raises:
+        ValueError: ``params`` マッピングを持たない場合。
+    """
+    if isinstance(model_entry, dict) and isinstance(
+        model_entry.get("params"), dict
+    ):
+        return model_entry["params"]
+    raise ValueError(
+        f"model type {model_name!r} requires 'params' mapping; write "
+        "'params: {}' for a model type that takes no parameters"
+    )
+
+
 def parse_model_parameters_block_with_init(
     section: object,
 ) -> dict[str, dict[str, ParameterFitSpec]]:
@@ -174,10 +196,16 @@ def parse_model_parameters_block_with_init(
     各パラメータ行は ``bounds``（``lb`` / ``ub`` を両方必須）と
     ``init.method`` を必須とする strict スキャン。
 
+    モデル種別は ``params`` マッピングを必ず持つ（係数を取らない種別は
+    ``params: {}``）。``params`` の省略・null・非マッピングを黙って読み飛
+    ばすとモデル種別キーごと欠落し、下流で「YAML にキーはあるのに未知の
+    モデル種別」という原因を誤導する :class:`KeyError` になるため、ここで
+    :class:`ValueError` にして真因を示す。
+
     Raises:
         ValueError: ``bounds`` が無い・片方欠落、``init`` が無い、
             ``init.method`` が未対応の値、``method='value'`` で ``value``
-            が無いなどの場合。
+            が無い、モデル種別が ``params`` マッピングを持たないなどの場合。
     """
     if not isinstance(section, dict):
         return {}
@@ -186,15 +214,15 @@ def parse_model_parameters_block_with_init(
         return {}
     out: dict[str, dict[str, ParameterFitSpec]] = {}
     for model_name, model_entry in mp.items():
-        if not isinstance(model_entry, dict):
-            continue
-        params = model_entry.get("params", {})
-        if not isinstance(params, dict):
-            continue
+        params = _require_params_mapping(model_name, model_entry)
         inner: dict[str, ParameterFitSpec] = {}
         for pname, pentry in params.items():
             if not isinstance(pentry, dict):
-                continue
+                raise ValueError(
+                    f"parameter {f'{model_name}.{pname}'!r} requires "
+                    f"'bounds' mapping with 'lb' and 'ub', got "
+                    f"{type(pentry).__name__}"
+                )
             inner[str(pname)] = _build_spec(pentry, f"{model_name}.{pname}")
         out[str(model_name)] = inner
     return out

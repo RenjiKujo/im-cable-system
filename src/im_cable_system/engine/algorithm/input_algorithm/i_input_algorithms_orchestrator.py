@@ -32,8 +32,11 @@ Note:
     値域、単位文字列の妥当性など）はここでは行わず、``LoadedDataT``
     自身も ``__post_init__`` を持たない方針。
 - ``_assemble_input_dto``: ``InputDtoT`` を作れない場合のみ raise する。
-    フィールド単体の値域・契約（正値、有限性、単位など）は各 DTO の
-    ``__post_init__`` でカバーする。
+    個々の DTO が単独で判定できる契約は各 DTO の ``__post_init__`` で
+    カバーする。フィールド単体の値域（正値、有限性、単位など）に加え、
+    1 つの DTO 内で閉じたキー集合の過不足（モデル種別が要求する係数名に
+    対する ``params`` の不足・余分など）もここに含む。上流の
+    ``_load_data`` は名前の絞り込みを行わず、読み込んだものをそのまま渡す。
 - ``_validate_input_dto``: フィールド単体の ``__post_init__`` を超える
     DTO 構造の整合、SI 基本単位整合、cross-field / cross-DTO 整合
     （参照軸長さ、catalog vs candidate の整合など）、物理関係式の整合
@@ -125,9 +128,10 @@ class IInputAlgorithmsOrchestrator(
         は想定しない。
 
         ``InputDtoT`` を作れない場合のみ raise する。フィールド単体の
-        契約（正値・有限性・単位など）は各 DTO の ``__post_init__`` が
-        担う。cross-field / 物理関係式の整合は ``_validate_input_dto``
-        に委ねる。
+        契約（正値・有限性・単位など）と、1 つの DTO 内で閉じたキー集合
+        の過不足（モデル係数名の不足・余分など）は各 DTO の
+        ``__post_init__`` が担う。cross-field / 物理関係式の整合は
+        ``_validate_input_dto`` に委ねる。
 
         Args:
             loaded_data: :meth:`_load_data` の戻り値。

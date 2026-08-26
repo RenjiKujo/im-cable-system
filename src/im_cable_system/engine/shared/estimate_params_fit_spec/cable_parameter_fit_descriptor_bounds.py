@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, NewType
 
 from im_cable_system.engine.shared.estimate_params_fit_spec.parameter_fit_spec import (  # noqa: E501
     ParameterFitSpec,
@@ -19,6 +19,10 @@ from im_cable_system.engine.shared.estimate_params_fit_spec.yaml_bounds_parsing 
     parse_fixed_parameters_block_with_init,
     parse_model_parameters_block_with_init,
 )
+
+# 導体モデル種別名。NewType はランタイムでは恒等関数で検証しない
+# （検証は _assemble_input_dto 段の DTO __post_init__ が持つ）。
+CableConductorModelName = NewType("CableConductorModelName", str)
 
 _REQUIRED_FIXED_CABLE_KEYS: tuple[str, ...] = (
     "conductor_resistance_per_length",
@@ -135,6 +139,29 @@ class CableParameterFitDescriptorBounds:
         )
         return (spec.lb, spec.ub)
 
+    def conductor_model_param_specs(
+        self,
+        model_type_name: str | Enum,
+    ) -> dict[str, ParameterFitSpec]:
+        """当該導体モデル種別の params 行を丸ごと返す（コピー）。
+
+        Args:
+            model_type_name: モデル種別（文字列または Enum）。
+
+        Returns:
+            dict[str, ParameterFitSpec]: 係数名 → bounds/init 仕様。
+                ``params: {}`` の種別では空辞書。
+
+        Raises:
+            KeyError: YAML に当該 ``model_type`` キーが無い場合。
+        """
+        model_key = _model_type_key(model_type_name)
+        if model_key not in self._conductor_model_specs:
+            raise KeyError(
+                f"unknown conductor model in bounds YAML: {model_key}"
+            )
+        return dict(self._conductor_model_specs[model_key])
+
     def conductor_model_param_spec(
         self,
         model_type_name: str | Enum,
@@ -147,11 +174,7 @@ class CableParameterFitDescriptorBounds:
                 いない場合。
         """
         model_key = _model_type_key(model_type_name)
-        if model_key not in self._conductor_model_specs:
-            raise KeyError(
-                f"unknown conductor model in bounds YAML: {model_key}"
-            )
-        model_row = self._conductor_model_specs[model_key]
+        model_row = self.conductor_model_param_specs(model_type_name)
         if param_name not in model_row:
             raise KeyError(
                 "missing bounds/init for conductor model parameter: "

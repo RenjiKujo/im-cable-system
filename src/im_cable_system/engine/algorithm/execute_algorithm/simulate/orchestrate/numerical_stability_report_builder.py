@@ -1,4 +1,4 @@
-"""数値安定化レポート DTO の生成ファクトリ（simulate 層）。
+"""数値安定化レポート DTO の生成（simulate 層）。
 
 集計器（:class:`NumericalStabilityAccumulator`）から
 :class:`NumericalStabilityReportDto` を構築する。DTO 自体を

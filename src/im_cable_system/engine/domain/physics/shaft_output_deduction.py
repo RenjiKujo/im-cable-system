@@ -50,7 +50,7 @@ def calculate_constant_friction_windage_loss(
 
     Args:
         nameplate_power: 銘牌電力 [W]（3相合計、``ImSeriesDto.nameplate_power``）。
-        k_friction_windage: 摩擦・風損係数（無次元、定格入力に対する比率）。
+        k_friction_windage: 摩擦・風損係数（無次元、銘板出力（3 相合計）に対する比率）。
         reference_shape: 出力配列の形状（``ArrayLayoutDto.get_reference_shape()``）。
 
     Returns:
@@ -86,7 +86,7 @@ def calculate_quadratic_stray_load_loss(
         nameplate_power: 銘牌電力 [W]（3相合計、``ImSeriesDto.nameplate_power``）。
         nameplate_current: 銘牌電流 [A]（``ImSeriesDto.nameplate_current``）。
         secondary_current: 二次側合計電流配列 [A]。
-        k_stray_load: 漂遊負荷損係数（無次元、定格入力に対する比率）。
+        k_stray_load: 漂遊負荷損係数（無次元、銘板出力（3 相合計）に対する比率）。
         eps: 近接ゼロ判定のしきい値（Config 由来）。``abs(I_N) <= eps`` の
             ときは正規化せず ``r_I2 = |I2|`` にフォールバックする
             （``docs/conventions/4_numerical_robustness.md`` の極小ガード規約）。
