@@ -170,6 +170,41 @@ class TestParseModelParametersBlockWithInit:
         with pytest.raises(ValueError, match=r"'MODEL_A\.alpha'"):
             parse_model_parameters_block_with_init(section)
 
+    @pytest.mark.parametrize(
+        "model_entry",
+        [None, {}, {"params": None}, {"params": []}, "BASIC"],
+        ids=[
+            "null_entry",
+            "no_params_key",
+            "null_params",
+            "params_not_mapping",
+            "scalar_entry",
+        ],
+    )
+    def test_model_type_without_params_mapping_raises(
+        self, model_entry: object
+    ) -> None:
+        """``params`` を持たないモデル種別は、黙って読み飛ばさず ValueError。
+
+        読み飛ばすとモデル種別キーごと欠落し、下流が「YAML にキーはあるのに
+        未知のモデル種別」という誤導的な KeyError を出すため。
+        """
+        section = {"model_parameters": {"BASIC": model_entry}}
+        with pytest.raises(ValueError, match=r"'BASIC' requires 'params'"):
+            parse_model_parameters_block_with_init(section)
+
+    def test_param_entry_not_mapping_raises_with_param_path(self) -> None:
+        """係数行が mapping でない場合も、黙って落とさず ValueError。"""
+        section = {
+            "model_parameters": {
+                "MODEL_A": {"params": {"alpha": None}},
+            }
+        }
+        with pytest.raises(
+            ValueError, match=r"'MODEL_A\.alpha'.*requires 'bounds' mapping"
+        ):
+            parse_model_parameters_block_with_init(section)
+
     def test_partial_bounds_raises_with_param_path(self) -> None:
         section = {
             "model_parameters": {

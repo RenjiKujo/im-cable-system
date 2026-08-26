@@ -71,13 +71,13 @@ _CONCEPT_NAMES = frozenset(
         "JobSpec",
         "JobSpecs",
         "LoadedData",
-        # 未実装であることを docs 側が明示している名目型
-        # （docs/architecture/4_processor.md の「現時点で未実装」を参照）。
-        # 実装されたらこの 2 つは除外リストから外す。
-        "IInputStage",
-        "IOutputStage",
         # 標準ライブラリの型を概念として参照しているもの。
         "Handler",  # stdlib logging.Handler
+        # pydantic の外部クラス。apps/web/api/schemas.py で実際に import
+        # されているが、6 個も import するため 1 行に収まらず括弧付き複数行
+        # import になっており、_collect_src_symbols の正規表現（1 行の
+        # `import ...` しか見ない）が拾えない。
+        "BaseModel",
         # 命名規約のラベル・数式記号（識別子ではない）。
         "UPPER_SNAKE",
         "UPPER_SNAKE_CASE",
@@ -93,8 +93,7 @@ _PATH_PREFIXES = (
     "examples/",
     "scripts/",
     "runner/",
-    # `apps/` は apps/ を版管理に載せるコミットで足す。未追跡のうちに足すと
-    # `.cursor/rules/principles.mdc` の `apps/` 参照が clone 側で実在せず CI が落ちる。
+    "apps/",
     ".cursor/",
     ".claude/",
 )
@@ -121,6 +120,11 @@ _TREE_ROOT_LINE_PATTERN = re.compile(r"^([A-Za-z0-9_./\-]+/)\s*(?:#.*)?$")
 # docs 中の `CamelCase` 表記（クラス・IF 名らしきもの）。
 # 4 文字以上・大文字始まり。全大文字（Enum 値）は _collect_src_symbols 側で拾う。
 _IDENT_PATTERN = re.compile(r"`([A-Z][A-Za-z0-9_]{3,})`")
+# os.environ から読む環境変数名。docs は変数名を名指しするが、実装側は
+# 文字列リテラルなので定義・import の走査では拾えない。
+_ENV_VAR_PATTERN = re.compile(
+    r"""os\.environ(?:\.get)?[(\[]\s*["']([A-Z][A-Z0-9_]*)["']"""
+)
 # ツリー行の子エントリ（深さ 1）: "├── name/" や "└── name" の name 部分。
 _TREE_CHILD_PATTERN = re.compile(r"^[│ ]{0,4}[├└]── ([A-Za-z0-9_.\-]+/?)")
 # CLAUDE.md の import 行: 行頭の `@<リポジトリ相対パス>` のみ。
@@ -208,6 +212,11 @@ def _collect_src_symbols() -> set[str]:
     docs が ``DataFrame`` や ``Figure`` のような外部ライブラリ型に言及するのは
     正当なため、それらを未定義として誤検知しないようにする。``apps/`` を含めるのは、
     ``docs/apps/web/`` が ``JobRecord`` 等 apps 側の識別子に言及するため。
+
+    ``os.environ`` から読む環境変数名も拾う。docs は利用者が設定する変数名を
+    名指しするが、実装側では文字列リテラルなので定義・import のどちらにも
+    現れない。許可リストに積むと「docs が名前を間違えても通る」ため、
+    実際に読んでいる名前だけを正とする。
     """
     symbols: set[str] = set()
     for py in (*_SRC_DIR.rglob("*.py"), *_APPS_DIR.rglob("*.py")):
@@ -224,6 +233,8 @@ def _collect_src_symbols() -> set[str]:
         symbols |= set(
             re.findall(r"^\s*(?:from\s+[\w.]+\s+)?import\s+(.+)$", text, re.M)
         )
+        # os.environ.get("NAME") / os.environ["NAME"] の NAME。
+        symbols |= set(_ENV_VAR_PATTERN.findall(text))
     # "a, b as c" 形式をばらす。
     flat: set[str] = set()
     for item in symbols:

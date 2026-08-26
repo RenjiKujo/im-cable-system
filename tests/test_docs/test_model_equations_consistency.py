@@ -8,8 +8,11 @@ shared の DTO / Enum を正とする」と宣言している契約を、実行�
 - **コード**: 各 ``*ModelDto.get_required_parameter_names()`` の分岐（正）。
 - **docs**: ``docs/model/equations/*.md`` の記号 ↔ YAML キー対応表。
 - **YAML**: ``bounds_and_init/*.yaml`` の ``model_parameters.<種別>.params`` キー。
+  出荷用（``src/im_cable_system/``）とテスト入力用（``tests/input_files/``）の
+  両方を同じ契約で検証する。
 
-3 者のいずれかだけを更新（モデル追加・係数名変更）すると、このテストが落ちる。
+3 者のいずれかだけを更新（モデル追加・係数名変更・種別削除）すると、このテスト
+が落ちる。docs / YAML 側にコードから消えた種別が残っている場合も検出する。
 
 さらに :class:`TestModelEquationsCoverage` が「本テスト自身の網羅」を守る。
 モデル種別の追加は既存のパラメータ化で自動的に検証対象へ入るが、**サブシステムを
@@ -46,19 +49,15 @@ from im_cable_system.engine.shared.dto.generic.im_cable_system import (
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _MODEL_EQUATIONS_DIR = _REPO_ROOT / "docs" / "model" / "equations"
-_IM_BOUNDS_PATH = (
-    _REPO_ROOT
-    / "src"
-    / "im_cable_system"
-    / "bounds_and_init"
-    / "im_descriptor_bounds_and_init.yaml"
-)
-_CABLE_BOUNDS_PATH = (
-    _REPO_ROOT
-    / "src"
-    / "im_cable_system"
-    / "bounds_and_init"
-    / "cable_descriptor_bounds_and_init.yaml"
+_IM_BOUNDS_FILE = "im_descriptor_bounds_and_init.yaml"
+_CABLE_BOUNDS_FILE = "cable_descriptor_bounds_and_init.yaml"
+
+# 出荷用（src）とテスト入力用（tests/input_files）の bounds YAML は同じ契約に
+# 服する。src 側だけ更新すると本テストは通り、結合テストが load 時の KeyError
+# で落ちる、という切り分けにくい壊れ方をするため両方を検証対象にする。
+_BOUNDS_DIRS = (
+    ("src", _REPO_ROOT / "src" / "im_cable_system" / "bounds_and_init"),
+    ("tests", _REPO_ROOT / "tests" / "input_files" / "bounds_and_init"),
 )
 
 _SRC_DIR = _REPO_ROOT / "src"
@@ -72,6 +71,8 @@ _DOC_TABLE_ROW_PATTERN = re.compile(
 _INDEX_TABLE_ROW_PATTERN = re.compile(
     r"^\|[^|]*\|\s*`([A-Z][A-Z_0-9]*)`\s*\|", re.M
 )
+# モデル種別を表す md 見出し（Enum メンバー名の形）だけを対象にする。
+_MODEL_TYPE_HEADING_PATTERN = re.compile(r"[A-Z][A-Z_0-9]*")
 # 必須係数名を宣言する DTO を見分けるメソッド名。
 _REQUIRED_PARAMS_METHOD = "get_required_parameter_names"
 
@@ -84,7 +85,7 @@ class _Subsystem:
     enum_cls: type[Enum]
     dto_cls: type[Any]
     doc_path: Path
-    yaml_path: Path
+    yaml_file: str
     yaml_top_key: str
 
 
@@ -94,7 +95,7 @@ _SUBSYSTEMS = (
         enum_cls=ImPrimaryModelType,
         dto_cls=ImPrimaryModelDto,
         doc_path=_MODEL_EQUATIONS_DIR / "im_primary.md",
-        yaml_path=_IM_BOUNDS_PATH,
+        yaml_file=_IM_BOUNDS_FILE,
         yaml_top_key="primary",
     ),
     _Subsystem(
@@ -102,7 +103,7 @@ _SUBSYSTEMS = (
         enum_cls=ImExcitationModelType,
         dto_cls=ImExcitationModelDto,
         doc_path=_MODEL_EQUATIONS_DIR / "im_excitation.md",
-        yaml_path=_IM_BOUNDS_PATH,
+        yaml_file=_IM_BOUNDS_FILE,
         yaml_top_key="excitation",
     ),
     _Subsystem(
@@ -110,7 +111,7 @@ _SUBSYSTEMS = (
         enum_cls=ImSecondaryModelType,
         dto_cls=ImSecondaryModelDto,
         doc_path=_MODEL_EQUATIONS_DIR / "im_secondary.md",
-        yaml_path=_IM_BOUNDS_PATH,
+        yaml_file=_IM_BOUNDS_FILE,
         yaml_top_key="secondary",
     ),
     _Subsystem(
@@ -118,7 +119,7 @@ _SUBSYSTEMS = (
         enum_cls=ConductorModelType,
         dto_cls=CableConductorModelDto,
         doc_path=_MODEL_EQUATIONS_DIR / "cable_conductor.md",
-        yaml_path=_CABLE_BOUNDS_PATH,
+        yaml_file=_CABLE_BOUNDS_FILE,
         yaml_top_key="conductor",
     ),
     _Subsystem(
@@ -126,7 +127,7 @@ _SUBSYSTEMS = (
         enum_cls=ImFrictionWindageModelType,
         dto_cls=ImFrictionWindageModelDto,
         doc_path=_MODEL_EQUATIONS_DIR / "im_friction_windage.md",
-        yaml_path=_IM_BOUNDS_PATH,
+        yaml_file=_IM_BOUNDS_FILE,
         yaml_top_key="friction_windage",
     ),
     _Subsystem(
@@ -134,7 +135,7 @@ _SUBSYSTEMS = (
         enum_cls=ImStrayLoadModelType,
         dto_cls=ImStrayLoadModelDto,
         doc_path=_MODEL_EQUATIONS_DIR / "im_stray_load.md",
-        yaml_path=_IM_BOUNDS_PATH,
+        yaml_file=_IM_BOUNDS_FILE,
         yaml_top_key="stray_load",
     ),
 )
@@ -160,12 +161,19 @@ def _code_required_params(
 
 
 def _doc_yaml_keys(doc_path: Path) -> dict[str, set[str]]:
-    """docs の対応表から `モデル種別 → YAML キー集合` を抽出する。"""
+    """docs の対応表から `モデル種別 → YAML キー集合` を抽出する。
+
+    md にはモデル種別以外の ``##`` 見出し（`im_secondary.md` の
+    「二重かご（DOUBLE_CAGE）の等価二次」など）も含まれるため、Enum
+    メンバー名の形（大文字・数字・アンダースコア）の見出しだけを拾う。
+    """
     text = doc_path.read_text(encoding="utf-8")
     result: dict[str, set[str]] = {}
     # "## MODEL_NAME" 見出しで節を分割し、節内の対応表行から YAML キーを拾う。
     for section in re.split(r"\n## ", text)[1:]:
         model_name = section.split("\n", 1)[0].strip()
+        if not _MODEL_TYPE_HEADING_PATTERN.fullmatch(model_name):
+            continue
         result[model_name] = set(_DOC_TABLE_ROW_PATTERN.findall(section))
     return result
 
@@ -196,6 +204,12 @@ class TestModelEquationsConsistency:
             f"{subsystem.label}: コードにあるモデル種別が "
             f"{subsystem.doc_path.name} に無い: {sorted(missing_in_docs)}"
         )
+        stale_in_docs = set(docs) - set(code)
+        assert not stale_in_docs, (
+            f"{subsystem.label}: コードに存在しないモデル種別が "
+            f"{subsystem.doc_path.name} にある: {sorted(stale_in_docs)}\n"
+            "  → Enum から削除・改名したなら md からも外すこと。"
+        )
         for model_name, code_params in code.items():
             doc_params = docs[model_name]
             assert doc_params == code_params, (
@@ -205,26 +219,36 @@ class TestModelEquationsConsistency:
             )
 
     @pytest.mark.parametrize(
+        "bounds_dir",
+        [path for _, path in _BOUNDS_DIRS],
+        ids=[label for label, _ in _BOUNDS_DIRS],
+    )
+    @pytest.mark.parametrize(
         "subsystem", _SUBSYSTEMS, ids=[s.label for s in _SUBSYSTEMS]
     )
-    def test_yaml_bounds_matches_code(self, subsystem: _Subsystem) -> None:
+    def test_yaml_bounds_matches_code(
+        self, subsystem: _Subsystem, bounds_dir: Path
+    ) -> None:
         """bounds_and_init YAML の params キー集合が、コードの必須係数名集合と一致する。"""
+        yaml_path = bounds_dir / subsystem.yaml_file
         code = _code_required_params(subsystem.enum_cls, subsystem.dto_cls)
-        yaml_params = _yaml_required_params(
-            subsystem.yaml_path, subsystem.yaml_top_key
-        )
+        yaml_params = _yaml_required_params(yaml_path, subsystem.yaml_top_key)
 
-        missing_in_yaml = {
-            name for name, params in code.items() if params
-        } - set(yaml_params)
+        missing_in_yaml = set(code) - set(yaml_params)
         assert not missing_in_yaml, (
             f"{subsystem.label}: コードにあるモデル種別が "
-            f"{subsystem.yaml_path.name} に無い: {sorted(missing_in_yaml)}"
+            f"{yaml_path} に無い: {sorted(missing_in_yaml)}\n"
+            "  → 係数を取らない種別も 'params: {}' で列挙すること"
+            "（キー欠落は load 時に KeyError）。"
+        )
+        stale_in_yaml = set(yaml_params) - set(code)
+        assert not stale_in_yaml, (
+            f"{subsystem.label}: コードに存在しないモデル種別が "
+            f"{yaml_path} にある: {sorted(stale_in_yaml)}\n"
+            "  → Enum から削除・改名したなら YAML からも外すこと。"
         )
         for model_name, code_params in code.items():
-            if not code_params and model_name not in yaml_params:
-                continue  # BASIC 等、係数不要なモデルは bounds 未記載でもよい。
-            yaml_keys = yaml_params.get(model_name, set())
+            yaml_keys = yaml_params[model_name]
             assert yaml_keys == code_params, (
                 f"{subsystem.label}.{model_name}: 係数名が不一致\n"
                 f"  コードのみ: {sorted(code_params - yaml_keys)}\n"
