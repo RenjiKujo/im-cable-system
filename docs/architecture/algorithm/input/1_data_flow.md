@@ -26,7 +26,7 @@ flowchart LR
 
 1. `_validate_job_spec`: ファイルを開く前に、パスの存在や必須フィールドの非空など、軽量に確認できる項目だけを検証する。
 2. `_load_data`: ファイルを読み、`LoadedData` を構築する。ファイル構造の破綻（ヘッダ欠落、変換失敗、カタログキー未登録など）でのみ raise する。
-3. `_assemble_input_dto`: `LoadedData` から `InputDto` を組み立てる。フィールド単体の値域・単位などの契約は各 DTO の `__post_init__` が担う。
+3. `_assemble_input_dto`: `LoadedData` から `InputDto` を組み立てる。値域・単位などのフィールド単体の契約と、1 つの DTO 内で閉じたキー集合の過不足（モデル係数名など）は各 DTO の `__post_init__` が担う。
 4. `_validate_input_dto`: 組み立て済み DTO に対して、構造整合・単位整合・DTO 横断整合・物理関係式などを意図的に重く検証する。
 
 ## モード別の流れ

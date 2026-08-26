@@ -10,7 +10,7 @@
 
 - `_validate_job_spec`: ファイルを開く前に確認できる軽量チェックに限定する。パス存在や必須フィールドの非空など。
 - `_load_data`: `LoadedData` を作れない場合のみ raise する。ファイル読み取り不可、ヘッダ欠落、数値変換失敗、カタログキー未登録など、ファイル構造の破綻が対象。
-- `_assemble_input_dto`: `InputDto` を作れない場合のみ raise する。フィールド単体の値域・有限性・単位は各 DTO の `__post_init__` が担う。
+- `_assemble_input_dto`: `InputDto` を作れない場合のみ raise する。個々の DTO が単独で判定できる契約は各 DTO の `__post_init__` が担う。フィールド単体の値域・有限性・単位に加えて、**1 つの DTO 内で閉じたキー集合の過不足**（例: モデル種別が要求する係数名に対する `params` の不足・余分）もここに含む。組み立て側は名前の絞り込みや事前検証を行わず、読み込んだものをそのまま DTO に渡す。
 - `_validate_input_dto`: フィールド単体を超える整合を意図的に重く検証する。
 
 この分担により、上流の段は「構築できるか」だけに集中でき、値レベル・関係式レベルの整合は下流に集約される。
@@ -25,7 +25,7 @@ DTO 構造の整合、SI 基本単位の整合、DTO 横断の整合（参照軸
 
 forward の CartesianGrid / OperatingPoints は、参照軸の選び方だけが異なる。そのためオーケストレーターにモード分岐を持たせず、`reference_axes` を生成時に Assembler へ注入する形で差を吸収する。
 
-estimate_params は「1 TSV → 複数 InputDto」を扱う。候補直積の展開は TSV のパース結果に依存するため Loader に閉じ込める。組み立て・検証の複数件ループはオーケストレーターが持ち、Assembler / Validator は単一件処理の契約に保つ。
+estimate_params は「1 TSV → 複数 InputDto」を扱う。候補直積の展開は TSV のパース結果に依存するため Loader に閉じ込める。候補のモデル種別名は str（subsystem ごとの NewType）のまま扱い、DTO / Enum 化は `_assemble_input_dto` に委ねる（forward と同じ契約）。組み立て・検証の複数件ループはオーケストレーターが持ち、Assembler / Validator は単一件処理の契約に保つ。
 
 この切り分けにより、forward と estimate_params で Assembler / Validator の粒度を揃えられる。
 
