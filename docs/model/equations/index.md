@@ -21,6 +21,11 @@
 - **係数の探索境界（bounds）・初期化（init）**は、次の 2 つの YAML を**正**とする。
   - IM: `src/im_cable_system/bounds_and_init/im_descriptor_bounds_and_init.yaml` の `<subsystem>.model_parameters`
   - ケーブル: `src/im_cable_system/bounds_and_init/cable_descriptor_bounds_and_init.yaml` の `conductor.model_parameters`
+  - `model_parameters` には **Enum の全モデル種別を列挙する**。係数を取らない種別
+    （`BASIC` / `NONE` 等）も `params: {}` と書く。Loader は当該種別の `params` を
+    そのまま初期値化するだけで係数名の絞り込みをしないため、種別キーの欠落は
+    load 時に `KeyError` になる。
+  - 上記は `tests/input_files/bounds_and_init/` のテスト入力 YAML にも同じく適用される。
 - 各モデル種別ごとの**数式と記号の定義**は、本ディレクトリの各 md（下表のリンク先）を正とする。
 
 ## 記号の共通前提
@@ -73,7 +78,7 @@
 - **選択軸はモデル種別ではなく `cage_multiplicity`（`SINGLE_CAGE` / `DOUBLE_CAGE`）** である。
   ビルダー（`factory_im_model_builder.py`）・電圧電流計算器（`factory_im_voltage_current_calculator.py`）・電力計算器（`factory_im_power_calculator.py`）はいずれも `cage_multiplicity` で `Single*` / `Double*` を分岐する。
 - 二重かごでは内かご（INNER）・外かご（OUTER）を**独立した二次枝**として扱い、各枝は**通常の二次モデル**（`BASIC` / `SLIP_DEPENDENT_*` / `CURRENT_DEPENDENT_*`）の式・コンバーターで計算する。枝二次アドミタンスを並列合成して等価二次 $Y_{2,\mathrm{eq}} = Y_{2,\mathrm{inner}} + Y_{2,\mathrm{outer}}$ を得る（`double_cage_im_total_immittance_synthesizer.py`）。
-- 二重かご固有の二次モデル種別（推定（estimate_params）でも内かご・外かごの候補軸（`im_secondary(double_inner)` / `im_secondary(double_outer)`）に**通常の二次モデル種別**を指定する。
+- 二重かご固有の二次モデル種別は**存在しない**。推定（estimate_params）でも、内かご・外かごの候補軸（`im_secondary(double_inner)` / `im_secondary(double_outer)`）には**通常の二次モデル種別**を指定する。
 
 ## 実装上の共通注意（数式に明示されない挙動）
 
@@ -88,5 +93,5 @@
 | IM 励磁（excitation） | [im_excitation.md](im_excitation.md) | 並列アドミタンス合成。飽和（slip / 電流依存）。 |
 | IM 二次（secondary） | [im_secondary.md](im_secondary.md) | 負荷支路 $(1-s)/s$、表皮効果、漏れ飽和、二重かご。 |
 | ケーブル導体（conductor） | [cable_conductor.md](cable_conductor.md) | π型導体区間の表皮効果（周波数 / 電流依存）。 |
-| IM 摩擦・風損（friction_windage） | [im_friction_windage.md](im_friction_windage.md) | 定格入力比例の一定損失。イミタンスを持たない。 |
+| IM 摩擦・風損（friction_windage） | [im_friction_windage.md](im_friction_windage.md) | 銘板出力比例の一定損失。イミタンスを持たない。 |
 | IM 漂遊負荷損（stray_load） | [im_stray_load.md](im_stray_load.md) | 二次電流比の2乗に比例。イミタンスを持たない。 |
