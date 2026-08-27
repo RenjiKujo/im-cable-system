@@ -26,7 +26,8 @@ pipeline → processor → algorithm → domain → shared
 
 ```text
 docs/
-├── architecture/   … ソフトウェアの層別設計
+├── architecture/   … engine の層別設計
+├── apps/           … engine 外側のクライアント層（ジョブ投入型 Web 面など）
 ├── conventions/    … 開発規約
 └── model/          … 等価回路（構成・計算の流れ・数式・当てはめ）
 ```
@@ -61,6 +62,10 @@ docs/
   - 層 1（表記）: [1_code_style.md](./conventions/1_code_style.md)
   - 層 2（設計原則）: [2_design_principles.md](./conventions/2_design_principles.md)
   - 層 3（横断概念）: [3_layering_and_imports.md](./conventions/3_layering_and_imports.md) / [4_numerical_robustness.md](./conventions/4_numerical_robustness.md) / [5_testing.md](./conventions/5_testing.md)
+
+### apps（engine 外側のクライアント層）
+
+- [apps/web — ジョブ投入型 Web 面](./apps/web/0_overview.md) — FastAPI + Streamlit + SQLAlchemy。`architecture/` が正本とする engine 5 層の対象外（`runner/` と同格の外側クライアント）。
 
 ## 新規開発時の参考順序
 

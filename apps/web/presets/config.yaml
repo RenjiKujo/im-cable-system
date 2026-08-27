@@ -1,0 +1,20 @@
+# apps/web 同梱の config プリセット定義。
+# 実体はリポジトリ内の既存 YAML を参照する（コピーは持たない）。
+# path は RunnerGatewaySettings.repo_root からの相対パス。
+# 各 mode の先頭要素が UI の既定選択になる。
+version: 1
+
+forward_by_cartesian_grid:
+  - name: forward_by_cartesian_grid_default
+    path: examples/config/forward_by_cartesian_grid.yaml
+    description: README Quick Start と同じ config（catalog / bounds / dump.base_dir は Web が上書き）
+
+estimate_params:
+  - name: estimate_params_default
+    path: examples/config/estimate_params.yaml
+    description: README Quick Start と同じ config（bounds / dump.base_dir は Web が上書き）
+
+forward_by_operating_points:
+  - name: forward_by_operating_points_default
+    path: examples/config/forward_by_operating_points.yaml
+    description: README Quick Start と同じ config（catalog / bounds / dump.base_dir は Web が上書き）

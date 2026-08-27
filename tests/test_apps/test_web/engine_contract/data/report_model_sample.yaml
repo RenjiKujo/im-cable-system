@@ -1,0 +1,34 @@
+version: 1
+name: SYS01
+nameplate:
+  power: {value: 3711.0, unit: W}
+  current: {value: 13.86, unit: A}
+model_labels:
+  im_primary: BASIC
+  im_excitation: BASIC
+  im_secondary_inner: BASIC
+  im_secondary_outer: BASIC
+  im_friction_windage: NONE
+  im_stray_load: NONE
+  cable_conductor: BASIC
+fitted_parameters:
+  - path: im.friction_windage_model.params.k_friction_windage
+    value: 0.01
+    unit: "-"
+    initial_value: 0.01
+    lower_bound: 0.0
+    upper_bound: 0.05
+    bound_status: interior
+  - path: im.primary_resistance
+    value: 0.4
+    unit: ohm
+    initial_value: 0.5
+    lower_bound: 0.1
+    upper_bound: 1.0
+    bound_status: lower
+fit_metrics:
+  optimizer_success: true
+  least_squares_cost: 0.1
+  overall_rmse_weighted_residual: 0.01
+  n_residual_elements: 10
+  n_valid_curve_points: 10

@@ -63,9 +63,10 @@ MPLBACKEND=Agg .venv/bin/python runner/run_forward_by_cartesian_grid.py \
 
 ### EstimateParams
 
-`examples/input/estimate_params_input.csv` の ``model_candidate_axis`` は各軸 1 候補
-（`SlipAndCurrentDependent03` 相当の正解構造のみ、1 組み合わせ）に絞ってあり、
-Quick Start の計算時間を短縮しています。構造同定デモは ``candidate_2`` 以降に
+`examples/input/estimate_params_input.csv` の ``model_candidate_axis`` は
+``im_primary`` だけ 2 候補（`BASIC` /
+`SLIP_DEPENDENT_LEAKAGE_SATURATION_V1`）で 2 組み合わせ、他軸は 1 候補に
+してあります（所要は約 2 倍）。構造同定デモは ``candidate_2`` 以降に
 候補を追加すると直積展開されます（パイプライン通しテスト参照）。
 ``im_friction_windage`` / ``im_stray_load``（摩擦・風損／漂遊負荷損）の 2 軸も
 同様に候補を追加できます（必須軸。ゼロ損失は ``NONE`` を明示的に書きます）。
@@ -158,6 +159,49 @@ from im_cable_system.estimate_params import (
 - EstimateParams 用のパラメータ境界・初期値を `src/im_cable_system/bounds_and_init/` に同梱。
 - カタログ／境界・初期値 YAML のパスは、CLI 引数（`--im-catalog` など）を優先し、未指定なら同梱 `config.yaml` の相対パス参照を使います（どちらも未指定だと `ValueError`）。
 
+## Web UI（ジョブ投入型）
+
+clone したリポジトリ上で、自分の PC から API + Streamlit を起動して使う
+前提です。ブラウザからジョブを投げ、完了を待たずに離れて、あとから状態と
+成果物（図・表・レポート）を確認できます。エンジン本体
+（`src/im_cable_system/`）は変更せず、`runner/run_*.py` を subprocess として
+起動します。実行データ（sqlite・ジョブ・成果物）は `<repo>/local_jobs/` に
+置かれ、gitignore 済みなので `git status` に出ません。置き場所は
+`IM_CABLE_SYSTEM_JOBS_ROOT` で変更できます。以前のホーム配下
+（`~/.im-cable-system/`）は使われません。移行は不要です。詳細な設計は
+[docs/apps/web/0_overview.md](docs/apps/web/0_overview.md)
+を参照してください。`estimate_params` の統合入力に必須軸
+（`im_friction_windage` / `im_stray_load`）が欠けている場合、および
+IM catalog / bounds に対応ブロックが無い場合は **422** で弾きます
+（`NONE` の自動補完はしない。ゼロ損失なら明示する）。config と入力ファイルは
+どちらもプリセット選択できるため、アップロード無しで画面を開いてそのまま
+投入できます。Submit Job を開いた直後の既定 mode は
+`forward_by_cartesian_grid` です。
+
+```bash
+pip install -e ".[dev,web]"
+
+# API（FastAPI）。--factory は import 時点で DB へ触らないようにするため必須。
+MPLBACKEND=Agg .venv/bin/python -m uvicorn apps.web.api.main:create_app \
+  --factory --port 8000
+
+# UI（Streamlit。別ターミナルで）
+.venv/bin/python -m streamlit run apps/web/ui/app.py
+```
+
+`curl` だけでも投入 → ポーリング → 成果物取得まで確認できます。
+下は API 経由の動作確認用の一例で、所要が短い
+ForwardByCartesianGrid（Quick Start と同じ入力）を投げています。
+
+```bash
+JOB=$(curl -s -X POST localhost:8000/api/jobs/forward_by_cartesian_grid \
+  -F series_selection=@examples/input/series_cartesian_grid.csv \
+  -F axes=@examples/input/axes_cartesian_grid.csv \
+  -F base_config=forward_by_cartesian_grid_default | python -c "import sys,json;print(json.load(sys.stdin)['job_id'])")
+curl -s localhost:8000/api/jobs/$JOB            # queued → running → succeeded
+curl -s localhost:8000/api/jobs/$JOB/artifacts  # figures/ tables/ reports/ が並ぶ
+```
+
 ## Inputs / Outputs
 
 表形式ファイルは TSV / CSV のどちらでも可。
@@ -228,10 +272,10 @@ GitHub Actions で検証しています（`.github/workflows/ci.yml`）。
 > 正本は `.github/workflows/ci.yml`。以下は手元で打つためのクイックリファレンス。
 
 ```bash
-ruff format --check src tests   # 整形チェック
-ruff check src tests            # lint
-basedpyright                      # 型
-pytest -m "not slow" -q         # テスト（CI と同じ。slow を除外）
+ruff format --check src tests apps   # 整形チェック
+ruff check src tests apps            # lint
+basedpyright                           # 型
+pytest -m "not slow" -q              # テスト（CI と同じ。slow を除外）
 ```
 
 slow を含む全テストは `pytest -q` で実行できます。
@@ -246,6 +290,7 @@ slow を含む全テストは `pytest -q` で実行できます。
 - Algorithm 層（input / execute / output）の設計: [docs/architecture/3_algorithm.md](docs/architecture/3_algorithm.md)（詳細: [docs/architecture/algorithm/](docs/architecture/algorithm/)）
 - Processor 層の設計: [docs/architecture/4_processor.md](docs/architecture/4_processor.md)
 - DTO 設計方針: [docs/architecture/shared/dto_principle.md](docs/architecture/shared/dto_principle.md)
+- Web 面（ジョブ投入型）の設計: [docs/apps/web/0_overview.md](docs/apps/web/0_overview.md)
 
 ## README 図の再生成
 
