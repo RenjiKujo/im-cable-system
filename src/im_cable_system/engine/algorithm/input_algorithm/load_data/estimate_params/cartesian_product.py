@@ -34,13 +34,13 @@ from dataclasses import dataclass
 from im_cable_system.engine.algorithm.input_algorithm.load_data.estimate_params.unified_input_parser import (  # noqa: E501
     EstimateParamsParsedTables,
 )
-from im_cable_system.engine.shared.dto.generic.im_cable_system import (
-    ConductorModelType,
-    ImExcitationModelType,
-    ImFrictionWindageModelType,
-    ImPrimaryModelType,
-    ImSecondaryModelType,
-    ImStrayLoadModelType,
+from im_cable_system.engine.shared.estimate_params_fit_spec import (
+    CableConductorModelName,
+    ImExcitationModelName,
+    ImFrictionWindageModelName,
+    ImPrimaryModelName,
+    ImSecondaryModelName,
+    ImStrayLoadModelName,
 )
 
 
@@ -49,11 +49,11 @@ class EstimateParamsModelCombo:
     """1 直積要素（Loader 内で per-combo の初期化に用いる）。
 
     Attributes:
-        primary: 一次モデル種別。
-        excitation: 励磁モデル種別。
-        secondary_inner: 二重かご時の内側二次モデル種別。単一かご時は ``None``。
-        secondary_outer: 二次（単一かごまたは外側）モデル種別。
-        cable_conductor: ケーブル導体モデル種別。ケーブル無しのときは ``None``。
+        primary: 一次モデル種別名。
+        excitation: 励磁モデル種別名。
+        secondary_inner: 二重かご時の内側二次モデル種別名。単一かご時は ``None``。
+        secondary_outer: 二次（単一かごまたは外側）モデル種別名。
+        cable_conductor: ケーブル導体モデル種別名。ケーブル無しのときは ``None``。
         primary_index: 統合 TSV ``im_primary`` 行の採用列番号（1-based）。
         excitation_index: 同 ``im_excitation`` 行。
         secondary_single_index: 同 ``im_secondary(single)`` 行。二重かご run の
@@ -62,10 +62,10 @@ class EstimateParamsModelCombo:
             単一かご run のときは ``0``。
         secondary_double_inner_index: 同 ``im_secondary(double_inner)`` 行。
             単一かご run のときは ``0``。
-        friction_windage: 摩擦・風損モデル種別。必須軸（primary / excitation
+        friction_windage: 摩擦・風損モデル種別名。必須軸（primary / excitation
             と同格）。``NONE`` のみを書いた TSV でも通常候補と同じ扱いで
             列挙される（フォールバックではない）。
-        stray_load: 漂遊負荷損モデル種別。規約は ``friction_windage`` と同じ。
+        stray_load: 漂遊負荷損モデル種別名。規約は ``friction_windage`` と同じ。
         cable_conductor_index: 同 ``cable_conductor_model`` 行。ケーブル無し
             のときは ``0``。
         friction_windage_index: 同 ``im_friction_windage`` 行の採用列番号。
@@ -84,13 +84,13 @@ class EstimateParamsModelCombo:
         本番と同じ規約で全 index を渡す。
     """
 
-    primary: ImPrimaryModelType
-    excitation: ImExcitationModelType
-    secondary_inner: ImSecondaryModelType | None
-    secondary_outer: ImSecondaryModelType
-    cable_conductor: ConductorModelType | None
-    friction_windage: ImFrictionWindageModelType
-    stray_load: ImStrayLoadModelType
+    primary: ImPrimaryModelName
+    excitation: ImExcitationModelName
+    secondary_inner: ImSecondaryModelName | None
+    secondary_outer: ImSecondaryModelName
+    cable_conductor: CableConductorModelName | None
+    friction_windage: ImFrictionWindageModelName
+    stray_load: ImStrayLoadModelName
     primary_index: int
     excitation_index: int
     secondary_single_index: int
@@ -103,7 +103,7 @@ class EstimateParamsModelCombo:
 
 def _build_cable_axis(
     candidate_cable_conductor: tuple[str, ...],
-) -> tuple[ConductorModelType | None, ...]:
+) -> tuple[CableConductorModelName | None, ...]:
     """候補文字列列から、ケーブル無し候補 ``"NONE"`` を ``None`` に写した軸を作る。
 
     Args:
@@ -111,22 +111,22 @@ def _build_cable_axis(
             並ぶ候補文字列（空セルは除外済み）。
 
     Returns:
-        tuple[ConductorModelType | None, ...]: 各要素は ``ConductorModelType``
-            または ``None``（``"NONE"`` のとき）。
+        tuple[CableConductorModelName | None, ...]: 各要素は
+            ``CableConductorModelName`` または ``None``（``"NONE"`` のとき）。
     """
-    axis: list[ConductorModelType | None] = []
+    axis: list[CableConductorModelName | None] = []
     for token in candidate_cable_conductor:
         if token.upper() == "NONE":
             axis.append(None)
         else:
-            axis.append(ConductorModelType(token))
+            axis.append(CableConductorModelName(token))
     return tuple(axis)
 
 
 def _cable_choices(
-    cable_axis: tuple[ConductorModelType | None, ...],
+    cable_axis: tuple[CableConductorModelName | None, ...],
     use_cable_axis: bool,
-) -> tuple[tuple[int, ConductorModelType | None], ...]:
+) -> tuple[tuple[int, CableConductorModelName | None], ...]:
     """ケーブル軸の ``(1-based index, 値)`` 列を返す（無効時は ``(0, None)``）。"""
     if use_cable_axis:
         return tuple((i, c) for i, c in enumerate(cable_axis, start=1))
@@ -135,12 +135,12 @@ def _cable_choices(
 
 def _iter_single_cage_combos(
     *,
-    primary_axis: tuple[ImPrimaryModelType, ...],
-    excitation_axis: tuple[ImExcitationModelType, ...],
-    secondary_single_axis: tuple[ImSecondaryModelType, ...],
-    friction_windage_axis: tuple[ImFrictionWindageModelType, ...],
-    stray_load_axis: tuple[ImStrayLoadModelType, ...],
-    cable_axis: tuple[ConductorModelType | None, ...],
+    primary_axis: tuple[ImPrimaryModelName, ...],
+    excitation_axis: tuple[ImExcitationModelName, ...],
+    secondary_single_axis: tuple[ImSecondaryModelName, ...],
+    friction_windage_axis: tuple[ImFrictionWindageModelName, ...],
+    stray_load_axis: tuple[ImStrayLoadModelName, ...],
+    cable_axis: tuple[CableConductorModelName | None, ...],
     use_cable_axis: bool,
 ) -> Iterator[EstimateParamsModelCombo]:
     """単一かご run の直積を yield する。
@@ -185,13 +185,13 @@ def _iter_single_cage_combos(
 
 def _iter_double_cage_combos(
     *,
-    primary_axis: tuple[ImPrimaryModelType, ...],
-    excitation_axis: tuple[ImExcitationModelType, ...],
-    secondary_double_inner_axis: tuple[ImSecondaryModelType, ...],
-    secondary_double_outer_axis: tuple[ImSecondaryModelType, ...],
-    friction_windage_axis: tuple[ImFrictionWindageModelType, ...],
-    stray_load_axis: tuple[ImStrayLoadModelType, ...],
-    cable_axis: tuple[ConductorModelType | None, ...],
+    primary_axis: tuple[ImPrimaryModelName, ...],
+    excitation_axis: tuple[ImExcitationModelName, ...],
+    secondary_double_inner_axis: tuple[ImSecondaryModelName, ...],
+    secondary_double_outer_axis: tuple[ImSecondaryModelName, ...],
+    friction_windage_axis: tuple[ImFrictionWindageModelName, ...],
+    stray_load_axis: tuple[ImStrayLoadModelName, ...],
+    cable_axis: tuple[CableConductorModelName | None, ...],
     use_cable_axis: bool,
 ) -> Iterator[EstimateParamsModelCombo]:
     """二重かご run の直積を yield する。
@@ -255,6 +255,10 @@ def iter_model_combos(
         0 件を silently yield する（例外にはならない）。
         本関数はパーサ側の検証を前提にしており、ここでは検証しない
         （primary / excitation / secondary も同様）。
+        候補文字列の合法性（モデル種別名が Enum / bounds カタログに
+        存在するか）もここでは判定しない。カタログキー照合は
+        ``build_*_loaded_data``（_load_data）が、DTO / Enum 化は
+        ``_assemble_input_dto`` の DTO ``__post_init__`` が担う。
 
     Args:
         parsed: 統合 TSV パース結果。
@@ -267,25 +271,25 @@ def iter_model_combos(
             ``secondary_inner is not None``。
     """
     primary_axis = tuple(
-        ImPrimaryModelType(v) for v in parsed.candidate_primary
+        ImPrimaryModelName(v) for v in parsed.candidate_primary
     )
     excitation_axis = tuple(
-        ImExcitationModelType(v) for v in parsed.candidate_excitation
+        ImExcitationModelName(v) for v in parsed.candidate_excitation
     )
     secondary_single_axis = tuple(
-        ImSecondaryModelType(v) for v in parsed.candidate_secondary_single
+        ImSecondaryModelName(v) for v in parsed.candidate_secondary_single
     )
     secondary_double_inner_axis = tuple(
-        ImSecondaryModelType(v) for v in parsed.candidate_secondary_double_inner
+        ImSecondaryModelName(v) for v in parsed.candidate_secondary_double_inner
     )
     secondary_double_outer_axis = tuple(
-        ImSecondaryModelType(v) for v in parsed.candidate_secondary_double_outer
+        ImSecondaryModelName(v) for v in parsed.candidate_secondary_double_outer
     )
     friction_windage_axis = tuple(
-        ImFrictionWindageModelType(v) for v in parsed.candidate_friction_windage
+        ImFrictionWindageModelName(v) for v in parsed.candidate_friction_windage
     )
     stray_load_axis = tuple(
-        ImStrayLoadModelType(v) for v in parsed.candidate_stray_load
+        ImStrayLoadModelName(v) for v in parsed.candidate_stray_load
     )
     cable_axis = _build_cable_axis(parsed.candidate_cable_conductor)
     use_cable_axis = include_cable and len(cable_axis) > 0

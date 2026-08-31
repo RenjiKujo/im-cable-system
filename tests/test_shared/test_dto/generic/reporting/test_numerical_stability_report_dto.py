@@ -1,6 +1,6 @@
 """``NumericalStabilityReportDto``（generic 純データ）テスト。
 
-``is_empty`` の挙動を検証する。集計器からの生成は simulate 層のファクトリ
+``is_empty`` の挙動を検証する。集計器からの生成は simulate 層のビルダー
 （``build_numerical_stability_report``）側でテストする。
 """
 

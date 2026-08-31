@@ -22,30 +22,28 @@ from im_cable_system.engine.algorithm.input_algorithm.load_data.estimate_params.
     EstimateParamsModelCombo,
 )
 from im_cable_system.engine.shared.config import IConfig
-from im_cable_system.engine.shared.dto.generic.im_cable_system import (
-    ConductorModelType,
-    ImExcitationModelType,
-    ImFrictionWindageModelType,
-    ImPrimaryModelType,
-    ImSecondaryModelType,
-    ImStrayLoadModelType,
-)
 from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E501
+    CableConductorModelName,
     CableParameterFitDescriptorBounds,
+    ImExcitationModelName,
+    ImFrictionWindageModelName,
+    ImPrimaryModelName,
+    ImSecondaryModelName,
+    ImStrayLoadModelName,
 )
 
 
 def _combo(
-    cable_conductor: ConductorModelType | None,
+    cable_conductor: CableConductorModelName | None,
 ) -> EstimateParamsModelCombo:
     return EstimateParamsModelCombo(
-        primary=ImPrimaryModelType.BASIC,
-        excitation=ImExcitationModelType.BASIC,
+        primary=ImPrimaryModelName("BASIC"),
+        excitation=ImExcitationModelName("BASIC"),
         secondary_inner=None,
-        secondary_outer=ImSecondaryModelType.BASIC,
+        secondary_outer=ImSecondaryModelName("BASIC"),
         cable_conductor=cable_conductor,
-        friction_windage=ImFrictionWindageModelType.NONE,
-        stray_load=ImStrayLoadModelType.NONE,
+        friction_windage=ImFrictionWindageModelName("NONE"),
+        stray_load=ImStrayLoadModelName("NONE"),
         primary_index=1,
         excitation_index=1,
         secondary_single_index=1,
@@ -73,7 +71,7 @@ class TestBuildCableLoadedData:
         cable_bounds: CableParameterFitDescriptorBounds,
     ) -> None:
         result = build_cable_loaded_data(
-            combo=_combo(ConductorModelType.BASIC),
+            combo=_combo(CableConductorModelName("BASIC")),
             cable_length=0.0,
             cable_length_unit="m",
             bounds=cable_bounds,
@@ -101,7 +99,7 @@ class TestBuildCableLoadedData:
         cable_bounds: CableParameterFitDescriptorBounds,
     ) -> None:
         result = build_cable_loaded_data(
-            combo=_combo(ConductorModelType.BASIC),
+            combo=_combo(CableConductorModelName("BASIC")),
             cable_length=100.0,
             cable_length_unit="m",
             bounds=cable_bounds,
@@ -110,7 +108,7 @@ class TestBuildCableLoadedData:
         )
         assert isinstance(result, CableLoadedData)
         assert result.name == "cable_test"
-        assert result.conductor_model == ConductorModelType.BASIC.value
+        assert result.conductor_model == "BASIC"
         # BASIC は params 不要 → None に丸める
         assert result.conductor_model_params is None
         assert len(result.sections) == 1
@@ -134,7 +132,9 @@ class TestBuildCableLoadedData:
     ) -> None:
         """非 BASIC モデルでは ``conductor_model_params`` が dict で残る。"""
         result = build_cable_loaded_data(
-            combo=_combo(ConductorModelType.FREQUENCY_DEPENDENT_SKIN_EFFECT_V1),
+            combo=_combo(
+                CableConductorModelName("FREQUENCY_DEPENDENT_SKIN_EFFECT_V1"),
+            ),
             cable_length=100.0,
             cable_length_unit="m",
             bounds=cable_bounds,
@@ -142,10 +142,7 @@ class TestBuildCableLoadedData:
             section_name="section_0",
         )
         assert isinstance(result, CableLoadedData)
-        assert (
-            result.conductor_model
-            == ConductorModelType.FREQUENCY_DEPENDENT_SKIN_EFFECT_V1.value
-        )
+        assert result.conductor_model == "FREQUENCY_DEPENDENT_SKIN_EFFECT_V1"
         params = result.conductor_model_params
         assert isinstance(params, dict)
         assert set(params.keys()) == {
@@ -155,3 +152,17 @@ class TestBuildCableLoadedData:
             "beta_conductor_x",
         }
         assert all(isinstance(value, float) for value in params.values())
+
+    def test_unknown_conductor_in_combo_raises_key_error(
+        self,
+        cable_bounds: CableParameterFitDescriptorBounds,
+    ) -> None:
+        with pytest.raises(KeyError, match="unknown conductor model"):
+            build_cable_loaded_data(
+                combo=_combo(CableConductorModelName("NOT_A_REAL_CONDUCTOR")),
+                cable_length=100.0,
+                cable_length_unit="m",
+                bounds=cable_bounds,
+                cable_name="cable_test",
+                section_name="section_0",
+            )

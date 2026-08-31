@@ -1,4 +1,4 @@
-"""``build_numerical_stability_report`` ファクトリのテスト。
+"""``build_numerical_stability_report`` ビルダーのテスト。
 
 集計器が空のときは ``None``、非空のときはソート済みタプルで
 ``NumericalStabilityReportDto`` を構築することを検証する
@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from im_cable_system.engine.algorithm.execute_algorithm.simulate.orchestrate.numerical_stability_report_factory import (  # noqa: E501
+from im_cable_system.engine.algorithm.execute_algorithm.simulate.orchestrate.numerical_stability_report_builder import (  # noqa: E501
     build_numerical_stability_report,
 )
 from im_cable_system.engine.shared.numerical_stability import (

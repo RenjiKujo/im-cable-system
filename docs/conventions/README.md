@@ -34,7 +34,7 @@
 | ドキュメント | 内容 |
 |---|---|
 | [1_code_style.md](./1_code_style.md) | 命名・型ヒント・docstring・禁止事項・モジュール分割の目安 |
-| [2_design_principles.md](./2_design_principles.md) | インターフェース駆動設計・依存性逆転・生成の分離（ファクトリー）・継承より委譲 |
+| [2_design_principles.md](./2_design_principles.md) | インターフェース駆動設計・抽象への依存・生成の分離（ファクトリー）・継承より委譲 |
 | [3_layering_and_imports.md](./3_layering_and_imports.md) | レイヤー構成と一方向依存・公開窓口（ファサード）経由の import 規約 |
 | [4_numerical_robustness.md](./4_numerical_robustness.md) | ゼロ除算・発散・NaN/inf の扱いを統一する数値ガード方針 |
 | [5_testing.md](./5_testing.md) | 契約をテストで固定する方針・テストツリーの構成 |

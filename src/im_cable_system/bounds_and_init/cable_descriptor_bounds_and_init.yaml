@@ -3,6 +3,9 @@
 # - 全エントリは「推定対象（fittable）」の bounds と init のみ。
 #   - ``conductor.rl_parameters``    … 導体 R'/L' の探索境界。
 #   - ``conductor.model_parameters`` … 導体モデル係数（種別ごと）の探索境界。
+#     Enum の全モデル種別を列挙する。係数を取らない種別（BASIC 等）も
+#     ``params: {}`` と必ず書く。種別キーの欠落は load 時に KeyError、
+#     ``params`` の省略・null は load 時に ValueError になる。
 #   - ``ground.rc_parameters``       … アース側 R·L / C/m の探索境界。
 # - ``init`` は初期値の決め方を指定する。次の 4 種をサポート:
 #     init: { method: "midpoint" }                  # (lb + ub) / 2

@@ -114,6 +114,6 @@ def build_cable_loaded_data(
     return CableLoadedData(
         name=cable_name,
         sections=(section,),
-        conductor_model=combo.cable_conductor.value,
+        conductor_model=combo.cable_conductor,
         conductor_model_params=conductor_params_or_none,
     )

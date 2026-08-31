@@ -10,7 +10,7 @@ Input のテストは、4 段に対応する粒度に分ける。
 
 - **JobSpecValidator テスト**: パス欠如や必須フィールド欠落が、ロード前に期待どおり失敗すること。
 - **Loader テスト**: ファイル構造の破綻（ヘッダ欠落、数値変換失敗、カタログキー未登録など）でのみ失敗し、`LoadedData` を構築できること。
-- **Assembler テスト**: `LoadedData` から `InputDto` が組み立てられること。フィールド単体の契約違反は DTO の `__post_init__` 側で検出されること。
+- **Assembler テスト**: `LoadedData` から `InputDto` が組み立てられること。フィールド単体の契約違反と、1 つの DTO 内で閉じたキー集合の過不足（モデル係数名など）は DTO の `__post_init__` 側で検出されること。Loader 側がそれを先回りして弾いていないこと。
 - **InputDtoValidator テスト**: 構造整合・単位整合・DTO 横断整合・物理関係式の検証が、期待どおり成功・失敗を返すこと。
 - **Orchestrator テスト**: `build_input_dto` が 4 段を固定順で実行し、検証済みの `InputDto` / `InputDtos` を返すこと。
 

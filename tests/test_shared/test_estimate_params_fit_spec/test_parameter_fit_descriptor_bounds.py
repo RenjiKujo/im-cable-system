@@ -430,3 +430,147 @@ class TestCableFromEstimationDocument:
             match="cable bounds YAML missing required fixed parameters",
         ):
             CableParameterFitDescriptorBounds.from_estimation_document({})
+
+
+def _im_document_with_full_primary_models() -> dict[str, Any]:
+    """BASIC と 3 係数の SLIP_DEPENDENT を持つ primary 文書。"""
+    document = _flat_im_document()
+    document["primary"]["model_parameters"] = {
+        "BASIC": {"params": {}},
+        "SLIP_DEPENDENT_LEAKAGE_SATURATION_V1": {
+            "params": {
+                "alpha_primary_r": {
+                    "bounds": {"lb": 0.05, "ub": 2.5},
+                    "init": _MIDPOINT_INIT,
+                },
+                "alpha_primary_x": {
+                    "bounds": {"lb": 0.1, "ub": 0.9},
+                    "init": _MIDPOINT_INIT,
+                },
+                "beta_primary_x": {
+                    "bounds": {"lb": 0.2, "ub": 0.8},
+                    "init": _MIDPOINT_INIT,
+                },
+            }
+        },
+    }
+    return document
+
+
+def _cable_document_with_full_conductor_models() -> dict[str, Any]:
+    """BASIC と 4 係数の FREQUENCY_DEPENDENT を持つ conductor 文書。"""
+    document = _flat_cable_document()
+    document["conductor"]["model_parameters"] = {
+        "BASIC": {"params": {}},
+        "FREQUENCY_DEPENDENT_SKIN_EFFECT_V1": {
+            "params": {
+                "alpha_conductor_r": {
+                    "bounds": {"lb": 0.01, "ub": 0.10},
+                    "init": _MIDPOINT_INIT,
+                },
+                "beta_conductor_r": {
+                    "bounds": {"lb": 0.05, "ub": 0.15},
+                    "init": _MIDPOINT_INIT,
+                },
+                "alpha_conductor_x": {
+                    "bounds": {"lb": 0.01, "ub": 0.10},
+                    "init": _MIDPOINT_INIT,
+                },
+                "beta_conductor_x": {
+                    "bounds": {"lb": 0.05, "ub": 0.15},
+                    "init": _MIDPOINT_INIT,
+                },
+            }
+        },
+    }
+    return document
+
+
+class TestImModelParamSpecs:
+    """``im_model_param_specs`` の行単位アクセサ。"""
+
+    def test_returns_all_params_for_known_model(self) -> None:
+        bounds = ImParameterFitDescriptorBounds.from_estimation_document(
+            _im_document_with_full_primary_models()
+        )
+        specs = bounds.im_model_param_specs(
+            "primary",
+            "SLIP_DEPENDENT_LEAKAGE_SATURATION_V1",
+        )
+        assert set(specs) == {
+            "alpha_primary_r",
+            "alpha_primary_x",
+            "beta_primary_x",
+        }
+
+    def test_returns_empty_dict_for_params_empty_model(self) -> None:
+        bounds = ImParameterFitDescriptorBounds.from_estimation_document(
+            _im_document_with_full_primary_models()
+        )
+        assert bounds.im_model_param_specs("primary", "BASIC") == {}
+
+    def test_unknown_model_raises(self) -> None:
+        bounds = ImParameterFitDescriptorBounds.from_estimation_document(
+            _im_document_with_full_primary_models()
+        )
+        with pytest.raises(KeyError, match="unknown IM primary model"):
+            bounds.im_model_param_specs("primary", "UNKNOWN_MODEL")
+
+    def test_returned_dict_is_a_copy(self) -> None:
+        bounds = ImParameterFitDescriptorBounds.from_estimation_document(
+            _im_document_with_full_primary_models()
+        )
+        specs = bounds.im_model_param_specs(
+            "primary",
+            "SLIP_DEPENDENT_LEAKAGE_SATURATION_V1",
+        )
+        specs["injected"] = next(iter(specs.values()))
+        specs2 = bounds.im_model_param_specs(
+            "primary",
+            "SLIP_DEPENDENT_LEAKAGE_SATURATION_V1",
+        )
+        assert "injected" not in specs2
+
+
+class TestConductorModelParamSpecs:
+    """``conductor_model_param_specs`` の行単位アクセサ。"""
+
+    def test_returns_all_params_for_known_model(self) -> None:
+        bounds = CableParameterFitDescriptorBounds.from_estimation_document(
+            _cable_document_with_full_conductor_models()
+        )
+        specs = bounds.conductor_model_param_specs(
+            "FREQUENCY_DEPENDENT_SKIN_EFFECT_V1",
+        )
+        assert set(specs) == {
+            "alpha_conductor_r",
+            "beta_conductor_r",
+            "alpha_conductor_x",
+            "beta_conductor_x",
+        }
+
+    def test_returns_empty_dict_for_params_empty_model(self) -> None:
+        bounds = CableParameterFitDescriptorBounds.from_estimation_document(
+            _cable_document_with_full_conductor_models()
+        )
+        assert bounds.conductor_model_param_specs("BASIC") == {}
+
+    def test_unknown_model_raises(self) -> None:
+        bounds = CableParameterFitDescriptorBounds.from_estimation_document(
+            _cable_document_with_full_conductor_models()
+        )
+        with pytest.raises(KeyError, match="unknown conductor model"):
+            bounds.conductor_model_param_specs("UNKNOWN")
+
+    def test_returned_dict_is_a_copy(self) -> None:
+        bounds = CableParameterFitDescriptorBounds.from_estimation_document(
+            _cable_document_with_full_conductor_models()
+        )
+        specs = bounds.conductor_model_param_specs(
+            "FREQUENCY_DEPENDENT_SKIN_EFFECT_V1",
+        )
+        specs["injected"] = next(iter(specs.values()))
+        specs2 = bounds.conductor_model_param_specs(
+            "FREQUENCY_DEPENDENT_SKIN_EFFECT_V1",
+        )
+        assert "injected" not in specs2

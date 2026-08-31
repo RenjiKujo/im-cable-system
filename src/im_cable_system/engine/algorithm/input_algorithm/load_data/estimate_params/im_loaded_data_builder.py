@@ -18,8 +18,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 from im_cable_system.engine.algorithm.input_algorithm.load_data.data_class.im_loaded_data import (  # noqa: E501
     ImBranchLoadedData,
     ImLoadedData,
@@ -27,12 +25,8 @@ from im_cable_system.engine.algorithm.input_algorithm.load_data.data_class.im_lo
     ImNameplateLoadedData,
 )
 from im_cable_system.engine.algorithm.input_algorithm.load_data.estimate_params.bounds_initializer import (  # noqa: E501
-    excitation_model_param_initials,
-    friction_windage_model_param_initials,
     im_fixed_initial,
-    primary_model_param_initials,
-    secondary_model_param_initials,
-    stray_load_model_param_initials,
+    im_model_param_initials,
 )
 from im_cable_system.engine.algorithm.input_algorithm.load_data.estimate_params.cartesian_product import (  # noqa: E501
     EstimateParamsModelCombo,
@@ -45,11 +39,11 @@ from im_cable_system.engine.algorithm.input_algorithm.load_data.estimate_params.
     EstimateParamsParsedTables,
 )
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
-    ImCageMultiplicityType,
-    ImSecondaryModelType,
+    ImCageMultiplicityType,  # load_data 生成定数（DTO 語彙同期。入力 parse ではない）
 )
 from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E501
     ImParameterFitDescriptorBounds,
+    ImSecondaryModelName,
 )
 
 _RES_UNIT = "Ω"
@@ -125,8 +119,8 @@ def _build_primary_branch(
     bounds: ImParameterFitDescriptorBounds,
 ) -> ImBranchLoadedData:
     return _build_branch(
-        model_value=combo.primary.value,
-        model_params=primary_model_param_initials(combo.primary, bounds),
+        model_value=combo.primary,
+        model_params=im_model_param_initials("primary", combo.primary, bounds),
         resistance=im_fixed_initial("primary_resistance", bounds),
         inductance=im_fixed_initial("primary_inductance", bounds),
     )
@@ -137,8 +131,10 @@ def _build_excitation_branch(
     bounds: ImParameterFitDescriptorBounds,
 ) -> ImBranchLoadedData:
     return _build_branch(
-        model_value=combo.excitation.value,
-        model_params=excitation_model_param_initials(combo.excitation, bounds),
+        model_value=combo.excitation,
+        model_params=im_model_param_initials(
+            "excitation", combo.excitation, bounds
+        ),
         resistance=im_fixed_initial("excitation_resistance", bounds),
         inductance=im_fixed_initial("excitation_inductance", bounds),
     )
@@ -149,22 +145,22 @@ def _build_secondary_branches_double_cage(
     bounds: ImParameterFitDescriptorBounds,
     total_resistance: float,
     total_inductance: float,
+    *,
+    inner_model: ImSecondaryModelName,
 ) -> tuple[ImBranchLoadedData, ImBranchLoadedData]:
     """二重かご時の内側・外側 secondary を構築する（R/L は半分ずつ）。"""
-    inner_model = cast(ImSecondaryModelType, combo.secondary_inner)
     half_r = total_resistance / 2.0
     half_l = total_inductance / 2.0
     inner = _build_branch(
-        model_value=inner_model.value,
-        model_params=secondary_model_param_initials(inner_model, bounds),
+        model_value=inner_model,
+        model_params=im_model_param_initials("secondary", inner_model, bounds),
         resistance=half_r,
         inductance=half_l,
     )
     outer = _build_branch(
-        model_value=combo.secondary_outer.value,
-        model_params=secondary_model_param_initials(
-            combo.secondary_outer,
-            bounds,
+        model_value=combo.secondary_outer,
+        model_params=im_model_param_initials(
+            "secondary", combo.secondary_outer, bounds
         ),
         resistance=half_r,
         inductance=half_l,
@@ -179,10 +175,9 @@ def _build_secondary_branch_single_cage(
     total_inductance: float,
 ) -> ImBranchLoadedData:
     return _build_branch(
-        model_value=combo.secondary_outer.value,
-        model_params=secondary_model_param_initials(
-            combo.secondary_outer,
-            bounds,
+        model_value=combo.secondary_outer,
+        model_params=im_model_param_initials(
+            "secondary", combo.secondary_outer, bounds
         ),
         resistance=total_resistance,
         inductance=total_inductance,
@@ -194,9 +189,9 @@ def _build_friction_windage(
     bounds: ImParameterFitDescriptorBounds,
 ) -> ImLossBranchLoadedData:
     return ImLossBranchLoadedData(
-        model=combo.friction_windage.value,
-        model_params=friction_windage_model_param_initials(
-            combo.friction_windage, bounds
+        model=combo.friction_windage,
+        model_params=im_model_param_initials(
+            "friction_windage", combo.friction_windage, bounds
         ),
     )
 
@@ -206,8 +201,10 @@ def _build_stray_load(
     bounds: ImParameterFitDescriptorBounds,
 ) -> ImLossBranchLoadedData:
     return ImLossBranchLoadedData(
-        model=combo.stray_load.value,
-        model_params=stray_load_model_param_initials(combo.stray_load, bounds),
+        model=combo.stray_load,
+        model_params=im_model_param_initials(
+            "stray_load", combo.stray_load, bounds
+        ),
     )
 
 
@@ -259,6 +256,7 @@ def build_im_loaded_data(
             bounds=bounds,
             total_resistance=secondary_total_r,
             total_inductance=secondary_total_l,
+            inner_model=combo.secondary_inner,
         )
         return ImLoadedData(
             name=im_name,

@@ -8,7 +8,7 @@ from im_cable_system.engine.algorithm.execute_algorithm.simulate.characteristic.
 from im_cable_system.engine.algorithm.execute_algorithm.simulate.i_simulation_orchestrator import (  # noqa: E501
     ISimulationOrchestrator,
 )
-from im_cable_system.engine.algorithm.execute_algorithm.simulate.orchestrate.numerical_stability_report_factory import (  # noqa: E501
+from im_cable_system.engine.algorithm.execute_algorithm.simulate.orchestrate.numerical_stability_report_builder import (  # noqa: E501
     build_numerical_stability_report,
 )
 from im_cable_system.engine.algorithm.execute_algorithm.simulate.orchestrate.simulation_numerical_stability_report_slot import (  # noqa: E501

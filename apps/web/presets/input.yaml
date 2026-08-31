@@ -1,0 +1,66 @@
+# apps/web 同梱の入力ファイルプリセット定義。
+# 実体はリポジトリ内の既存ファイルを参照する（コピーは持たない）。
+# path は RunnerGatewaySettings.repo_root からの相対パス。
+# 各 field の先頭要素が UI の既定選択になる。
+version: 1
+
+estimate_params:
+  input:
+    - name: quick_start_slipandcurrentdependent03
+      path: examples/input/estimate_params_input.csv
+      description: README Quick Start の教師曲線（im_primary のみ 2 候補（2 組み合わせ）・軸出力控除は NONE）
+  im_bounds:
+    - name: bundled_default
+      path: src/im_cable_system/bounds_and_init/im_descriptor_bounds_and_init.yaml
+      description: 同梱既定（未指定時と同じ）
+  cable_bounds:
+    - name: bundled_default
+      path: src/im_cable_system/bounds_and_init/cable_descriptor_bounds_and_init.yaml
+      description: 同梱既定（未指定時と同じ）
+
+forward_by_cartesian_grid:
+  series_selection:
+    - name: basic03_no_cable
+      path: examples/input/series_cartesian_grid.csv
+      description: Basic03・ケーブルなし
+    - name: slipandcurrentdependent03_no_cable
+      path: examples/input/series_cartesian_grid_slipandcurrentdependent03.csv
+      description: SlipAndCurrentDependent03・ケーブルなし
+  axes:
+    - name: cartesian_grid_50hz_200v
+      path: examples/input/axes_cartesian_grid.csv
+      description: slip × 50Hz × 200V を中心とした直積グリッド
+  performance_curve:
+    - name: slipandcurrentdependent03
+      path: examples/input/performance_curve.csv
+      description: SlipAndCurrentDependent03 の教師性能曲線（重ね描き用）
+  im_catalog:
+    - name: bundled_default
+      path: src/im_cable_system/catalog/im_series_catalog.yaml
+      description: 同梱既定（未指定時と同じ）
+  cable_catalog:
+    - name: bundled_default
+      path: src/im_cable_system/catalog/cable_series_catalog.yaml
+      description: 同梱既定（未指定時と同じ）
+
+forward_by_operating_points:
+  series_selection:
+    - name: slipandcurrentdependent03_feeder30m_lead10m
+      path: examples/input/series_operating_points.csv
+      description: SlipAndCurrentDependent03・Feeder 30m + Lead 10m
+  axes:
+    - name: operating_points_40to60hz
+      path: examples/input/axes_operating_points.csv
+      description: 40〜60Hz の実運転点集合
+  performance_curve:
+    - name: slipandcurrentdependent03
+      path: examples/input/performance_curve.csv
+      description: SlipAndCurrentDependent03 の教師性能曲線（重ね描き用）
+  im_catalog:
+    - name: bundled_default
+      path: src/im_cable_system/catalog/im_series_catalog.yaml
+      description: 同梱既定（未指定時と同じ）
+  cable_catalog:
+    - name: bundled_default
+      path: src/im_cable_system/catalog/cable_series_catalog.yaml
+      description: 同梱既定（未指定時と同じ）

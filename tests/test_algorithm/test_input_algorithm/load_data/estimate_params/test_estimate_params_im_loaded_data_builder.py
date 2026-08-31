@@ -7,12 +7,22 @@
 R/L とモデル係数の中点による初期化や、SINGLE_CAGE / DOUBLE_CAGE の R/L
 半分割りなど、Loader 内に閉じていたロジックを直接観測できることを確認
 する位置付けのテスト。
+
+内部実装の単体テスト。公開窓口に載っていないリーフを直 import する。
+とくに ``assemble_input_dto.common.im_dto_builder`` は別責務ツリー（assemble
+段）の非公開リーフだが、「load は係数名を絞り込まず、過不足の判定は DTO
+``__post_init__`` が持つ」という段またぎの責務分担を検証するために必要。
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+from im_cable_system.engine.algorithm.input_algorithm.assemble_input_dto.common.im_dto_builder import (  # noqa: E501
+    build_im_series_dto,
+)
 from im_cable_system.engine.algorithm.input_algorithm.load_data.data_class.im_loaded_data import (  # noqa: E501
     ImNameplateLoadedData,
 )
@@ -33,14 +43,14 @@ from im_cable_system.engine.algorithm.input_algorithm.load_data.estimate_params.
 from im_cable_system.engine.shared.config import IConfig
 from im_cable_system.engine.shared.dto.generic.im_cable_system import (
     ImCageMultiplicityType,
-    ImExcitationModelType,
-    ImFrictionWindageModelType,
-    ImPrimaryModelType,
-    ImSecondaryModelType,
-    ImStrayLoadModelType,
 )
 from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E501
+    ImExcitationModelName,
+    ImFrictionWindageModelName,
     ImParameterFitDescriptorBounds,
+    ImPrimaryModelName,
+    ImSecondaryModelName,
+    ImStrayLoadModelName,
 )
 
 _VALID_NAMEPLATE_BLOCK = {
@@ -88,13 +98,13 @@ def _make_parsed(
 
 def _basic_combo_single_cage() -> EstimateParamsModelCombo:
     return EstimateParamsModelCombo(
-        primary=ImPrimaryModelType.BASIC,
-        excitation=ImExcitationModelType.BASIC,
+        primary=ImPrimaryModelName("BASIC"),
+        excitation=ImExcitationModelName("BASIC"),
         secondary_inner=None,
-        secondary_outer=ImSecondaryModelType.BASIC,
+        secondary_outer=ImSecondaryModelName("BASIC"),
         cable_conductor=None,
-        friction_windage=ImFrictionWindageModelType.NONE,
-        stray_load=ImStrayLoadModelType.NONE,
+        friction_windage=ImFrictionWindageModelName("NONE"),
+        stray_load=ImStrayLoadModelName("NONE"),
         primary_index=1,
         excitation_index=1,
         secondary_single_index=1,
@@ -108,13 +118,13 @@ def _basic_combo_single_cage() -> EstimateParamsModelCombo:
 
 def _basic_combo_double_cage() -> EstimateParamsModelCombo:
     return EstimateParamsModelCombo(
-        primary=ImPrimaryModelType.BASIC,
-        excitation=ImExcitationModelType.BASIC,
-        secondary_inner=ImSecondaryModelType.BASIC,
-        secondary_outer=ImSecondaryModelType.BASIC,
+        primary=ImPrimaryModelName("BASIC"),
+        excitation=ImExcitationModelName("BASIC"),
+        secondary_inner=ImSecondaryModelName("BASIC"),
+        secondary_outer=ImSecondaryModelName("BASIC"),
         cable_conductor=None,
-        friction_windage=ImFrictionWindageModelType.NONE,
-        stray_load=ImStrayLoadModelType.NONE,
+        friction_windage=ImFrictionWindageModelName("NONE"),
+        stray_load=ImStrayLoadModelName("NONE"),
         primary_index=1,
         excitation_index=1,
         secondary_single_index=0,
@@ -128,13 +138,13 @@ def _basic_combo_double_cage() -> EstimateParamsModelCombo:
 
 def _shaft_output_deduction_combo_single_cage() -> EstimateParamsModelCombo:
     return EstimateParamsModelCombo(
-        primary=ImPrimaryModelType.BASIC,
-        excitation=ImExcitationModelType.BASIC,
+        primary=ImPrimaryModelName("BASIC"),
+        excitation=ImExcitationModelName("BASIC"),
         secondary_inner=None,
-        secondary_outer=ImSecondaryModelType.BASIC,
+        secondary_outer=ImSecondaryModelName("BASIC"),
         cable_conductor=None,
-        friction_windage=ImFrictionWindageModelType.CONSTANT_V1,
-        stray_load=ImStrayLoadModelType.CURRENT_DEPENDENT_QUADRATIC_V1,
+        friction_windage=ImFrictionWindageModelName("CONSTANT_V1"),
+        stray_load=ImStrayLoadModelName("CURRENT_DEPENDENT_QUADRATIC_V1"),
         primary_index=1,
         excitation_index=1,
         secondary_single_index=1,
@@ -223,9 +233,9 @@ class TestBuildImLoadedData:
         assert im.secondary is not None
         assert im.secondary_inner is None
         assert im.secondary_outer is None
-        assert im.primary.model == ImPrimaryModelType.BASIC.value
-        assert im.excitation.model == ImExcitationModelType.BASIC.value
-        assert im.secondary.model == ImSecondaryModelType.BASIC.value
+        assert im.primary.model == "BASIC"
+        assert im.excitation.model == "BASIC"
+        assert im.secondary.model == "BASIC"
         assert im.primary.resistance_unit == "Ω"
         assert im.primary.inductance_unit == "H"
         assert im.primary.model_params == {}
@@ -319,4 +329,254 @@ class TestBuildImLoadedData:
                 bounds=im_bounds,
                 nameplate=_make_nameplate(),
                 im_name="im_bad_poles",
+            )
+
+
+_MIDPOINT = "{ method: midpoint }"
+
+_BASE_IM_BOUNDS_YAML = f"""\
+version: 1
+primary:
+  rl_parameters:
+    primary_resistance:
+      unit: "Ω"
+      bounds: {{ lb: 0.1, ub: 0.5 }}
+      init: {_MIDPOINT}
+    primary_inductance:
+      unit: "H"
+      bounds: {{ lb: 0.001, ub: 0.01 }}
+      init: {_MIDPOINT}
+  model_parameters:
+    BASIC:
+      params: {{}}
+    SLIP_DEPENDENT_LEAKAGE_SATURATION_V1:
+      params:
+        alpha_primary_r:
+          bounds: {{ lb: 0.05, ub: 0.15 }}
+          init: {_MIDPOINT}
+        alpha_primary_x:
+          bounds: {{ lb: 0.05, ub: 0.15 }}
+          init: {_MIDPOINT}
+        beta_primary_x:
+          bounds: {{ lb: 0.1, ub: 0.3 }}
+          init: {_MIDPOINT}
+excitation:
+  rl_parameters:
+    excitation_resistance:
+      unit: "Ω"
+      bounds: {{ lb: 100.0, ub: 200.0 }}
+      init: {_MIDPOINT}
+    excitation_inductance:
+      unit: "H"
+      bounds: {{ lb: 0.01, ub: 0.05 }}
+      init: {_MIDPOINT}
+  model_parameters:
+    BASIC:
+      params: {{}}
+secondary:
+  rl_parameters:
+    secondary_resistance:
+      unit: "Ω"
+      bounds: {{ lb: 0.05, ub: 0.4 }}
+      init: {_MIDPOINT}
+    secondary_inductance:
+      unit: "H"
+      bounds: {{ lb: 0.001, ub: 0.01 }}
+      init: {_MIDPOINT}
+  model_parameters:
+    BASIC:
+      params: {{}}
+friction_windage:
+  model_parameters:
+    NONE:
+      params: {{}}
+stray_load:
+  model_parameters:
+    NONE:
+      params: {{}}
+"""
+
+
+def _slip_dep_primary_combo() -> EstimateParamsModelCombo:
+    return EstimateParamsModelCombo(
+        primary=ImPrimaryModelName("SLIP_DEPENDENT_LEAKAGE_SATURATION_V1"),
+        excitation=ImExcitationModelName("BASIC"),
+        secondary_inner=None,
+        secondary_outer=ImSecondaryModelName("BASIC"),
+        cable_conductor=None,
+        friction_windage=ImFrictionWindageModelName("NONE"),
+        stray_load=ImStrayLoadModelName("NONE"),
+        primary_index=1,
+        excitation_index=1,
+        secondary_single_index=1,
+        secondary_double_outer_index=0,
+        secondary_double_inner_index=0,
+        cable_conductor_index=0,
+        friction_windage_index=1,
+        stray_load_index=1,
+    )
+
+
+def _write_im_bounds_yaml(tmp_path: Path, body: str) -> Path:
+    path = tmp_path / "im_bounds.yaml"
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+class TestBuildImLoadedDataDoesNotEnforceParamContract:
+    """load は係数名の過不足を判定せず、YAML の params をそのまま載せる。"""
+
+    def test_extra_param_in_yaml_is_kept_in_model_params(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        body = _BASE_IM_BOUNDS_YAML.replace(
+            "beta_primary_x:\n"
+            "          bounds: { lb: 0.1, ub: 0.3 }\n"
+            "          init: { method: midpoint }",
+            "beta_primary_x:\n"
+            "          bounds: { lb: 0.1, ub: 0.3 }\n"
+            "          init: { method: midpoint }\n"
+            "        alpha_typo:\n"
+            "          bounds: { lb: 0.0, ub: 1.0 }\n"
+            "          init: { method: midpoint }",
+        )
+        bounds = load_im_parameter_fit_descriptor_bounds(
+            _write_im_bounds_yaml(tmp_path, body),
+        )
+        im = build_im_loaded_data(
+            parsed=_make_parsed(),
+            combo=_slip_dep_primary_combo(),
+            bounds=bounds,
+            nameplate=_make_nameplate(),
+            im_name="im_extra",
+        )
+        assert "alpha_typo" in im.primary.model_params
+        assert set(im.primary.model_params) == {
+            "alpha_primary_r",
+            "alpha_primary_x",
+            "beta_primary_x",
+            "alpha_typo",
+        }
+
+    def test_missing_param_in_yaml_is_not_rejected_at_load(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        body = _BASE_IM_BOUNDS_YAML.replace(
+            "        beta_primary_x:\n"
+            "          bounds: { lb: 0.1, ub: 0.3 }\n"
+            "          init: { method: midpoint }\n",
+            "",
+        )
+        bounds = load_im_parameter_fit_descriptor_bounds(
+            _write_im_bounds_yaml(tmp_path, body),
+        )
+        im = build_im_loaded_data(
+            parsed=_make_parsed(),
+            combo=_slip_dep_primary_combo(),
+            bounds=bounds,
+            nameplate=_make_nameplate(),
+            im_name="im_missing_param",
+        )
+        assert set(im.primary.model_params) == {
+            "alpha_primary_r",
+            "alpha_primary_x",
+        }
+
+    def test_missing_model_type_key_raises_key_error(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        body = _BASE_IM_BOUNDS_YAML.replace(
+            "    SLIP_DEPENDENT_LEAKAGE_SATURATION_V1:\n"
+            "      params:\n"
+            "        alpha_primary_r:\n"
+            "          bounds: { lb: 0.05, ub: 0.15 }\n"
+            "          init: { method: midpoint }\n"
+            "        alpha_primary_x:\n"
+            "          bounds: { lb: 0.05, ub: 0.15 }\n"
+            "          init: { method: midpoint }\n"
+            "        beta_primary_x:\n"
+            "          bounds: { lb: 0.1, ub: 0.3 }\n"
+            "          init: { method: midpoint }\n",
+            "",
+        )
+        bounds = load_im_parameter_fit_descriptor_bounds(
+            _write_im_bounds_yaml(tmp_path, body),
+        )
+        with pytest.raises(KeyError, match="unknown IM primary model"):
+            build_im_loaded_data(
+                parsed=_make_parsed(),
+                combo=_slip_dep_primary_combo(),
+                bounds=bounds,
+                nameplate=_make_nameplate(),
+                im_name="im_missing_type",
+            )
+
+    def test_extra_param_from_load_is_rejected_at_assemble(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """load が通した余分な係数は assemble の DTO が ``余分`` で弾く。"""
+
+        body = _BASE_IM_BOUNDS_YAML.replace(
+            "beta_primary_x:\n"
+            "          bounds: { lb: 0.1, ub: 0.3 }\n"
+            "          init: { method: midpoint }",
+            "beta_primary_x:\n"
+            "          bounds: { lb: 0.1, ub: 0.3 }\n"
+            "          init: { method: midpoint }\n"
+            "        alpha_typo:\n"
+            "          bounds: { lb: 0.0, ub: 1.0 }\n"
+            "          init: { method: midpoint }",
+        )
+        bounds = load_im_parameter_fit_descriptor_bounds(
+            _write_im_bounds_yaml(tmp_path, body),
+        )
+        im = build_im_loaded_data(
+            parsed=_make_parsed(),
+            combo=_slip_dep_primary_combo(),
+            bounds=bounds,
+            nameplate=_make_nameplate(),
+            im_name="im_extra_assemble",
+        )
+        with pytest.raises(ValueError) as excinfo:
+            build_im_series_dto(im)
+        msg = str(excinfo.value)
+        assert "余分" in msg
+        assert "alpha_typo" in msg
+
+
+class TestBuildImLoadedDataUnknownComboModelName:
+    """combo 側の未知名は bounds カタログ照合で KeyError になる。"""
+
+    def test_unknown_primary_in_combo_raises_key_error(
+        self,
+        im_bounds: ImParameterFitDescriptorBounds,
+    ) -> None:
+        combo = EstimateParamsModelCombo(
+            primary=ImPrimaryModelName("NOT_A_REAL_PRIMARY"),
+            excitation=ImExcitationModelName("BASIC"),
+            secondary_inner=None,
+            secondary_outer=ImSecondaryModelName("BASIC"),
+            cable_conductor=None,
+            friction_windage=ImFrictionWindageModelName("NONE"),
+            stray_load=ImStrayLoadModelName("NONE"),
+            primary_index=1,
+            excitation_index=1,
+            secondary_single_index=1,
+            secondary_double_outer_index=0,
+            secondary_double_inner_index=0,
+            cable_conductor_index=0,
+            friction_windage_index=1,
+            stray_load_index=1,
+        )
+        with pytest.raises(KeyError, match="unknown IM primary model"):
+            build_im_loaded_data(
+                parsed=_make_parsed(),
+                combo=combo,
+                bounds=im_bounds,
+                nameplate=_make_nameplate(),
+                im_name="im_unknown_primary",
             )

@@ -8,7 +8,8 @@ EstimateParams の InputStage では、推定の初期値となる R/L とモデ
 
 責務:
     - 固定 R/L / 単位長物性 / 接地物性の初期値生成
-    - モデル種別ごとの必須パラメータ名定義
+    - bounds YAML が当該モデル種別に定義する係数をそのまま初期化する。
+      名前集合の契約は DTO ``__post_init__`` が持つ
     - パラメータ名と spec から ``{param_name: initial}`` 辞書の生成
 
 NOTE: 単位は :class:`ImParameterFitDescriptorBounds` /
@@ -18,213 +19,110 @@ NOTE: 単位は :class:`ImParameterFitDescriptorBounds` /
 
 from __future__ import annotations
 
-from im_cable_system.engine.shared.dto.generic.im_cable_system import (
-    ConductorModelType,
-    ImExcitationModelType,
-    ImFrictionWindageModelType,
-    ImPrimaryModelType,
-    ImSecondaryModelType,
-    ImStrayLoadModelType,
-)
+from typing import Literal, overload
+
 from im_cable_system.engine.shared.estimate_params_fit_spec import (  # noqa: E501
+    CableConductorModelName,
     CableParameterFitDescriptorBounds,
+    ImExcitationModelName,
+    ImFrictionWindageModelName,
     ImParameterFitDescriptorBounds,
+    ImPrimaryModelName,
+    ImSecondaryModelName,
+    ImStrayLoadModelName,
+    ImSubsystemName,
 )
 
 
-def _primary_required_param_names(model: ImPrimaryModelType) -> list[str]:
-    if model == ImPrimaryModelType.BASIC:
-        return []
-    if model == ImPrimaryModelType.SLIP_DEPENDENT_LEAKAGE_SATURATION_V1:
-        return [
-            "alpha_primary_r",
-            "alpha_primary_x",
-            "beta_primary_x",
-        ]
-    if model == ImPrimaryModelType.CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1:
-        return [
-            "alpha_primary_leakage_x",
-            "beta_primary_leakage_x",
-        ]
-    raise ValueError(f"未対応の一次モデル型です: {model!r}")
+# subsystem とモデル種別名 NewType の対応を型で固定する。実装シグネチャだけだと
+# ``("secondary", combo.primary, ...)`` のような取り違えが型検査を素通りし、
+# しかも一部の種別名（CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1 など）は
+# primary / secondary の双方に存在するため KeyError にもならない。
+@overload
+def im_model_param_initials(
+    subsystem: Literal["primary"],
+    model: ImPrimaryModelName,
+    bounds: ImParameterFitDescriptorBounds,
+) -> dict[str, float]: ...
 
 
-def _excitation_required_param_names(
-    model: ImExcitationModelType,
-) -> list[str]:
-    if model == ImExcitationModelType.BASIC:
-        return []
-    if model in (
-        ImExcitationModelType.SLIP_DEPENDENT_SATURATION_V1,
-        ImExcitationModelType.CURRENT_DEPENDENT_SATURATION_V1,
-    ):
-        return [
-            "alpha_excitation_r",
-            "alpha_excitation_x",
-            "beta_excitation_x",
-        ]
-    raise ValueError(f"未対応の励磁モデル型です: {model!r}")
+@overload
+def im_model_param_initials(
+    subsystem: Literal["excitation"],
+    model: ImExcitationModelName,
+    bounds: ImParameterFitDescriptorBounds,
+) -> dict[str, float]: ...
 
 
-def _secondary_required_param_names(
-    model: ImSecondaryModelType,
-) -> list[str]:
-    if model == ImSecondaryModelType.BASIC:
-        return []
-    if model in (
-        ImSecondaryModelType.SLIP_DEPENDENT_SKIN_EFFECT_V1,
-        ImSecondaryModelType.CURRENT_DEPENDENT_SKIN_EFFECT_V1,
-    ):
-        return [
-            "alpha_secondary_r",
-            "beta_secondary_r",
-            "alpha_secondary_x",
-            "beta_secondary_x",
-        ]
-    if model == ImSecondaryModelType.CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1:
-        return [
-            "alpha_secondary_leakage_x",
-            "beta_secondary_leakage_x",
-        ]
-    if (
-        model
-        == ImSecondaryModelType.CURRENT_DEPENDENT_SKIN_EFFECT_AND_LEAKAGE_SATURATION_V1
-    ):
-        return [
-            "alpha_secondary_r",
-            "beta_secondary_r",
-            "alpha_secondary_x",
-            "beta_secondary_x",
-            "alpha_secondary_leakage_x",
-            "beta_secondary_leakage_x",
-        ]
-    raise ValueError(f"未対応の二次モデル型です: {model!r}")
+@overload
+def im_model_param_initials(
+    subsystem: Literal["secondary"],
+    model: ImSecondaryModelName,
+    bounds: ImParameterFitDescriptorBounds,
+) -> dict[str, float]: ...
 
 
-def _friction_windage_required_param_names(
-    model: ImFrictionWindageModelType,
-) -> list[str]:
-    if model == ImFrictionWindageModelType.NONE:
-        return []
-    if model == ImFrictionWindageModelType.CONSTANT_V1:
-        return ["k_friction_windage"]
-    raise ValueError(f"未対応の摩擦・風損モデル型です: {model!r}")
+@overload
+def im_model_param_initials(
+    subsystem: Literal["friction_windage"],
+    model: ImFrictionWindageModelName,
+    bounds: ImParameterFitDescriptorBounds,
+) -> dict[str, float]: ...
 
 
-def _stray_load_required_param_names(
-    model: ImStrayLoadModelType,
-) -> list[str]:
-    if model == ImStrayLoadModelType.NONE:
-        return []
-    if model == ImStrayLoadModelType.CURRENT_DEPENDENT_QUADRATIC_V1:
-        return ["k_stray_load"]
-    raise ValueError(f"未対応の漂遊負荷損モデル型です: {model!r}")
+@overload
+def im_model_param_initials(
+    subsystem: Literal["stray_load"],
+    model: ImStrayLoadModelName,
+    bounds: ImParameterFitDescriptorBounds,
+) -> dict[str, float]: ...
 
 
-def _conductor_required_param_names(
-    model: ConductorModelType,
-) -> list[str]:
-    if model == ConductorModelType.BASIC:
-        return []
-    if model in (
-        ConductorModelType.FREQUENCY_DEPENDENT_SKIN_EFFECT_V1,
-        ConductorModelType.CURRENT_DEPENDENT_SKIN_EFFECT_V1,
-    ):
-        return [
-            "alpha_conductor_r",
-            "beta_conductor_r",
-            "alpha_conductor_x",
-            "beta_conductor_x",
-        ]
-    raise ValueError(f"未対応の導体モデル型です: {model!r}")
-
-
-def primary_model_param_initials(
-    model: ImPrimaryModelType,
+def im_model_param_initials(
+    subsystem: ImSubsystemName,
+    model: str,
     bounds: ImParameterFitDescriptorBounds,
 ) -> dict[str, float]:
-    """一次モデル種別と境界から ``{param_name: initial}`` を返す。"""
+    """bounds YAML が当該モデル種別に定義する全係数の初期値を返す。
+
+    Args:
+        subsystem: IM サブシステム名。
+        model: モデル種別名。
+        bounds: IM 探索境界。
+
+    Returns:
+        dict[str, float]: ``{param_name: initial}``。
+            ``params: {}`` の種別では空辞書。
+
+    Raises:
+        KeyError: YAML に当該 ``model_type`` キーが無い場合。
+    """
     return {
-        param: bounds.im_model_param_spec(
-            subsystem="primary",
-            model_type_name=model.value,
-            param_name=param,
-        ).resolve_initial()
-        for param in _primary_required_param_names(model)
-    }
-
-
-def excitation_model_param_initials(
-    model: ImExcitationModelType,
-    bounds: ImParameterFitDescriptorBounds,
-) -> dict[str, float]:
-    """励磁モデル種別と境界から ``{param_name: initial}`` を返す。"""
-    return {
-        param: bounds.im_model_param_spec(
-            subsystem="excitation",
-            model_type_name=model.value,
-            param_name=param,
-        ).resolve_initial()
-        for param in _excitation_required_param_names(model)
-    }
-
-
-def secondary_model_param_initials(
-    model: ImSecondaryModelType,
-    bounds: ImParameterFitDescriptorBounds,
-) -> dict[str, float]:
-    """二次モデル種別と境界から ``{param_name: initial}`` を返す。"""
-    return {
-        param: bounds.im_model_param_spec(
-            subsystem="secondary",
-            model_type_name=model.value,
-            param_name=param,
-        ).resolve_initial()
-        for param in _secondary_required_param_names(model)
-    }
-
-
-def friction_windage_model_param_initials(
-    model: ImFrictionWindageModelType,
-    bounds: ImParameterFitDescriptorBounds,
-) -> dict[str, float]:
-    """摩擦・風損モデル種別と境界から ``{param_name: initial}`` を返す。"""
-    return {
-        param: bounds.im_model_param_spec(
-            subsystem="friction_windage",
-            model_type_name=model.value,
-            param_name=param,
-        ).resolve_initial()
-        for param in _friction_windage_required_param_names(model)
-    }
-
-
-def stray_load_model_param_initials(
-    model: ImStrayLoadModelType,
-    bounds: ImParameterFitDescriptorBounds,
-) -> dict[str, float]:
-    """漂遊負荷損モデル種別と境界から ``{param_name: initial}`` を返す。"""
-    return {
-        param: bounds.im_model_param_spec(
-            subsystem="stray_load",
-            model_type_name=model.value,
-            param_name=param,
-        ).resolve_initial()
-        for param in _stray_load_required_param_names(model)
+        name: spec.resolve_initial()
+        for name, spec in bounds.im_model_param_specs(subsystem, model).items()
     }
 
 
 def conductor_model_param_initials(
-    model: ConductorModelType,
+    model: CableConductorModelName,
     bounds: CableParameterFitDescriptorBounds,
 ) -> dict[str, float]:
-    """ケーブル導体モデルから ``{param_name: initial}`` を返す。"""
+    """bounds YAML が当該導体モデル種別に定義する全係数の初期値を返す。
+
+    Args:
+        model: 導体モデル種別名。
+        bounds: ケーブル探索境界。
+
+    Returns:
+        dict[str, float]: ``{param_name: initial}``。
+            ``params: {}`` の種別（``BASIC`` など）では空辞書。
+
+    Raises:
+        KeyError: YAML に当該 ``model_type`` キーが無い場合。
+    """
     return {
-        param: bounds.conductor_model_param_spec(
-            model_type_name=model.value,
-            param_name=param,
-        ).resolve_initial()
-        for param in _conductor_required_param_names(model)
+        name: spec.resolve_initial()
+        for name, spec in bounds.conductor_model_param_specs(model).items()
     }
 
 

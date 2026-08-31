@@ -86,7 +86,7 @@ src/im_cable_system/engine/algorithm/
 ### パッケージ運用（Algorithm層）
 
 - 実装モジュールがあるディレクトリには `__init__.py` を置く（責務の docstring、必要なら公開窓口）。
-- Processor 等の外部から呼ぶ入口は、主に各 `orchestrator/__init__.py` およびステージ用 I/F モジュールとする。
+- Processor 等の外部から呼ぶ入口は、主に各 `orchestrate/__init__.py` およびステージ用 I/F モジュールとする。
 
 **インポート・パッケージ運用**: [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。
 

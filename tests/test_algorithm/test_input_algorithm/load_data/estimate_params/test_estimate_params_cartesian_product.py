@@ -61,7 +61,7 @@ class TestIterModelCombosSingleOnly:
         assert len(combos) == 2
         assert all(c.secondary_inner is None for c in combos)
         assert all(c.cable_conductor is None for c in combos)
-        assert {c.secondary_outer.value for c in combos} == {
+        assert {c.secondary_outer for c in combos} == {
             "BASIC",
             "SLIP_DEPENDENT_SKIN_EFFECT_V1",
         }
@@ -80,8 +80,8 @@ class TestIterModelCombosDoubleOnly:
         assert all(c.secondary_inner is not None for c in combos)
         assert combos[0].secondary_outer is not None
         assert combos[0].secondary_inner is not None
-        assert combos[0].secondary_outer.value == "BASIC"
-        assert combos[0].secondary_inner.value == "BASIC"
+        assert combos[0].secondary_outer == "BASIC"
+        assert combos[0].secondary_inner == "BASIC"
 
 
 class TestIterModelCombosMixed:
@@ -118,9 +118,7 @@ class TestIterModelCombosWithCableAxis:
         )
         combos = list(iter_model_combos(parsed, include_cable=True))
         assert len(combos) == 2
-        assert {
-            c.cable_conductor.value for c in combos if c.cable_conductor
-        } == {
+        assert {c.cable_conductor for c in combos if c.cable_conductor} == {
             "BASIC",
             "FREQUENCY_DEPENDENT_SKIN_EFFECT_V1",
         }
@@ -178,7 +176,7 @@ class TestIterModelCombosCableNoneToken:
         assert none_combos[0].cable_conductor_index == 1
         assert cable_combos[0].cable_conductor_index == 2
         assert cable_combos[0].cable_conductor is not None
-        assert cable_combos[0].cable_conductor.value == "BASIC"
+        assert cable_combos[0].cable_conductor == "BASIC"
 
 
 class TestIterModelCombosFrictionWindageStrayLoadNoneOnly:
@@ -192,8 +190,8 @@ class TestIterModelCombosFrictionWindageStrayLoadNoneOnly:
         parsed = _make_parsed(candidate_secondary_single=("BASIC",))
         combos = list(iter_model_combos(parsed, include_cable=False))
         assert len(combos) == 1
-        assert combos[0].friction_windage.value == "NONE"
-        assert combos[0].stray_load.value == "NONE"
+        assert combos[0].friction_windage == "NONE"
+        assert combos[0].stray_load == "NONE"
         # この軸は必ず採用されるため常に 1-based（0 は使わない）。
         assert combos[0].friction_windage_index == 1
         assert combos[0].stray_load_index == 1
@@ -210,7 +208,7 @@ class TestIterModelCombosFrictionWindageStrayLoadMultiplication:
         )
         combos = list(iter_model_combos(parsed, include_cable=False))
         assert len(combos) == 4
-        seen = {(c.friction_windage.value, c.stray_load.value) for c in combos}
+        seen = {(c.friction_windage, c.stray_load) for c in combos}
         assert seen == {
             ("NONE", "NONE"),
             ("NONE", "CURRENT_DEPENDENT_QUADRATIC_V1"),
@@ -219,6 +217,30 @@ class TestIterModelCombosFrictionWindageStrayLoadMultiplication:
         }
         # index は 1-based で候補列順と対応する。
         indices = {
-            (c.friction_windage.value, c.friction_windage_index) for c in combos
+            (c.friction_windage, c.friction_windage_index) for c in combos
         }
         assert indices == {("NONE", 1), ("CONSTANT_V1", 2)}
+
+
+class TestIterModelCombosDoesNotValidateModelNames:
+    """候補文字列の合法性は Loader 直積では判定しない。"""
+
+    def test_unknown_model_token_passes_through(self) -> None:
+        parsed = _make_parsed(
+            candidate_primary=("NOT_A_REAL_PRIMARY",),
+            candidate_secondary_single=("BASIC",),
+        )
+        combos = list(iter_model_combos(parsed, include_cable=False))
+        assert len(combos) == 1
+        assert combos[0].primary == "NOT_A_REAL_PRIMARY"
+
+    def test_invalid_cable_candidate_ignored_when_include_cable_false(
+        self,
+    ) -> None:
+        parsed = _make_parsed(
+            candidate_secondary_single=("BASIC",),
+            candidate_cable_conductor=("NOT_A_REAL_CONDUCTOR",),
+        )
+        combos = list(iter_model_combos(parsed, include_cable=False))
+        assert len(combos) == 1
+        assert combos[0].cable_conductor is None

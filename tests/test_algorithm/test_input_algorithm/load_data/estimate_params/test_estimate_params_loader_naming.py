@@ -13,25 +13,25 @@ from im_cable_system.engine.algorithm.input_algorithm.load_data.estimate_params.
     _build_im_name,
     _build_system_name,
 )
-from im_cable_system.engine.shared.dto.generic.im_cable_system import (
-    ConductorModelType,
-    ImExcitationModelType,
-    ImFrictionWindageModelType,
-    ImPrimaryModelType,
-    ImSecondaryModelType,
-    ImStrayLoadModelType,
+from im_cable_system.engine.shared.estimate_params_fit_spec import (
+    CableConductorModelName,
+    ImExcitationModelName,
+    ImFrictionWindageModelName,
+    ImPrimaryModelName,
+    ImSecondaryModelName,
+    ImStrayLoadModelName,
 )
 
 
 def _make_combo(**overrides: object) -> EstimateParamsModelCombo:
     base: dict[str, object] = {
-        "primary": ImPrimaryModelType.BASIC,
-        "excitation": ImExcitationModelType.BASIC,
+        "primary": ImPrimaryModelName("BASIC"),
+        "excitation": ImExcitationModelName("BASIC"),
         "secondary_inner": None,
-        "secondary_outer": ImSecondaryModelType.BASIC,
-        "cable_conductor": ConductorModelType.BASIC,
-        "friction_windage": ImFrictionWindageModelType.CONSTANT_V1,
-        "stray_load": ImStrayLoadModelType.CURRENT_DEPENDENT_QUADRATIC_V1,
+        "secondary_outer": ImSecondaryModelName("BASIC"),
+        "cable_conductor": CableConductorModelName("BASIC"),
+        "friction_windage": ImFrictionWindageModelName("CONSTANT_V1"),
+        "stray_load": ImStrayLoadModelName("CURRENT_DEPENDENT_QUADRATIC_V1"),
         "primary_index": 1,
         "excitation_index": 2,
         "secondary_single_index": 3,
@@ -60,8 +60,8 @@ def test_build_im_name_has_five_plus_two_indices_in_order() -> None:
 def test_build_system_name_none_axes_fallback_to_index_one() -> None:
     """fw/sl に ``NONE`` のみを書いた TSV では index=1。"""
     combo = _make_combo(
-        friction_windage=ImFrictionWindageModelType.NONE,
-        stray_load=ImStrayLoadModelType.NONE,
+        friction_windage=ImFrictionWindageModelName("NONE"),
+        stray_load=ImStrayLoadModelName("NONE"),
         friction_windage_index=1,
         stray_load_index=1,
     )

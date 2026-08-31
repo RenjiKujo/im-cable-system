@@ -2,7 +2,7 @@
 
 NOTE: イベント種別ごとの発生回数のみを保持する純データ DTO。
     集計器（``NumericalStabilityAccumulator``）からの生成は simulate 層の
-    ファクトリ（``build_numerical_stability_report``）が担い、本 DTO は
+    ビルダー（``build_numerical_stability_report``）が担い、本 DTO は
     ``shared.numerical_stability`` に依存しない。itm / output の双方から
     ``generic.reporting`` 窓口経由で参照する。
 """

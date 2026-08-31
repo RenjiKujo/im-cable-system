@@ -1,8 +1,8 @@
 # シミュレーションロジック設計 - コンポーネント構成
 
-> **この文書が正本である範囲**: レイヤー構造・各層の役割と依存先・コンポーネントとディレクトリ構成の対応・Mermaid 表記ルール。
+> **この文書が正本である範囲**: `src/im_cable_system/engine/` 配下のレイヤー構造・各層の役割と依存先・コンポーネントとディレクトリ構成の対応・Mermaid 表記ルール。
 >
-> **正本ではない（参照先）**: import 規約と `__init__.py` 運用は [`conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md)、各層の詳細設計は本ディレクトリの `1_shared.md`〜`5_pipeline.md`。
+> **正本ではない（参照先）**: import 規約と `__init__.py` 運用は [`conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md)、各層の詳細設計は本ディレクトリの `1_shared.md`〜`5_pipeline.md`。engine 外側のクライアント（`runner/` および `apps/web/`）はこの 5 層の対象外であり、`apps/web/` の構成は [`../apps/web/0_overview.md`](../apps/web/0_overview.md) が正本。
 
 ## コンポーネント構成概要
 
@@ -23,7 +23,7 @@ Simulationエンジンでは上記のレイヤー構造を採用する。
 | **processor** | 各ステージ（Input/Execute/Output）で **Dtos** の受け渡しと処理フローを担当する。Dtos を走査し、各要素（単一 Dto）に対する処理は Algorithm 層に委譲し、結果を集約して返す。各 Dto ごとに Algorithm のオーケストレーターを 1 回呼び、処理の詳細順序は Algorithm 層に閉じる。各ステージの引数・戻り値は Dtos で、層・ステージごとに完全に定義される | algorithm, domain, shared |
 | **algorithm** | 各ステージにおいて **単一 Dto** を引数に取り、1 本の結果 Dto（または 1 件分の出力）を返すコアロジック（モデル構築・シミュレーション実行・検証・可視化用データ生成等）を実装する。引数・戻り値は層・ステージごとに完全に定義される | domain, shared |
 | **domain** | シミュレーションで使用する基礎知識・物理法則に基づく計算・判定・検証を提供する | shared |
-| **shared** | 全コンポーネントで共通利用されるデータ構造（DTO）・ユーティリティ・定数・設定を提供する | なし |
+| **shared** | 全コンポーネントで共通利用されるデータ構造（DTO）・設定・ジョブ仕様・推定仕様・数値安定化イベント集計・ログ／横断デコレータ等を提供する | なし |
 
 ## 各コンポーネントの詳細設計
 
@@ -68,6 +68,7 @@ src/im_cable_system/engine/
     ├── dto/                     # データ転送オブジェクト
     ├── config/                  # 設定・ロガー
     ├── job_spec/                # 実行モード別ジョブ仕様
+    ├── estimate_params_fit_spec/ # 推定の探索境界・初期値仕様（Input/Execute 横断）
     └── numerical_stability/     # 数値安定化イベント集計
 ```
 
@@ -110,7 +111,8 @@ shared
 詳細は`3_algorithm.md`を参照。
 
 #### domain → shared
-- domainはsharedのDTO、ユーティリティ、設定に依存
+- domainはsharedのDTOと数値安定化イベント記録（`numerical_stability`）に依存
+- domainはsharedの設定・ロガーには依存しない（domainを設定読み込みなどのI/Oから切り離すため）
 
 詳細は`2_domain.md`を参照。
 
@@ -121,7 +123,7 @@ shared
 
 ### 依存関係の原則
 - **上位レイヤーから下位レイヤーへの一方向依存**: 下位レイヤーは上位レイヤーに依存しない
-- **インターフェイスへの依存**: 具象クラスではなくインターフェイスに依存（依存性逆転の原則）
+- **インターフェイスへの依存**: 具象クラスではなくインターフェイスに依存（下位レイヤーが公開する抽象に依存することを指し、依存性逆転〈DIP〉とは呼び分ける。[`docs/conventions/2_design_principles.md`](../conventions/2_design_principles.md) を参照）
 - **DTOを介したデータ受け渡し**: 各ステージ間でDTOを介した明確なデータ受け渡し
 
 **インポートルール**（層間依存・import 禁止パターン）と **Dir・`__init__.py` 運用**は [`docs/conventions/3_layering_and_imports.md`](../conventions/3_layering_and_imports.md) を参照する。各コンポーネントのフォルダ構成は本ドキュメント群の `*_*.md` を参照する。

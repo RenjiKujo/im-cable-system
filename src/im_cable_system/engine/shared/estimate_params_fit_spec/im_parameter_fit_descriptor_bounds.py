@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, NewType
 
 from im_cable_system.engine.shared.estimate_params_fit_spec.parameter_fit_spec import (  # noqa: E501
     ParameterFitSpec,
@@ -19,6 +19,25 @@ from im_cable_system.engine.shared.estimate_params_fit_spec.yaml_bounds_parsing 
     parse_fixed_parameters_block_with_init,
     parse_model_parameters_block_with_init,
 )
+
+ImSubsystemName = Literal[
+    "primary",
+    "excitation",
+    "secondary",
+    "friction_windage",
+    "stray_load",
+]
+
+# subsystem ごとにモデル種別名を型で分離する。bounds YAML には
+# CURRENT_DEPENDENT_LEAKAGE_SATURATION_V1 のように複数 subsystem に同名キーが
+# 存在するものがあり、素の str だと取り違えが KeyError にすらならない。
+# NewType はランタイムでは恒等関数で、値の検証は一切行わない
+# （検証は _assemble_input_dto 段の DTO __post_init__ が持つ）。
+ImPrimaryModelName = NewType("ImPrimaryModelName", str)
+ImExcitationModelName = NewType("ImExcitationModelName", str)
+ImSecondaryModelName = NewType("ImSecondaryModelName", str)
+ImFrictionWindageModelName = NewType("ImFrictionWindageModelName", str)
+ImStrayLoadModelName = NewType("ImStrayLoadModelName", str)
 
 _REQUIRED_FIXED_IM_KEYS: tuple[str, ...] = (
     "primary_resistance",
@@ -146,13 +165,7 @@ class ImParameterFitDescriptorBounds:
 
     def im_model_param(
         self,
-        subsystem: Literal[
-            "primary",
-            "excitation",
-            "secondary",
-            "friction_windage",
-            "stray_load",
-        ],
+        subsystem: ImSubsystemName,
         model_type_name: str | Enum,
         param_name: str,
     ) -> tuple[float, float]:
@@ -169,23 +182,23 @@ class ImParameterFitDescriptorBounds:
         )
         return (spec.lb, spec.ub)
 
-    def im_model_param_spec(
+    def im_model_param_specs(
         self,
-        subsystem: Literal[
-            "primary",
-            "excitation",
-            "secondary",
-            "friction_windage",
-            "stray_load",
-        ],
+        subsystem: ImSubsystemName,
         model_type_name: str | Enum,
-        param_name: str,
-    ) -> ParameterFitSpec:
-        """モデル係数の bounds + init 仕様。
+    ) -> dict[str, ParameterFitSpec]:
+        """当該モデル種別の params 行を丸ごと返す（コピー）。
+
+        Args:
+            subsystem: IM サブシステム名。
+            model_type_name: モデル種別（文字列または Enum）。
+
+        Returns:
+            dict[str, ParameterFitSpec]: 係数名 → bounds/init 仕様。
+                ``params: {}`` の種別では空辞書。
 
         Raises:
-            KeyError: YAML にモデル種別またはパラメータ名が定義されて
-                いない場合。
+            KeyError: YAML に当該 ``model_type`` キーが無い場合。
         """
         if subsystem == "primary":
             table = self._primary_model_specs
@@ -202,7 +215,22 @@ class ImParameterFitDescriptorBounds:
             raise KeyError(
                 f"unknown IM {subsystem} model in bounds YAML: {model_key}"
             )
-        model_row = table[model_key]
+        return dict(table[model_key])
+
+    def im_model_param_spec(
+        self,
+        subsystem: ImSubsystemName,
+        model_type_name: str | Enum,
+        param_name: str,
+    ) -> ParameterFitSpec:
+        """モデル係数の bounds + init 仕様。
+
+        Raises:
+            KeyError: YAML にモデル種別またはパラメータ名が定義されて
+                いない場合。
+        """
+        model_key = _model_type_key(model_type_name)
+        model_row = self.im_model_param_specs(subsystem, model_type_name)
         if param_name not in model_row:
             raise KeyError(
                 f"missing bounds/init for IM {subsystem} model parameter: "

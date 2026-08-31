@@ -28,11 +28,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: uv pip install -e ".[dev]" --system
+      - run: uv pip install -e ".[dev,web]" --system
       - name: Ruff format check
-        run: ruff format --check src tests
+        run: ruff format --check src tests apps
       - name: Ruff lint
-        run: ruff check src tests
+        run: ruff check src tests apps
 
   typecheck:
     name: Type check (pyright)
@@ -45,7 +45,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: uv pip install -e ".[dev]" --system
+      - run: uv pip install -e ".[dev,web]" --system
       - name: Pyright
         run: basedpyright
 
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: uv pip install -e ".[dev]" --system
+      - run: uv pip install -e ".[dev,web]" --system
       # docs↔実装の整合性テスト（tests/test_docs/）もこの pytest に含まれる。
       # 専用ジョブは置かず、CI で確認するテストは tests/ に一本化する。
       - name: Pytest (not slow)
